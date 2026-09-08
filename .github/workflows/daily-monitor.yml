@@ -1,0 +1,34 @@
+name: Daily scheme monitor
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 16:15 UTC is after Indian market close on weekdays.
+    - cron: "15 16 * * 1-5"
+
+permissions:
+  contents: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python -m scheme_intel.main --send
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          PYTHONPATH: src
+      - name: Store latest research snapshot
+        run: |
+          git config user.name "scheme-intel[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/latest.json
+          git diff --cached --quiet || git commit -m "chore: update scheme-monitor snapshot"
+          git push
+
+
