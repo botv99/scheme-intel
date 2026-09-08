@@ -4,7 +4,7 @@ An evidence-led monitor for India's GOBARdhan / compressed-biogas ecosystem. It 
 
 ## What it does
 
-- Tracks GOBARdhan, CBG/Bio-CNG, SATAT and related official-sector language.
+- Tracks GOBARdhan, CBG/Bio-CNG, SATAT and related official-sector language, CPPP tenders, and configured NSE/BSE corporate-disclosure pages.
 - Treats fund releases, cabinet approvals, pricing/blending changes, tenders, awards and commissioning as ranked catalysts.
 - Keeps an editable stock watchlist in `config/watchlist.yaml`.
 - Creates a **research setup** only when a material catalyst exists and the stock confirms trend/momentum. Entry is a 20-day-high breakout; the stop is two ATRs (with a 6% floor) and the first target is 2R.
@@ -32,6 +32,10 @@ Create a bot with BotFather, start a chat with it, then add these **GitHub Actio
 - `TELEGRAM_CHAT_ID`
 
 Never put either value in the repository or `watchlist.yaml`. With secrets set, run the workflow manually from the **Actions** tab to test it.
+
+## Schedule
+
+The GitHub Action runs Monday–Friday at **6:00 PM India Standard Time** (12:30 UTC), after the regular NSE/BSE cash-market close. GitHub schedules are best-effort and can start a few minutes late. It scans the configured sources, retrieves price data for symbols with a listed ticker, saves a research snapshot, and sends only material alerts when Telegram secrets exist.
 
 ## Add a company
 
