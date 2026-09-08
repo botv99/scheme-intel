@@ -1,0 +1,51 @@
+scheme:
+  name: GOBARdhan — National Circular Bioenergy Scheme
+  aliases: [GOBARdhan, CBG, Bio-CNG, compressed biogas, compressed biogas, SATAT, biogas]
+  official_sources:
+    - name: PIB Ministry of Petroleum & Natural Gas
+      url: https://www.pib.gov.in/AllRel.aspx?reg=3&lang=1
+    - name: GOBARdhan Unified Registration Portal
+      url: https://www.gobardhan.sbm.gov.in/
+    - name: Ministry of New and Renewable Energy
+      url: https://mnre.gov.in/
+    - name: Ministry of Jal Shakti
+      url: https://jalshakti-ddws.gov.in/
+
+settings:
+  rally_threshold_pct: 10
+  rally_window_days: 15
+  max_setup_age_days: 5
+  risk_per_trade_pct: 1
+  minimum_catalyst_score: 60
+
+stocks:
+  - name: TruAlt Bioenergy
+    symbol: null
+    aliases: [TruAlt, TruAlt Bioenergy]
+    thesis: CBG developer and producer; monitor project commissioning, offtake, and policy support.
+  - name: VA Tech Wabag
+    symbol: WABAG.NS
+    aliases: [VA Tech Wabag, Wabag]
+    thesis: Water and wastewater solutions; monitor organic-waste, biomethanation, and municipal contract exposure.
+  - name: Praj Industries
+    symbol: PRAJIND.NS
+    aliases: [Praj Industries, Praj]
+    thesis: Bioenergy engineering and CBG technology; monitor orders, plant commissioning, and policy incentives.
+  - name: Organic Recycling Systems
+    symbol: null
+    aliases: [Organic Recycling Systems, ORS]
+    thesis: Organic-waste processing; monitor tenders, municipal contracts, and project awards.
+  - name: Kirloskar Pneumatic
+    symbol: KIRLPNU.NS
+    aliases: [Kirloskar Pneumatic, Kirloskar]
+    thesis: Compression equipment; monitor CBG plant capex orders and industrial demand.
+  - name: GAIL
+    symbol: GAIL.NS
+    aliases: [GAIL, GAIL India]
+    thesis: Gas marketing and infrastructure; monitor CBG offtake, blending, and pipeline announcements.
+  - name: Indian Oil Corporation
+    symbol: IOC.NS
+    aliases: [Indian Oil, IOCL, IOC]
+    thesis: CBG offtake and retail network; monitor procurement, blending, and project partnerships.
+
+
