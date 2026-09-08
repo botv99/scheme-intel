@@ -32,7 +32,7 @@ class TestCatalystClassification:
     def test_classify_tender_award(self):
         """Test classification of tender award."""
         article = Article(
-            title="GAIL awarded CBG tender for ₹50 crore project",
+            title="GAIL announced CBG tender awarded for ₹50 crore project",
             url="https://example.com",
             source="PIB",
             published_at=None,

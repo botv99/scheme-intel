@@ -9,6 +9,7 @@ MATERIAL_EVENTS = {
     "letter of award": (90, "contract award"),
     "contract awarded": (90, "contract award"),
     "tender awarded": (85, "tender award"),
+    "awarded tender": (85, "tender award"),
     "commercial operation": (85, "commissioning"),
     "commissioned": (80, "commissioning"),
     "procurement price": (75, "pricing"),
