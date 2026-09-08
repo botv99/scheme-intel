@@ -3,8 +3,8 @@ name: Daily scheme monitor
 on:
   workflow_dispatch:
   schedule:
-    # 16:15 UTC is after Indian market close on weekdays.
-    - cron: "15 16 * * 1-5"
+    # 12:30 UTC = 6:00 PM India Standard Time (UTC+5:30), Mon–Fri.
+    - cron: "30 12 * * 1-5"
 
 permissions:
   contents: write
@@ -30,5 +30,4 @@ jobs:
           git add data/latest.json
           git diff --cached --quiet || git commit -m "chore: update scheme-monitor snapshot"
           git push
-
 
