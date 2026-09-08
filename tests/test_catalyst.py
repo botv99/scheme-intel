@@ -12,7 +12,7 @@ class TestCatalystClassification:
     def test_classify_cabinet_approval(self):
         """Test classification of cabinet approval catalyst."""
         article = Article(
-            title="Cabinet approves GOBARdhan fund release",
+            title="Cabinet approves GOBARdhan fund release for Praj Industries",
             url="https://example.com",
             source="PIB",
             published_at=None,

@@ -12,7 +12,9 @@ def _rsi(close: pd.Series, period: int = 14) -> float:
     delta = close.diff()
     up = delta.clip(lower=0).rolling(period).mean()
     down = -delta.clip(upper=0).rolling(period).mean()
-    value = 100 - (100 / (1 + (up / down)))
+    down_safe = down.replace(0, 1e-9)
+    rs = up / down_safe
+    value = 100 - (100 / (1 + rs))
     return float(value.iloc[-1])
 
 

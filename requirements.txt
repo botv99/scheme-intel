@@ -3,6 +3,7 @@ feedparser>=6.0,<7
 PyYAML>=6.0,<7
 requests>=2.32,<3
 yfinance>=0.2.54,<1
+pandas>=2.0,<3
 
 
 pytest>=7.4,<8
