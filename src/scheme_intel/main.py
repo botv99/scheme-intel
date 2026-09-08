@@ -21,11 +21,19 @@ def load_config() -> dict:
 
 def run(send: bool = False) -> dict:
     config = load_config()
-    aliases = config["scheme"]["aliases"]
+    aliases = config["scheme"]["aliases"] + [
+        alias for company in config["stocks"]
+        for alias in [company["name"], *company.get("aliases", [])]
+    ]
     articles = []
+    source_errors = []
     for source in config["scheme"]["official_sources"]:
-        # Add source-specific RSS URLs in config when available; page scan is intentionally conservative.
-        articles.extend(scan_page(source["name"], source["url"], aliases))
+        # Exchange and tender pages can periodically change their access policy.
+        # A failed source is recorded without preventing the rest of the daily scan.
+        try:
+            articles.extend(scan_page(source["name"], source["url"], aliases))
+        except Exception as error:  # requests/HTML failures are operational data, not trading signals
+            source_errors.append({"source": source["name"], "error": str(error)[:180]})
     deduped = {article.url: article for article in articles if article.url}.values()
     catalysts = [item for article in deduped if (item := classify(article, config["stocks"]))]
     material = [item for item in catalysts if item.score >= config["settings"]["minimum_catalyst_score"]]
@@ -37,7 +45,8 @@ def run(send: bool = False) -> dict:
                 if setup:
                     setups.append(setup.to_dict())
     report = {"catalysts": [{"title": c.article.title, "url": c.article.url, "score": c.score,
-                               "category": c.category, "companies": c.companies} for c in material], "setups": setups}
+                               "category": c.category, "companies": c.companies} for c in material],
+              "setups": setups, "source_errors": source_errors}
     (ROOT / "data").mkdir(exist_ok=True)
     (ROOT / "data" / "latest.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     if send and material:
@@ -55,5 +64,4 @@ if __name__ == "__main__":
     parser.add_argument("--send", action="store_true", help="send material alerts when Telegram secrets are configured")
     args = parser.parse_args()
     print(json.dumps(run(send=args.send), indent=2))
-
 
