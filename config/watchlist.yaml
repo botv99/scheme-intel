@@ -10,6 +10,12 @@ scheme:
       url: https://mnre.gov.in/
     - name: Ministry of Jal Shakti
       url: https://jalshakti-ddws.gov.in/
+    - name: Central Public Procurement Portal (tenders)
+      url: https://eprocure.gov.in/eprocure/app
+    - name: NSE corporate filings
+      url: https://www.nseindia.com/companies-listing/corporate-filings-announcements?tabIndex=equity
+    - name: BSE corporate announcements
+      url: https://www.bseindia.com/corporates/ann.html
 
 settings:
   rally_threshold_pct: 10
@@ -47,5 +53,4 @@ stocks:
     symbol: IOC.NS
     aliases: [Indian Oil, IOCL, IOC]
     thesis: CBG offtake and retail network; monitor procurement, blending, and project partnerships.
-
 
