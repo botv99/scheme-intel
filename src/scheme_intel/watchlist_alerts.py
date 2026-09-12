@@ -1,510 +1,760 @@
-if not WATCHLIST_FILE.exists():
-    raise FileNotFoundError(
-        f"Missing watchlist: {WATCHLIST_FILE}"
-    )
 
-with WATCHLIST_FILE.open(
-    "r",
-    encoding="utf-8",
-) as file:
-    data = json.load(file)
+"""
+Gobardhan stock watchlist Telegram alerts.
 
-return [
-    stock
-    for stock in data.get("stocks", [])
-    if stock.get("enabled", True)
+Runs daily through GitHub Actions.
+"""
+
+from __future__ import annotations
+
+import html
+import json
+import logging
+import os
+import re
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from urllib.parse import quote_plus
+
+import feedparser
+import requests
+import yfinance as yf
+
+
+# --------------------------------------------------
+# SETTINGS
+# --------------------------------------------------
+
+ROOT = Path(__file__).resolve().parents[2]
+WATCHLIST_FILE = ROOT / "data" / "watchlist.json"
+
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+CHAT_IDS = [
+    item.strip()
+    for item in os.getenv("TELEGRAM_CHAT_ID", "").split(",")
+    if item.strip()
 ]
-try:
 
-    response = session.get(
-        url,
-        params=params,
-        timeout=TIMEOUT,
-    )
+TIMEOUT = 25
 
-    response.raise_for_status()
-
-    return response.json()
-
-except Exception as exc:
-
-    log.warning(
-        "Request failed: %s | %s",
-        url,
-        exc,
-    )
-
-    return None
-  result = []
-
-for item in items:
-
-    if item and item not in result:
-        result.append(item)
-
-return result
-symbol = stock.get("symbol", "").strip()
-
-exchange = stock.get(
-    "exchange",
-    "NSE",
-).upper()
-
-if not symbol:
-
-    return {
-        "available": False,
-        "reason": "NSE symbol not verified",
-    }
-
-yahoo_symbol = (
-    f"{symbol}.NS"
-    if exchange == "NSE"
-    else f"{symbol}.BO"
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
 )
 
-try:
+log = logging.getLogger("gobardhan-alerts")
 
-    ticker = yf.Ticker(yahoo_symbol)
+session = requests.Session()
 
-    history = ticker.history(
-        period="5d",
-        interval="1d",
-        auto_adjust=False,
-    )
+session.headers.update(
+    {
+        "User-Agent": (
+            "Mozilla/5.0 "
+            "(Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 "
+            "Chrome/120 Safari/537.36"
+        ),
+        "Accept": "application/json,text/plain,*/*",
+    }
+)
 
-    if history.empty:
+
+# --------------------------------------------------
+# HELPERS
+# --------------------------------------------------
+
+def safe(value) -> str:
+    """Escape Telegram HTML characters."""
+    return html.escape(str(value or ""))
+
+
+def load_watchlist() -> list[dict]:
+    """Load enabled companies from watchlist.json."""
+
+    if not WATCHLIST_FILE.exists():
+        raise FileNotFoundError(
+            f"Missing watchlist file: {WATCHLIST_FILE}"
+        )
+
+    with WATCHLIST_FILE.open(
+        "r",
+        encoding="utf-8",
+    ) as file:
+        data = json.load(file)
+
+    return [
+        stock
+        for stock in data.get("stocks", [])
+        if stock.get("enabled", True)
+    ]
+
+
+def yahoo_symbol(stock: dict) -> str | None:
+    """Convert NSE/BSE symbol to Yahoo Finance symbol."""
+
+    symbol = stock.get("symbol", "").strip()
+
+    if not symbol:
+        return None
+
+    exchange = stock.get("exchange", "NSE").upper()
+
+    if exchange == "NSE":
+        return f"{symbol}.NS"
+
+    if exchange == "BSE":
+        return f"{symbol}.BO"
+
+    return symbol
+
+
+# --------------------------------------------------
+# MARKET PRICE
+# --------------------------------------------------
+
+def get_price(stock: dict) -> dict:
+    """Fetch delayed market price and previous close."""
+
+    symbol = yahoo_symbol(stock)
+
+    if not symbol:
+        return {
+            "available": False,
+            "reason": "Exchange symbol not verified",
+        }
+
+    try:
+        ticker = yf.Ticker(symbol)
+
+        history = ticker.history(
+            period="5d",
+            interval="1d",
+            auto_adjust=False,
+        )
+
+        if history.empty:
+            return {
+                "available": False,
+                "reason": "No price data returned",
+            }
+
+        latest = history.iloc[-1]
+
+        price = float(latest["Close"])
+
+        previous_close = None
+
+        if len(history) >= 2:
+            previous_close = float(
+                history.iloc[-2]["Close"]
+            )
+
+        change = None
+        change_percent = None
+
+        if previous_close:
+            change = price - previous_close
+            change_percent = (
+                change / previous_close
+            ) * 100
+
+        volume = latest.get("Volume")
+
+        return {
+            "available": True,
+            "price": price,
+            "previous_close": previous_close,
+            "change": change,
+            "change_percent": change_percent,
+            "volume": (
+                int(volume)
+                if volume and volume == volume
+                else None
+            ),
+            "source": "Yahoo Finance",
+            "delayed": True,
+        }
+
+    except Exception as exc:
+        log.warning(
+            "Price failed for %s: %s",
+            symbol,
+            exc,
+        )
 
         return {
             "available": False,
-            "reason": "No price data returned",
+            "reason": "Price source unavailable",
         }
 
-    latest = history.iloc[-1]
 
-    price = float(latest["Close"])
+def format_price(price: dict) -> str:
+    """Format price for Telegram."""
 
-    previous_close = None
-
-    if len(history) >= 2:
-        previous_close = float(
-            history.iloc[-2]["Close"]
-        )
-
-    change = None
-    change_percent = None
-
-    if previous_close:
-
-        change = price - previous_close
-
-        change_percent = (
-            change / previous_close
-        ) * 100
-
-    volume = latest.get("Volume")
-
-    return {
-        "available": True,
-        "price": price,
-        "previous_close": previous_close,
-        "change": change,
-        "change_percent": change_percent,
-        "volume": (
-            int(volume)
-            if volume
-            else None
-        ),
-        "source": "Yahoo Finance",
-        "delayed": True,
-    }
-
-except Exception as exc:
-
-    log.warning(
-        "Price failed for %s: %s",
-        symbol,
-        exc,
-    )
-
-    return {
-        "available": False,
-        "reason": "Price source unavailable",
-    }
     if not price.get("available"):
-    return (
-        "Unavailable — "
-        + price.get(
-            "reason",
-            "No data",
-        )
-    )
-
-value = price["price"]
-
-result = f"₹{value:,.2f}"
-
-percent = price.get("change_percent")
-
-change = price.get("change")
-
-if percent is not None:
-
-    sign = "+" if percent >= 0 else ""
-
-    result += (
-        f" ({sign}{percent:.2f}%)"
-    )
-
-if change is not None:
-
-    sign = "+" if change >= 0 else ""
-
-    result += (
-        f" | {sign}₹{change:.2f}"
-    )
-
-return result
-symbol = stock.get("symbol", "").strip()
-
-if not symbol:
-    return []
-
-url = (
-    "https://www.nseindia.com/"
-    "api/corporate-announcements"
-)
-
-try:
-
-    # Visit NSE homepage first for cookies.
-    session.get(
-        "https://www.nseindia.com/",
-        timeout=TIMEOUT,
-    )
-
-    data = get_json(
-        url,
-        params={
-            "index": "equities",
-            "symbol": symbol,
-        },
-    )
-
-    if not isinstance(data, list):
-        return []
-
-    results = []
-
-    for item in data[:15]:
-
-        title = (
-            item.get("subject")
-            or item.get("desc")
-            or "Corporate announcement"
+        return (
+            "Unavailable — "
+            + price.get("reason", "No data")
         )
 
-        results.append(
-            {
-                "title": title,
-                "date": (
-                    item.get("an_dt")
-                    or item.get("sort_date")
-                    or item.get("date")
-                ),
-                "url": (
-                    item.get("attchmntFile")
-                    or item.get("fileName")
-                    or "https://www.nseindia.com/"
-                ),
-                "source": "NSE",
-            }
-        )
+    value = price["price"]
 
-    return results
+    result = f"₹{value:,.2f}"
 
-except Exception as exc:
+    percent = price.get("change_percent")
+    change = price.get("change")
 
-    log.warning(
-        "NSE announcements failed: %s",
-        exc,
-    )
+    if percent is not None:
+        sign = "+" if percent >= 0 else ""
+        result += f" ({sign}{percent:.2f}%)"
 
-    return []
+    if change is not None:
+        sign = "+" if change >= 0 else ""
+        result += f" | {sign}₹{change:.2f}"
+
+    return result
+
+
+# --------------------------------------------------
+# NSE CORPORATE ANNOUNCEMENTS
+# --------------------------------------------------
+
+def get_nse_announcements(stock: dict) -> list[dict]:
     """
-Extract event-related announcements.
+    Fetch recent NSE corporate announcements.
 
-This is not a complete future events calendar.
-Confirmed event dates require a verified calendar
-source or company exchange filing.
-"""
+    Availability depends on NSE access and response format.
+    """
 
-announcements = get_nse_announcements(stock)
+    symbol = stock.get("symbol", "").strip()
 
-keywords = [
-    "board meeting",
-    "financial results",
-    "earnings",
-    "dividend",
-    "agm",
-    "annual general meeting",
-    "bonus",
-    "split",
-    "buyback",
-    "rights issue",
-    "record date",
-    "investor meet",
-    "analyst meet",
-    "conference call",
-]
-
-events = []
-
-for item in announcements:
-
-    title = item.get("title", "")
-
-    if any(
-        keyword in title.lower()
-        for keyword in keywords
-    ):
-
-        events.append(item)
-
-return events[:8]
-"""
-Best-effort event calendar.
-
-Availability depends on Yahoo Finance coverage.
-"""
-
-symbol = stock.get("symbol", "").strip()
-
-if not symbol:
-    return []
-
-exchange = stock.get(
-    "exchange",
-    "NSE",
-).upper()
-
-yahoo_symbol = (
-    f"{symbol}.NS"
-    if exchange == "NSE"
-    else f"{symbol}.BO"
-)
-
-try:
-
-    ticker = yf.Ticker(yahoo_symbol)
-
-    calendar = ticker.calendar
-
-    if calendar is None:
+    if not symbol:
         return []
 
-    if hasattr(calendar, "to_dict"):
-        calendar = calendar.to_dict()
-
-    if not isinstance(calendar, dict):
-        return []
-
-    results = []
-
-    for key, value in calendar.items():
-
-        results.append(
-            {
-                "title": str(key),
-                "date": str(value),
-                "source": "Yahoo Finance",
-            }
-        )
-
-    return results[:8]
-
-except Exception as exc:
-
-    log.warning(
-        "Calendar failed for %s: %s",
-        symbol,
-        exc,
+    url = (
+        "https://www.nseindia.com/"
+        "api/corporate-announcements"
     )
 
-    return []
+    try:
+        # Establish NSE session cookies.
+        session.get(
+            "https://www.nseindia.com/",
+            timeout=TIMEOUT,
+        )
+
+        response = session.get(
+            url,
+            params={
+                "index": "equities",
+                "symbol": symbol,
+            },
+            timeout=TIMEOUT,
+        )
+
+        response.raise_for_status()
+
+        data = response.json()
+
+        if not isinstance(data, list):
+            return []
+
+        results = []
+
+        for item in data[:15]:
+
+            title = (
+                item.get("subject")
+                or item.get("desc")
+                or "Corporate announcement"
+            )
+
+            results.append(
+                {
+                    "title": title,
+                    "date": (
+                        item.get("an_dt")
+                        or item.get("sort_date")
+                        or item.get("date")
+                        or "Date unavailable"
+                    ),
+                    "url": (
+                        item.get("attchmntFile")
+                        or item.get("fileName")
+                        or "https://www.nseindia.com/"
+                    ),
+                    "source": "NSE",
+                }
+            )
+
+        return results
+
+    except Exception as exc:
+        log.warning(
+            "NSE announcements failed: %s",
+            exc,
+        )
+
+        return []
+
+
+# --------------------------------------------------
+# EVENTS CALENDAR
+# --------------------------------------------------
+
+def get_events(stock: dict) -> list[dict]:
     """
-Placeholder until a verified exchange deal
-adapter is connected.
+    Extract event-related NSE announcements.
 
-Do not fabricate bulk/block deal information.
-"""
+    This is not a complete future events calendar.
+    """
 
-# The official exchange deal pages should be used
-# for a reliable production adapter.
-#
-# NSE:
-# https://www.nseindia.com/
-#
-# BSE:
-# https://www.bseindia.com/
+    announcements = get_nse_announcements(stock)
 
-return []
-name = stock["name"]
+    keywords = [
+        "board meeting",
+        "financial results",
+        "earnings",
+        "dividend",
+        "agm",
+        "annual general meeting",
+        "bonus",
+        "split",
+        "buyback",
+        "rights issue",
+        "record date",
+        "investor meet",
+        "analyst meet",
+        "conference call",
+    ]
 
-symbol = stock.get("symbol", "").strip()
+    events = []
 
-search_terms = [f'"{name}"']
+    for item in announcements:
 
-if symbol:
-    search_terms.append(f'"{symbol}"')
+        title = item.get("title", "")
 
-query = quote_plus(
-    " OR ".join(search_terms)
-)
+        if any(
+            keyword in title.lower()
+            for keyword in keywords
+        ):
+            events.append(item)
 
-url = (
-    "https://news.google.com/rss/search"
-    f"?q={query}&hl=en-IN&gl=IN&ceid=IN:en"
-)
+    return events[:8]
 
-try:
 
-    feed = feedparser.parse(url)
+# --------------------------------------------------
+# MEDIA-REPORTED BLOCK DEAL NEWS
+# --------------------------------------------------
+
+def get_block_deal_news(stock: dict) -> list[dict]:
+    """
+    Fetch recent media-reported block/bulk deal news.
+
+    This is NOT an official exchange block-deal feed.
+    """
+
+    name = stock["name"]
+
+    symbol = stock.get("symbol", "").strip()
+
+    search_terms = [
+        f'"{name}" "block deal"',
+        f'"{name}" "bulk deal"',
+    ]
+
+    if symbol:
+        search_terms.extend(
+            [
+                f'"{symbol}" "block deal"',
+                f'"{symbol}" "bulk deal"',
+            ]
+        )
+
+    query = quote_plus(
+        " OR ".join(search_terms)
+    )
+
+    url = (
+        "https://news.google.com/rss/search"
+        f"?q={query}"
+        "&hl=en-IN&gl=IN&ceid=IN:en"
+    )
+
+    try:
+
+        feed = feedparser.parse(url)
+
+        results = []
+
+        for entry in feed.entries[:5]:
+
+            title = entry.get(
+                "title",
+                "Block/bulk deal news",
+            )
+
+            results.append(
+                {
+                    "title": title,
+                    "url": entry.get("link"),
+                    "published": entry.get(
+                        "published",
+                        "",
+                    ),
+                    "source": "Media-reported",
+                }
+            )
+
+        return results
+
+    except Exception as exc:
+
+        log.warning(
+            "Block deal news failed for %s: %s",
+            name,
+            exc,
+        )
+
+        return []
+
+
+# --------------------------------------------------
+# FINANCIAL NEWS
+# --------------------------------------------------
+
+def get_news(stock: dict) -> list[dict]:
+    """Fetch recent financial news."""
+
+    name = stock["name"]
+
+    symbol = stock.get("symbol", "").strip()
+
+    # Source-specific searches through Google News RSS.
+    sources = [
+        "moneycontrol.com",
+        "livemint.com",
+        "economictimes.indiatimes.com",
+        "financialexpress.com",
+        "upstox.com",
+    ]
 
     news = []
 
-    for entry in feed.entries[:6]:
+    for source in sources:
 
-        news.append(
-            {
-                "title": entry.get(
-                    "title",
-                    "Untitled news",
-                ),
-                "url": entry.get("link"),
-                "published": entry.get(
-                    "published",
-                    "",
-                ),
-                "source": "Google News RSS",
-            }
+        search = f'"{name}" site:{source}'
+
+        if symbol:
+            search += f' OR "{symbol}" site:{source}'
+
+        query = quote_plus(search)
+
+        url = (
+            "https://news.google.com/rss/search"
+            f"?q={query}"
+            "&hl=en-IN&gl=IN&ceid=IN:en"
         )
 
-    return news
+        try:
 
-except Exception as exc:
+            feed = feedparser.parse(url)
 
-    log.warning(
-        "News failed: %s",
-        exc,
+            for entry in feed.entries[:2]:
+
+                news.append(
+                    {
+                        "title": entry.get(
+                            "title",
+                            "Untitled news",
+                        ),
+                        "url": entry.get("link"),
+                        "published": entry.get(
+                            "published",
+                            "",
+                        ),
+                        "source": source,
+                    }
+                )
+
+        except Exception as exc:
+
+            log.warning(
+                "News failed for %s: %s",
+                source,
+                exc,
+            )
+
+    # Remove duplicate headlines.
+    unique = []
+    seen = set()
+
+    for item in news:
+
+        title = item.get("title", "")
+
+        if title not in seen:
+            unique.append(item)
+            seen.add(title)
+
+    return unique[:8]
+
+
+# --------------------------------------------------
+# TELEGRAM MESSAGE
+# --------------------------------------------------
+
+def build_message(
+    stock: dict,
+    price: dict,
+    events: list[dict],
+    deals: list[dict],
+    news: list[dict],
+) -> str:
+
+    name = safe(stock["name"])
+
+    symbol = safe(
+        stock.get("symbol")
+        or "Symbol pending"
     )
 
-    return []
-    if not BOT_TOKEN:
-    raise RuntimeError(
-        "Missing TELEGRAM_BOT_TOKEN"
-    )
-
-if not CHAT_ID:
-    raise RuntimeError(
-        "Missing TELEGRAM_CHAT_ID"
-    )
-
-url = (
-    "https://api.telegram.org/"
-    f"bot{BOT_TOKEN}/sendMessage"
-)
-
-response = requests.post(
-    url,
-    json={
-        "chat_id": CHAT_ID,
-        "text": message,
-        "parse_mode": "HTML",
-        "disable_web_page_preview": True,
-    },
-    timeout=TIMEOUT,
-)
-
-response.raise_for_status()
-name = safe_text(stock["name"])
-
-symbol = safe_text(
-    stock.get("symbol")
-    or "Symbol pending"
-)
-
-lines = []
-
-lines.append(
-    f"📊 <b>{name}</b>"
-)
-
-lines.append(
-    f"Symbol: {symbol}"
-)
-
-lines.append(
-    f"💰 <b>Market Price:</b> "
-    f"{safe_text(format_price(price))}"
-)
-
-if price.get("delayed"):
+    lines = []
 
     lines.append(
-        "ℹ️ Price may be delayed."
+        f"📊 <b>{name}</b>"
     )
-
-volume = price.get("volume")
-
-if volume:
 
     lines.append(
-        f"📦 Volume: {volume:,}"
+        f"Symbol: {symbol}"
     )
 
-# EVENTS
+    lines.append("")
 
-lines.append("")
-lines.append("📅 <b>Events Calendar / Filings</b>")
+    lines.append(
+        "💰 <b>Market Price</b>"
+    )
 
-combined_events = events + calendar
+    lines.append(
+        safe(format_price(price))
+    )
 
-if combined_events:
-
-    for event in combined_events[:8]:
-
-        title = safe_text(
-            event.get(
-                "title",
-                "Event",
-            )
-        )
-
-        date = safe_text(
-            event.get(
-                "date",
-                "Date unavailable",
-            )
-        )
-
+    if price.get("delayed"):
         lines.append(
-            f"• {date}: {title}"
+            "ℹ️ Price may be delayed."
         )
 
-        if event.get("url"):
+    volume = price.get("volume")
+
+    if volume:
+        lines.append(
+            f"📦 Volume: {volume:,}"
+        )
+
+    # EVENTS
+
+    lines.append("")
+
+    lines.append(
+        "📅 <b>Events / Corporate Announcements</b>"
+    )
+
+    if events:
+
+        for event in events[:6]:
+
+            title = safe(
+                event.get(
+                    "title",
+                    "Event",
+                )
+            )
+
+            date = safe(
+                event.get(
+                    "date",
+                    "Date unavailable",
+                )
+            )
 
             lines.append(
-                f"  {safe_text(event['url'])}"
+                f"• {date}: {title}"
             )
 
-else:
+            if event.get("url"):
+                lines.append(
+                    safe(event["url"])
+                )
+
+    else:
+
+        lines.append(
+            "• No event data returned."
+        )
+
+    # BLOCK DEALS
+
+    lines.append("")
 
     lines.append(
-        "• No event data returned."
+        "🔍 <b>Block / Bulk Deal News</b>"
     )
 
-# DEALS
+    if deals:
 
-lines.append("")
-li::chatgpt-content-reference{index="8"}
+        for deal in deals[:4]:
+
+            title = safe(
+                deal.get(
+                    "title",
+                    "Deal news",
+                )
+            )
+
+            lines.append(
+                f"• {title}"
+            )
+
+            if deal.get("url"):
+                lines.append(
+                    safe(deal["url"])
+                )
+
+    else:
+
+        lines.append(
+            "• No media-reported block/bulk deal news found."
+        )
+
+    # NEWS
+
+    lines.append("")
+
+    lines.append(
+        "📰 <b>Financial News</b>"
+    )
+
+    if news:
+
+        for item in news[:6]:
+
+            title = safe(
+                item.get(
+                    "title",
+                    "News",
+                )
+            )
+
+            lines.append(
+                f"• {title}"
+            )
+
+            if item.get("url"):
+                lines.append(
+                    safe(item["url"])
+                )
+
+    else:
+
+        lines.append(
+            "• No recent news returned."
+        )
+
+    return "\n".join(lines)
+
+
+# --------------------------------------------------
+# TELEGRAM SENDING
+# --------------------------------------------------
+
+def send_telegram(message: str) -> None:
+
+    if not BOT_TOKEN:
+        raise RuntimeError(
+            "Missing TELEGRAM_BOT_TOKEN"
+        )
+
+    if not CHAT_IDS:
+        raise RuntimeError(
+            "Missing TELEGRAM_CHAT_ID"
+        )
+
+    url = (
+        "https://api.telegram.org/"
+        f"bot{BOT_TOKEN}/sendMessage"
+    )
+
+    for chat_id in CHAT_IDS:
+
+        response = requests.post(
+            url,
+            json={
+                "chat_id": chat_id,
+                "text": message,
+                "parse_mode": "HTML",
+                "disable_web_page_preview": True,
+            },
+            timeout=TIMEOUT,
+        )
+
+        response.raise_for_status()
+
+        log.info(
+            "Telegram message sent to %s",
+            chat_id,
+        )
+
+
+# --------------------------------------------------
+# MAIN
+# --------------------------------------------------
+
+def main() -> None:
+
+    stocks = load_watchlist()
+
+    log.info(
+        "Loaded %s stocks",
+        len(stocks),
+    )
+
+    if not BOT_TOKEN or not CHAT_IDS:
+        raise RuntimeError(
+            "Telegram secrets are missing."
+        )
+
+    for stock in stocks:
+
+        name = stock["name"]
+
+        log.info(
+            "Processing %s",
+            name,
+        )
+
+        price = get_price(stock)
+
+        events = get_events(stock)
+
+        deals = get_block_deal_news(stock)
+
+        news = get_news(stock)
+
+        message = build_message(
+            stock=stock,
+            price=price,
+            events=events,
+            deals=deals,
+            news=news,
+        )
+
+        send_telegram(message)
+
+        log.info(
+            "Completed %s",
+            name,
+        )
+
+
+if __name__ == "__main__":
+    main()
