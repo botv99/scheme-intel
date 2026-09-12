@@ -1,1 +1,46 @@
-
+{
+  "stocks": [
+    {
+      "name": "True Alt Bioenergy",
+      "symbol": "",
+      "exchange": "NSE",
+      "enabled": true
+    },
+    {
+      "name": "VA Tech Wabag",
+      "symbol": "WABAG",
+      "exchange": "NSE",
+      "enabled": true
+    },
+    {
+      "name": "Praj Industries",
+      "symbol": "PRAJIND",
+      "exchange": "NSE",
+      "enabled": true
+    },
+    {
+      "name": "Organic Recycling Systems",
+      "symbol": "",
+      "exchange": "NSE",
+      "enabled": true
+    },
+    {
+      "name": "Kirloskar Pneumatic",
+      "symbol": "KIRLPNU",
+      "exchange": "NSE",
+      "enabled": true
+    },
+    {
+      "name": "Indian Oil Corporation",
+      "symbol": "IOC",
+      "exchange": "NSE",
+      "enabled": true
+    },
+    {
+      "name": "GAIL (India)",
+      "symbol": "GAIL",
+      "exchange": "NSE",
+      "enabled": true
+    }
+  ]
+}
