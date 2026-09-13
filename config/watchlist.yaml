@@ -24,33 +24,59 @@ settings:
   risk_per_trade_pct: 1
   minimum_catalyst_score: 60
 
+# Daily market-data ingestion layer.
+# Run with: PYTHONPATH=src python -m scheme_intel.ingest
+ingestion:
+  days_back: 7          # keep exchange deals / announcements from the last N trading days
+  screener:
+    chart_days: 365     # number of daily closes pulled from screener.in to compute RSI / trend
+  exchanges:
+    bulk_deals: true
+    announcement_keywords: [tender, contract, order, LOA, award, bulk deal, block deal]
+  news_sources:
+    - name: Mint
+      rss: https://www.livemint.com/rss/markets
+    - name: Financial Express (markets)
+      pages:
+        - https://www.financialexpress.com/market/
+        - https://www.financialexpress.com/industry/
+    - name: Moneycontrol
+      rss: https://www.moneycontrol.com/rss/marketreports.xml
+
 stocks:
   - name: TruAlt Bioenergy
     symbol: null
+    screener_id: null
     aliases: [TruAlt, TruAlt Bioenergy]
     thesis: CBG developer and producer; monitor project commissioning, offtake, and policy support.
   - name: VA Tech Wabag
     symbol: WABAG.NS
+    screener_id: WABAG
     aliases: [VA Tech Wabag, Wabag]
     thesis: Water and wastewater solutions; monitor organic-waste, biomethanation, and municipal contract exposure.
   - name: Praj Industries
     symbol: PRAJIND.NS
+    screener_id: PRAJIND
     aliases: [Praj Industries, Praj]
     thesis: Bioenergy engineering and CBG technology; monitor orders, plant commissioning, and policy incentives.
   - name: Organic Recycling Systems
     symbol: null
+    screener_id: null
     aliases: [Organic Recycling Systems, ORS]
     thesis: Organic-waste processing; monitor tenders, municipal contracts, and project awards.
   - name: Kirloskar Pneumatic
     symbol: KIRLPNU.NS
+    screener_id: KIRLPNU
     aliases: [Kirloskar Pneumatic, Kirloskar]
     thesis: Compression equipment; monitor CBG plant capex orders and industrial demand.
   - name: GAIL
     symbol: GAIL.NS
+    screener_id: GAIL
     aliases: [GAIL, GAIL India]
     thesis: Gas marketing and infrastructure; monitor CBG offtake, blending, and pipeline announcements.
   - name: Indian Oil Corporation
     symbol: IOC.NS
+    screener_id: IOC
     aliases: [Indian Oil, IOCL, IOC]
     thesis: CBG offtake and retail network; monitor procurement, blending, and project partnerships.
 

@@ -4,6 +4,10 @@ __pycache__/
 # Ignore generated cache/snapshots
 data/latest.json
 
+# Local run artifacts
+logs/
+.pytest_cache/
+
 # Keep watchlist files tracked by Git
 !data/watchlist.json
 

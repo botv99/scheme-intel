@@ -24,6 +24,21 @@ $env:PYTHONPATH = "src"
 python -m scheme_intel.main
 ```
 
+## Ingestion layer
+
+Collects daily market data for the watchlist and saves it to `data/ingested.json`:
+
+```bash
+python -m scheme_intel.ingest            # full run
+python -m scheme_intel.ingest --days-back 14
+```
+
+- **Screener.in** – per-stock price snapshot: close, volume, % change, 52-week high/low, market cap and locally-computed RSI-14.
+- **NSE / BSE** – bulk (and block) deals plus tender/contract announcements.
+- **Mint / Financial Express / Moneycontrol** – news mentioning watchlist companies.
+
+Source endpoints are best-effort: NSE/BSE JSON APIs can block datacenter IPs, so failures are recorded in the snapshot instead of stopping the run. Unlisted stocks (`symbol: null`) are news-monitored only. The GitHub Action runs weekdays at 6:30 PM IST and commits the snapshot.
+
 ## Telegram setup
 
 Create a bot with BotFather, start a chat with it, then add these **GitHub Actions secrets** in `Settings → Secrets and variables → Actions`:

@@ -5,3 +5,5 @@ pytest-html
 yfinance
 requests
 feedparser
+beautifulsoup4
+PyYAML
