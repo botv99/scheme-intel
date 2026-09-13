@@ -686,16 +686,26 @@ def send_telegram(message: str) -> None:
 
     for chat_id in CHAT_IDS:
 
+        payload = {
+            "chat_id": chat_id,
+            "text": message,
+            "parse_mode": "HTML",
+            "disable_web_page_preview": True,
+        }
+
         response = requests.post(
             url,
-            json={
-                "chat_id": chat_id,
-                "text": message,
-                "parse_mode": "HTML",
-                "disable_web_page_preview": True,
-            },
+            json=payload,
             timeout=TIMEOUT,
         )
+
+        if not response.ok:
+            log.error(
+                "Telegram API error %s for chat %s: %s",
+                response.status_code,
+                chat_id,
+                response.text[:500],
+            )
 
         response.raise_for_status()
 
@@ -708,6 +718,20 @@ def send_telegram(message: str) -> None:
 # --------------------------------------------------
 # MAIN
 # --------------------------------------------------
+
+TELEGRAM_MAX_LENGTH = 4096
+
+
+def truncate_message(message: str) -> str:
+    """Truncate message to Telegram's 4096 char limit."""
+
+    if len(message) <= TELEGRAM_MAX_LENGTH:
+        return message
+
+    truncated = message[: TELEGRAM_MAX_LENGTH - 20]
+    truncated += "\n\n…(truncated)"
+    return truncated
+
 
 def main() -> None:
 
@@ -723,6 +747,9 @@ def main() -> None:
             "Telegram secrets are missing."
         )
 
+    succeeded = 0
+    failed = 0
+
     for stock in stocks:
 
         name = stock["name"]
@@ -732,28 +759,49 @@ def main() -> None:
             name,
         )
 
-        price = get_price(stock)
+        try:
 
-        events = get_events(stock)
+            price = get_price(stock)
 
-        deals = get_block_deal_news(stock)
+            events = get_events(stock)
 
-        news = get_news(stock)
+            deals = get_block_deal_news(stock)
 
-        message = build_message(
-            stock=stock,
-            price=price,
-            events=events,
-            deals=deals,
-            news=news,
-        )
+            news = get_news(stock)
 
-        send_telegram(message)
+            message = build_message(
+                stock=stock,
+                price=price,
+                events=events,
+                deals=deals,
+                news=news,
+            )
 
-        log.info(
-            "Completed %s",
-            name,
-        )
+            message = truncate_message(message)
+
+            send_telegram(message)
+
+            succeeded += 1
+
+            log.info(
+                "Completed %s",
+                name,
+            )
+
+        except Exception as exc:
+            failed += 1
+            log.error(
+                "FAILED %s: %s",
+                name,
+                exc,
+            )
+
+    log.info(
+        "Summary: %s succeeded, %s failed out of %s stocks",
+        succeeded,
+        failed,
+        len(stocks),
+    )
 
 
 if __name__ == "__main__":
