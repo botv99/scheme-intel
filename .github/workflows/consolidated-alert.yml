@@ -1,10 +1,10 @@
-name: GOBARdhan Consolidated Alert
+name: "GOBARdhan Consolidated Alert (6:00 PM IST)"
 
 on:
   workflow_dispatch:
   schedule:
-    # 4:30 PM IST = 11:00 UTC, Mon-Fri
-    - cron: "0 11 * * 1-5"
+    # 6:00 PM IST = 12:30 UTC, Mon-Fri
+    - cron: "30 12 * * 1-5"
 
 permissions:
   contents: write
