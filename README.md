@@ -39,7 +39,7 @@ python -m scheme_intel.ingest --days-back 14
 
 The main pipeline (`python -m scheme_intel.main`) consumes the snapshot as its shared data source: ingested news and exchange announcements feed catalyst detection, fresh ingested OHLC history feeds swing setups, and ingestion source errors are merged into the report. When the snapshot is older than 26 hours (or missing), setups fall back to live prices while the rest of the pipeline still runs standalone.
 
-Source endpoints are best-effort: NSE/BSE JSON APIs can block datacenter IPs, so failures are recorded in the snapshot instead of stopping the run. Unlisted stocks (`symbol: null`) are news-monitored only. The GitHub Action runs weekdays at 6:30 PM IST and commits the snapshot.
+Source endpoints are best-effort: NSE/BSE JSON APIs can block datacenter IPs, so failures are recorded in the snapshot instead of stopping the run. When screener.in itself is unreachable from the runner, the price snapshot falls back to Yahoo Finance-only data. Every watchlist stock is now price-covered — TruAlt Bioenergy (NSE `TRUALT`) and Organic Recycling Systems (BSE SME `ORGANICREC`; screener slug is the scrip code `543997`) were previously marked unlisted. Unlisted stocks (`symbol: null`), if added later, are news-monitored only. The GitHub Action runs weekdays at 6:30 PM IST and commits the snapshot.
 
 ## Telegram setup
 

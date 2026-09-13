@@ -83,6 +83,34 @@ def _closes(n: int) -> list[float]:
     return [round(start + i * 1.2, 2) for i in range(n)]
 
 
+def _fake_hist(n: int = 120):
+    """A fake yfinance history DataFrame (OHLCV) used to patch price.yf.Ticker."""
+    import pandas as pd
+
+    idx = pd.date_range(start="2026-03-01", periods=n)
+    return pd.DataFrame({
+        "Open": [300.0] * n,
+        "High": [310.0] * n,
+        "Low": [290.0] * n,
+        "Close": [300.0 + i * 1.2 for i in range(n)],
+        "Volume": [1000000] * n,
+    }, index=idx)
+
+
+def _patch_yf_history(frames=None):
+    """Build a context manager that stubs yfinance history for the price module."""
+    frames = frames if frames is not None else _fake_hist()
+
+    class _FakeTicker:
+        def __init__(self, symbol):
+            pass
+
+        def history(self, **kwargs):
+            return frames
+
+    return patch("scheme_intel.ingestion.price.yf.Ticker", return_value=_FakeTicker("X"))
+
+
 class TestScreenerPrice:
     def test_default_screener_id(self):
         assert price.default_screener_id("PRAJIND.NS") == "PRAJIND"
@@ -90,7 +118,8 @@ class TestScreenerPrice:
 
     def test_snapshot_parses_header_ratios_and_chart(self):
         fake = _FakeSession(PRICE_HTML, _chart_payload(_closes(30)))
-        with patch("scheme_intel.ingestion.price._session", return_value=fake):
+        with patch("scheme_intel.ingestion.price._session", return_value=fake), \
+             _patch_yf_history():
             snapshot = price.fetch_screener_snapshot(
                 {"name": "Praj Industries", "symbol": "PRAJIND.NS"}, "PRAJIND", days=30
             )
@@ -108,7 +137,8 @@ class TestScreenerPrice:
     def test_snapshot_without_chart_company_id(self):
         html = PRICE_HTML.replace('data-company-id="2529"', "")
         fake = _FakeSession(html, _chart_payload(_closes(2)))
-        with patch("scheme_intel.ingestion.price._session", return_value=fake):
+        with patch("scheme_intel.ingestion.price._session", return_value=fake), \
+             _patch_yf_history():
             snapshot = price.fetch_screener_snapshot(
                 {"name": "Praj Industries", "symbol": "PRAJIND.NS"}, "PRAJIND", days=30
             )
@@ -119,11 +149,42 @@ class TestScreenerPrice:
             def get(self, url, timeout=None, **kwargs):
                 raise Exception("network down")
 
-        with patch("scheme_intel.ingestion.price._session", return_value=BoomSession()):
+        with patch("scheme_intel.ingestion.price._session", return_value=BoomSession()), \
+             patch.object(price.yf, "Ticker", side_effect=Exception("blocked")):
             snapshot = price.fetch_screener_snapshot(
                 {"name": "Praj Industries", "symbol": "PRAJIND.NS"}, "PRAJIND", days=30
             )
         assert snapshot.error is not None
+
+    def test_yfinance_fallback_when_screener_blocked(self):
+        """Screener failure still yields a usable Yahoo-Only snapshot with history."""
+        class BoomSession:
+            def get(self, url, timeout=None, **kwargs):
+                raise Exception("network down")
+
+        with patch("scheme_intel.ingestion.price._session", return_value=BoomSession()), \
+             _patch_yf_history():
+            snapshot = price.fetch_screener_snapshot(
+                {"name": "Praj Industries", "symbol": "PRAJIND.NS"}, "PRAJIND", days=30
+            )
+        assert snapshot.error is not None
+        assert snapshot.price_source == "yfinance"
+        assert snapshot.close is not None
+        assert len(snapshot.history or []) == 120
+        assert snapshot.change_pct is not None
+
+    def test_screener_slug_may_be_scrip_code(self):
+        """BSE SME stocks use the numeric scrip code as the screener slug."""
+        fake = _FakeSession(PRICE_HTML, _chart_payload(_closes(30)))
+        with patch("scheme_intel.ingestion.price._session", return_value=fake), \
+             _patch_yf_history():
+            snapshot = price.fetch_screener_snapshot(
+                {"name": "Organic Recycling Systems", "symbol": "ORGANICREC.BO"},
+                "543997", days=30
+            )
+        assert snapshot.screener_id == "543997"
+        assert snapshot.company == "Organic Recycling Systems"
+        assert snapshot.error is None
 
     def test_collect_prices_skips_unlisted_stocks(self):
         config = {
@@ -134,7 +195,8 @@ class TestScreenerPrice:
             ],
         }
         fake = _FakeSession(PRICE_HTML, _chart_payload(_closes(30)))
-        with patch("scheme_intel.ingestion.price._session", return_value=fake):
+        with patch("scheme_intel.ingestion.price._session", return_value=fake), \
+             _patch_yf_history():
             snapshots = price.collect_prices(config)
         assert len(snapshots) == 1
         assert snapshots[0]["company"] == "Praj Industries"

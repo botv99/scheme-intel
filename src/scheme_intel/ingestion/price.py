@@ -5,7 +5,10 @@ Screener.in does not expose daily OHLC or RSI on its free company page, so this
 module reads what it does expose (current price, change %, 52-week high/low,
 market cap, and a daily close series + volume via the chart API) and computes
 RSI(14) locally. A 6-month OHLC history is persisted from Yahoo Finance so the
-downstream pipeline can build swing setups without re-fetching price data.
+downstream pipeline can build swing setups without re-fetching price data. When
+screener.in is unreachable (datacenter/CI IPs are sometimes blocked) or a stock
+has no name-based screener slug, a Yahoo Finance-only snapshot is produced and
+the screener error is recorded on the snapshot.
 """
 from __future__ import annotations
 
@@ -50,9 +53,81 @@ def default_screener_id(symbol: str) -> str:
 
     Screener.in uses the NSE ticker for most NSE-listed firms, so
     ``PRAJIND.NS`` -> ``PRAJIND``. Override with an explicit ``screener_id``
-    in the watchlist when the slug differs from the exchange ticker.
+    in the watchlist when the slug differs from the exchange ticker (for
+    example BSE SME names like ``ORGANICREC`` have no name-based slug and use
+    the numeric scrip code as the screener slug).
     """
     return symbol.split(".")[0].upper()
+
+
+def _yfinance_history(symbol: str) -> tuple[list[dict], Optional[float], Optional[float], Optional[float]]:
+    """Fetch a 6-month OHLC history from Yahoo Finance for a symbol.
+
+    Returns:
+        (history, last_open, last_high, last_low).
+    """
+    if not symbol:
+        return [], None, None, None
+    try:
+        hist = yf.Ticker(symbol).history(period="6mo", interval="1d", auto_adjust=True)
+        if hist.empty:
+            return [], None, None, None
+        history = [
+            {
+                "date": str(idx.date()),
+                "open": round(float(row["Open"]), 2),
+                "high": round(float(row["High"]), 2),
+                "low": round(float(row["Low"]), 2),
+                "close": round(float(row["Close"]), 2),
+                "volume": int(float(row["Volume"])),
+            }
+            for idx, row in hist.iterrows()
+        ]
+        last = hist.iloc[-1]
+        return history, float(last["Open"]), float(last["High"]), float(last["Low"])
+    except Exception as exc:  # pragma: no cover - network dependent
+        logger.debug(f"yfinance history failed for {symbol}: {exc}")
+        return [], None, None, None
+
+
+def _yfinance_fallback_snapshot(stock: dict, screener_id: str, error: Exception) -> PriceSnapshot:
+    """
+    Build a Yahoo Finance-only snapshot when the screener.in page is unreachable.
+
+    Screener.in blocks datacenter IPs (so CI runners can be rejected) and some
+    BSE SME names have no name-based screener slug. In those cases the snapshot
+    is still produced from Yahoo Finance OHLC and the screener error is recorded,
+    keeping the downstream pipeline able to read the stock.
+    """
+    name = stock.get("name", "Unknown")
+    symbol = stock.get("symbol")
+    history, open_, high, low = _yfinance_history(symbol)
+    close = change_pct = None
+    if history:
+        close = history[-1]["close"]
+        if len(history) >= 2 and history[-2]["close"]:
+            change_pct = round((history[-1]["close"] / history[-2]["close"] - 1) * 100, 2)
+        if open_ is None and len(history) >= 2:
+            open_ = history[-2]["close"]
+    return PriceSnapshot(
+        company=name,
+        symbol=symbol or "",
+        screener_id=screener_id,
+        date=str(history[-1]["date"]) if history else None,
+        open=open_,
+        close=close,
+        high=high,
+        low=low,
+        volume=history[-1]["volume"] if history else None,
+        change_pct=change_pct,
+        rsi14=None,
+        market_cap=None,
+        high_52w=None,
+        low_52w=None,
+        price_source="yfinance",
+        error=str(error)[:180],
+        history=history or None,
+    )
 
 
 def _rsi(closes: list[float], period: int = 14) -> Optional[float]:
@@ -178,26 +253,7 @@ def fetch_screener_snapshot(stock: dict, screener_id: Optional[str], days: int =
             change_pct = computed_change
 
         open_, high, low = None, None, None
-        history: list[dict] = []
-        if symbol:
-            try:
-                hist = yf.Ticker(symbol).history(period="6mo", interval="1d", auto_adjust=True)
-                if not hist.empty:
-                    history = [
-                        {
-                            "date": str(idx.date()),
-                            "open": round(float(row["Open"]), 2),
-                            "high": round(float(row["High"]), 2),
-                            "low": round(float(row["Low"]), 2),
-                            "close": round(float(row["Close"]), 2),
-                            "volume": int(float(row["Volume"])),
-                        }
-                        for idx, row in hist.iterrows()
-                    ]
-                    last = hist.iloc[-1]
-                    open_, high, low = float(last["Open"]), float(last["High"]), float(last["Low"])
-            except Exception as exc:  # pragma: no cover - network dependent
-                logger.debug(f"yfinance history failed for {symbol}: {exc}")
+        history, open_, high, low = _yfinance_history(symbol)
         if open_ is None and len(close_series) >= 2:
             open_ = close_series[-2]
 
@@ -221,15 +277,11 @@ def fetch_screener_snapshot(stock: dict, screener_id: Optional[str], days: int =
             history=history,
         )
     except requests.RequestException as exc:
-        logger.warning(f"Screener fetch failed for {name} ({screener_id}): {exc}")
-        return PriceSnapshot(name, symbol or "", screener_id, None, None, None, None,
-                             None, None, None, None, None, None, None, "screener.in",
-                             error=str(exc)[:180])
+        logger.warning(f"Screener fetch failed for {name} ({screener_id}); using yfinance fallback: {exc}")
+        return _yfinance_fallback_snapshot(stock, screener_id, exc)
     except Exception as exc:  # pragma: no cover - defensive
         logger.error(f"Unexpected error parsing screener data for {name}: {exc}")
-        return PriceSnapshot(name, symbol or "", screener_id, None, None, None, None,
-                             None, None, None, None, None, None, None, "screener.in",
-                             error=str(exc)[:180])
+        return _yfinance_fallback_snapshot(stock, screener_id, exc)
 
 
 def collect_prices(config: dict, days: int | None = None) -> list[dict]:

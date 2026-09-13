@@ -45,8 +45,8 @@ ingestion:
 
 stocks:
   - name: TruAlt Bioenergy
-    symbol: null
-    screener_id: null
+    symbol: TRUALT.NS
+    screener_id: TRUALT
     aliases: [TruAlt, TruAlt Bioenergy]
     thesis: CBG developer and producer; monitor project commissioning, offtake, and policy support.
   - name: VA Tech Wabag
@@ -60,9 +60,9 @@ stocks:
     aliases: [Praj Industries, Praj]
     thesis: Bioenergy engineering and CBG technology; monitor orders, plant commissioning, and policy incentives.
   - name: Organic Recycling Systems
-    symbol: null
-    screener_id: null
-    aliases: [Organic Recycling Systems, ORS]
+    symbol: ORGANICREC.BO
+    screener_id: "543997"
+    aliases: [Organic Recycling Systems, ORSL, ORS]
     thesis: Organic-waste processing; monitor tenders, municipal contracts, and project awards.
   - name: Kirloskar Pneumatic
     symbol: KIRLPNU.NS
