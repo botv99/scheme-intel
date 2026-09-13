@@ -74,7 +74,8 @@ def _volume_stats(frame: pd.DataFrame) -> tuple[float | None, float | None]:
 
 
 def make_setup(company: str, symbol: str, catalyst_score: int,
-               history: list[dict] | None = None) -> SwingSetup | None:
+               history: list[dict] | None = None,
+               dma200: float | None = None) -> SwingSetup | None:
     """
     Build a swing setup for a company from daily OHLC history.
 
@@ -97,6 +98,8 @@ def make_setup(company: str, symbol: str, catalyst_score: int,
       * MACD(12,26,9) filter: histogram positive (MACD line above its signal).
       * Multi-timeframe: the weekly close must be above its 10-week SMA
         (SKIPPED, not blocking, when weekly data is too short).
+      * 200-day MA: price must be above the current 200-day moving average
+        (SKIPPED when the value is unavailable).
     """
     if history is not None:
         frame = pd.DataFrame(history)
@@ -126,16 +129,18 @@ def make_setup(company: str, symbol: str, catalyst_score: int,
     volume_avg, volume_ratio = _volume_stats(frame)
     macd, macd_signal, macd_hist = _macd(close)
     week_trend = _weekly_trend(frame)
+    above_dma200 = dma200 is None or last > dma200
 
     momentum = last > sma20 > sma50
     rsi_ok = 50 <= rsi14 <= 70
     volume_ok = volume_ratio is None or volume_ratio >= VOLUME_BREAKOUT_MULT
     macd_ok = macd_hist is None or macd_hist > 0
-    # A missing higher-timeframe read never blocks qualification.
+    # A missing higher-timeframe or 200-DMA read never blocks qualification.
     trend_ok = week_trend in (None, "UP")
+    dma200_ok = above_dma200
     qualified = (
         momentum and breakout and rsi_ok and volume_ok and macd_ok
-        and trend_ok and catalyst_score >= 60
+        and trend_ok and dma200_ok and catalyst_score >= 60
     )
     status = "QUALIFIED" if qualified else "WATCH"
 
@@ -162,6 +167,7 @@ def make_setup(company: str, symbol: str, catalyst_score: int,
         macd_signal=round(macd_signal, 3) if macd_signal is not None else None,
         macd_hist=round(macd_hist, 4) if macd_hist is not None else None,
         week_trend=week_trend,
+        dma200=round(dma200, 2) if dma200 is not None else None,
     )
 
 

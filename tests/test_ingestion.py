@@ -36,19 +36,23 @@ PRICE_HTML = """
 """
 
 
-def _chart_payload(closes: list[float]) -> str:
-    return json.dumps({
-        "datasets": [
-            {
-                "metric": "Price",
-                "values": [[f"2026-09-{i + 1:02d}", str(value)] for i, value in enumerate(closes)],
-            },
-            {
-                "metric": "Volume",
-                "values": [[f"2026-09-{i + 1:02d}", 1000 * (i + 1), {"delivery": 50}] for i in range(len(closes))],
-            },
-        ]
-    })
+def _chart_payload(closes: list[float], dma200: float | None = None) -> str:
+    datasets = [
+        {
+            "metric": "Price",
+            "values": [[f"2026-09-{i + 1:02d}", str(value)] for i, value in enumerate(closes)],
+        },
+        {
+            "metric": "Volume",
+            "values": [[f"2026-09-{i + 1:02d}", 1000 * (i + 1), {"delivery": 50}] for i in range(len(closes))],
+        },
+    ]
+    if dma200 is not None:
+        datasets.append({
+            "metric": "DMA200",
+            "values": [[f"2026-09-{i + 1:02d}", str(round(dma200 + i * 0.01, 2))] for i in range(len(closes))],
+        })
+    return json.dumps({"datasets": datasets})
 
 
 class _FakeResponse:
@@ -133,6 +137,15 @@ class TestScreenerPrice:
         assert 0 <= snapshot.rsi14 <= 100
         assert snapshot.price_source == "screener.in"
         assert snapshot.error is None
+
+    def test_snapshot_includes_dma200(self):
+        fake = _FakeSession(PRICE_HTML, _chart_payload(_closes(30), dma200=250.0))
+        with patch("scheme_intel.ingestion.price._session", return_value=fake), \
+             _patch_yf_history():
+            snapshot = price.fetch_screener_snapshot(
+                {"name": "Praj Industries", "symbol": "PRAJIND.NS"}, "PRAJIND", days=30
+            )
+        assert snapshot.dma200 == 250.29
 
     def test_snapshot_without_chart_company_id(self):
         html = PRICE_HTML.replace('data-company-id="2529"', "")

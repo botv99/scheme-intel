@@ -30,6 +30,7 @@ class PriceSnapshot:
     high_52w: Optional[float]
     low_52w: Optional[float]
     price_source: str
+    dma200: Optional[float] = None
     error: Optional[str] = None
     history: Optional[list[dict]] = None
 

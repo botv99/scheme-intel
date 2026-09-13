@@ -256,3 +256,25 @@ class TestWeeklyTrend:
     def test_too_short_history_is_none(self):
         closes = [100 + i for i in range(30)]
         assert _weekly_trend(self._frame(closes)) is None
+
+
+class TestDMA200:
+    @patch('scheme_intel.signals.yf.Ticker')
+    def test_dma200_above_is_not_blocking(self, mock_ticker):
+        """A stock trading above its 200-DMA still qualifies."""
+        setup = make_setup("Demo", "DEMO.NS", 90, history=_rows_qualified(), dma200=150.0)
+        assert setup is not None and setup.status == "QUALIFIED"
+        assert setup.dma200 == 150.0
+
+    @patch('scheme_intel.signals.yf.Ticker')
+    def test_dma200_below_blocks_qualification(self, mock_ticker):
+        """A stock below its 200-DMA must not qualify."""
+        setup = make_setup("Demo", "DEMO.NS", 90, history=_rows_qualified(), dma200=400.0)
+        assert setup is not None and setup.status == "WATCH"
+        assert setup.dma200 == 400.0
+
+    def test_dma200_none_does_not_block(self):
+        """When the 200-DMA is unavailable, qualification must not be blocked."""
+        setup = make_setup("Demo", "DEMO.NS", 90, history=_rows_qualified(), dma200=None)
+        assert setup is not None and setup.status == "QUALIFIED"
+        assert setup.dma200 is None

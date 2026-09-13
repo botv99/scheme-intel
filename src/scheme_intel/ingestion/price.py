@@ -178,20 +178,31 @@ def _parse_ratios(soup: BeautifulSoup) -> dict:
     return ratios
 
 
-def _fetch_chart_series(company_id: str, days: int) -> tuple[list, list]:
-    """Fetch the daily close series and volume series from the screener chart API."""
+def _fetch_chart_datasets(company_id: str, days: int) -> dict[str, list]:
+    """Fetch all chart datasets from the screener chart API."""
     url = f"{SCREENER_BASE}/api/company/{company_id}/chart/?days={days}&metrics=Price-DMA50-DMA200-Volume"
     response = _session().get(url, timeout=DEFAULT_TIMEOUT)
     response.raise_for_status()
     payload = response.json()
-    closes: list = []
-    volumes: list = []
-    for dataset in payload.get("datasets", []):
-        if dataset.get("metric") == "Price":
-            closes = dataset.get("values", [])
-        elif dataset.get("metric") == "Volume":
-            volumes = dataset.get("values", [])
-    return closes, volumes
+    return {ds.get("metric"): ds.get("values", []) for ds in payload.get("datasets", [])}
+
+
+def _fetch_chart_series(company_id: str, days: int) -> tuple[list, list]:
+    """Fetch the daily close series and volume series from the screener chart API."""
+    datasets = _fetch_chart_datasets(company_id, days)
+    return datasets.get("Price", []), datasets.get("Volume", [])
+
+
+def _fetch_dma200(company_id: str, days: int) -> float | None:
+    """Return the current 200-day moving average from the screener chart API, or None."""
+    datasets = _fetch_chart_datasets(company_id, days)
+    dma = datasets.get("DMA200", [])
+    if not dma:
+        return None
+    try:
+        return float(dma[-1][1])
+    except (ValueError, TypeError, IndexError):
+        return None
 
 
 def fetch_screener_snapshot(stock: dict, screener_id: Optional[str], days: int = 365) -> PriceSnapshot:
@@ -233,8 +244,10 @@ def fetch_screener_snapshot(stock: dict, screener_id: Optional[str], days: int =
                 high_52w, low_52w = _to_float(parts[0]), _to_float(parts[1])
 
         closes, volumes = [], []
+        dma200 = None
         if company_id:
             closes, volumes = _fetch_chart_series(company_id, days)
+            dma200 = _fetch_dma200(company_id, days)
         else:
             logger.warning(f"No screener company id found for {name} ({screener_id})")
 
@@ -275,6 +288,7 @@ def fetch_screener_snapshot(stock: dict, screener_id: Optional[str], days: int =
             price_source="screener.in",
             error=None,
             history=history,
+            dma200=dma200,
         )
     except requests.RequestException as exc:
         logger.warning(f"Screener fetch failed for {name} ({screener_id}); using yfinance fallback: {exc}")

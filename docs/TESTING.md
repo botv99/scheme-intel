@@ -71,7 +71,7 @@ Current coverage across modules:
 - **sources.py**: Feed fetching, page scanning, error handling, deduplication, date parsing
 - **catalyst.py**: Event classification, scoring, multi-company matching
 - **notifier.py**: Telegram sending, multi-chat support, config validation
-- **signals.py**: RSI, MACD, volume breakout, weekly multi-timeframe trend, setup generation
+- **signals.py**: RSI, MACD, 200-DMA, volume breakout, weekly multi-timeframe trend, setup generation
 - **models.py**: Article, Catalyst, SwingSetup, SourceQuality, AnalysisReport integrity
 - **pipeline.py**: Ingested-articles, history mapping, catalyst detection, setup generation
 - **ingestion.py**: Screener price snapshots, exchange bulk/block deals, media news

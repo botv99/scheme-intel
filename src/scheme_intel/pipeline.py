@@ -117,6 +117,21 @@ class Pipeline:
         logger.info(f"Mapped fresh ingested history for {len(history_map)} symbols")
         return history_map
 
+    def dma200_by_symbol(self, ingested: dict) -> dict[str, float]:
+        """Map NSE ticker -> current 200-day moving average from the ingested snapshots."""
+        generated_at = self._parse_date(ingested.get("generated_at"))
+        if generated_at is None or (now_utc() - generated_at) > timedelta(hours=INGESTED_MAX_AGE_HOURS):
+            return {}
+        out: dict[str, float] = {}
+        for snapshot in ingested.get("prices", []):
+            symbol = str(snapshot.get("symbol", ""))
+            if not symbol:
+                continue
+            dma200 = snapshot.get("dma200")
+            if dma200 is not None:
+                out[symbol.split(".")[0].upper()] = float(dma200)
+        return out
+
     # ----------------------------------------------------------------- sources
 
     def fetch_articles(self, config: dict, ingested: Optional[dict] = None) -> tuple[list, list]:
@@ -175,9 +190,11 @@ class Pipeline:
     # ------------------------------------------------------------------- setups
 
     def generate_setups(self, material_catalysts: list, config: dict,
-                        history_by_symbol: Optional[dict[str, list[dict]]] = None) -> list:
+                        history_by_symbol: Optional[dict[str, list[dict]]] = None,
+                        dma200_by_symbol: Optional[dict[str, float]] = None) -> list:
         """Generate swing setups for material catalysts."""
         history_by_symbol = history_by_symbol or {}
+        dma200_by_symbol = dma200_by_symbol or {}
         setups = []
         for catalyst in material_catalysts:
             for company in config["stocks"]:
@@ -185,7 +202,8 @@ class Pipeline:
                     try:
                         symbol = company["symbol"]
                         history = history_by_symbol.get(symbol.split(".")[0].upper())
-                        setup = make_setup(company["name"], symbol, catalyst.score, history=history)
+                        dma200 = dma200_by_symbol.get(symbol.split(".")[0].upper())
+                        setup = make_setup(company["name"], symbol, catalyst.score, history=history, dma200=dma200)
                         if setup:
                             setups.append(setup.to_dict())
                             source = "ingested" if history else "live"
@@ -220,6 +238,8 @@ class Pipeline:
                         extras.append(f"MACD {s['macd_hist']:+.3f}")
                     if s.get("week_trend"):
                         extras.append(f"weekly {s['week_trend']}")
+                    if s.get("dma200") is not None:
+                        extras.append(f"200DMA {s['dma200']}")
                     suffix = f" — {', '.join(extras)}" if extras else ""
                     lines.append(
                         f"• {s['company']}: entry {s['entry']}, stop {s['stop']}, "
@@ -244,7 +264,8 @@ class Pipeline:
         articles, source_errors = self.fetch_articles(self.config, ingested)
         material_catalysts, all_catalysts = self.detect_catalysts(articles, self.config)
         history_by_symbol = self.history_by_symbol(ingested) if ingested else {}
-        setups = self.generate_setups(material_catalysts, self.config, history_by_symbol)
+        dma200_by_symbol = self.dma200_by_symbol(ingested) if ingested else {}
+        setups = self.generate_setups(material_catalysts, self.config, history_by_symbol, dma200_by_symbol)
 
         generated_time = now_utc().isoformat()
         report_obj = AnalysisReport(

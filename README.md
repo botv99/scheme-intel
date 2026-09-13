@@ -7,7 +7,7 @@ An evidence-led monitor for India's GOBARdhan / compressed-biogas ecosystem. It 
 - Tracks GOBARdhan, CBG/Bio-CNG, SATAT and related official-sector language, CPPP tenders, and configured NSE/BSE corporate-disclosure pages.
 - Treats fund releases, cabinet approvals, pricing/blending changes, tenders, awards and commissioning as ranked catalysts.
 - Keeps an editable stock watchlist in `config/watchlist.yaml`.
-- Creates a **research setup** only when a material catalyst exists and the stock confirms the technical setup: close above its 20/50-day SMAs with RSI-14 in a healthy band, a **volume-confirmed breakout** above the prior 20-day high, a positive **MACD** histogram, and a weekly (multi-timeframe) trend that is not down. Entry is the 20-day-high breakout level; the stop is two ATRs (with a 6% floor) and the first target is 2R.
+- Creates a **research setup** only when a material catalyst exists and the stock confirms the technical setup: close above its 20/50/200-day SMAs with RSI-14 in a healthy band, a **volume-confirmed breakout** above the prior 20-day high, a positive **MACD** histogram, and a weekly (multi-timeframe) trend that is not down. Entry is the 20-day-high breakout level; the stop is two ATRs (with a 6% floor) and the first target is 2R.
 - Sends Telegram only if both secrets are configured.
 
 ## Important limits
