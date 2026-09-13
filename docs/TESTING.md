@@ -7,17 +7,26 @@
 pip install -r requirements.txt
 ```
 
-### Run all tests
-```bash
-python -m pytest tests/ -v
-```
-
-### Run with coverage report
+### Run all tests (default: coverage + parallel)
 ```bash
 python run_tests.py
 ```
+Generates `htmlcov/index.html`, `coverage.xml`, and `coverage.json`.
 
-This generates an HTML report in `htmlcov/index.html`
+### Run without coverage
+```bash
+python run_tests.py --no-coverage
+```
+
+### Run only unit tests
+```bash
+python run_tests.py -m unit
+```
+
+### Fallback: direct pytest
+```bash
+python -m pytest tests/ -v
+```
 
 ## Running Specific Tests
 
@@ -46,20 +55,29 @@ python -m pytest tests/ -v -m unit
 ```
 tests/
 ├── conftest.py              # Shared fixtures and configuration
-├── test_sources.py          # Source fetching tests (15+ tests)
-├── test_catalyst.py         # Catalyst classification tests (10+ tests)
-├── test_signals.py          # Technical analysis tests (8+ tests)
-└── test_notifier.py         # Telegram notification tests (10+ tests)
+├── test_catalyst.py         # Catalyst classification tests (5 tests)
+├── test_ingestion.py        # Screener/NSE/BSE/media ingestion tests (20 tests)
+├── test_main.py             # Pipeline entry-point tests (5 tests)
+├── test_models.py           # Data model tests (3 tests)
+├── test_notifier.py         # Telegram notification tests (11 tests)
+├── test_pipeline.py         # Pipeline ingestion wiring tests (9 tests)
+├── test_signals.py          # Technical analysis tests (18 tests)
+└── test_sources.py          # Source fetching tests (11 tests)
 ```
 
 ## Test Coverage
 
-Current targets:
-- **sources.py**: Feed fetching, page scanning, error handling, deduplication
+Current coverage across modules:
+- **sources.py**: Feed fetching, page scanning, error handling, deduplication, date parsing
 - **catalyst.py**: Event classification, scoring, multi-company matching
 - **notifier.py**: Telegram sending, multi-chat support, config validation
-- **signals.py**: RSI calculation, setup generation, status determination
-- **models.py**: Data model integrity and serialization
+- **signals.py**: RSI, MACD, volume breakout, weekly multi-timeframe trend, setup generation
+- **models.py**: Article, Catalyst, SwingSetup, SourceQuality, AnalysisReport integrity
+- **pipeline.py**: Ingested-articles, history mapping, catalyst detection, setup generation
+- **ingestion.py**: Screener price snapshots, exchange bulk/block deals, media news
+- **main.py**: Pipeline entry point and config loading
+
+Target: 85%+ line coverage on `src/scheme_intel`
 
 ## Coverage Report
 
@@ -82,17 +100,14 @@ See `.github/workflows/test.yml` for workflow configuration.
 ## Common Issues
 
 ### ModuleNotFoundError: No module named 'scheme_intel'
-**Solution**: Ensure `PYTHONPATH` includes the `src` directory:
+**Solution**: `run_tests.py` sets the path automatically. Otherwise ensure `PYTHONPATH` includes the `src` directory:
 ```bash
 export PYTHONPATH=src
 python -m pytest tests/
 ```
 
 ### Tests fail with "connection error"
-**Solution**: Some tests mock HTTP requests. If they fail, check that `unittest.mock` is available:
-```bash
-pip install pytest-mock
-```
+All HTTP calls are mocked with `unittest.mock`. `pytest-mock` is already listed in `requirements.txt` if you prefer the `mocker` fixture.
 
 ## Adding New Tests
 
