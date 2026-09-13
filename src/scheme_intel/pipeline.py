@@ -21,6 +21,25 @@ logger = get_logger(__name__)
 # Ingested price history is used for setups only while it is fresh.
 INGESTED_MAX_AGE_HOURS = 26
 
+# India Standard Time offset (UTC+5:30)
+IST = timezone(timedelta(hours=5, minutes=30))
+
+
+def today_ist() -> datetime.date:
+    """Return today's date in IST."""
+    return datetime.now(IST).date()
+
+
+def article_is_today(article: Article) -> bool:
+    """Check if an article was published today (IST)."""
+    if article.published_at is None:
+        return False
+    dt = article.published_at
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    dt_ist = dt.astimezone(IST)
+    return dt_ist.date() == today_ist()
+
 
 class Pipeline:
     """
@@ -181,8 +200,13 @@ class Pipeline:
                 })
 
         deduped = deduplicate_articles(articles)
-        logger.info(f"Total unique articles gathered: {len(deduped)}")
-        return deduped, source_errors
+
+        # Filter to only today's articles (IST)
+        today = today_ist()
+        today_articles = [a for a in deduped if article_is_today(a)]
+        logger.info(f"Total unique articles: {len(deduped)}, today's articles: {len(today_articles)}")
+
+        return today_articles, source_errors
 
     # ---------------------------------------------------------------- catalysts
 

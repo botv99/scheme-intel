@@ -20,6 +20,51 @@ import feedparser
 import requests
 import yfinance as yf
 
+# India Standard Time offset (UTC+5:30)
+IST = timezone(timedelta(hours=5, minutes=30))
+
+
+def today_ist() -> datetime.date:
+    """Return today's date in IST."""
+    return datetime.now(IST).date()
+
+
+def is_today(dt_str: str) -> bool:
+    """Check if a date string (RFC 2822 or ISO 8601) is from today IST."""
+    if not dt_str:
+        return False
+    try:
+        # Try RFC 2822 (RSS format)
+        from email.utils import parsedate_to_datetime
+        dt = parsedate_to_datetime(dt_str)
+    except Exception:
+        try:
+            dt = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
+        except Exception:
+            return False
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    dt_ist = dt.astimezone(IST)
+    return dt_ist.date() == today_ist()
+
+
+def parse_date(dt_str: str | None) -> datetime | None:
+    """Parse date string to datetime object (UTC)."""
+    if not dt_str:
+        return None
+    from email.utils import parsedate_to_datetime
+    try:
+        return parsedate_to_datetime(dt_str).astimezone(timezone.utc)
+    except Exception:
+        pass
+    try:
+        dt = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except ValueError:
+        return None
+
 
 # --------------------------------------------------
 # SETTINGS
@@ -304,7 +349,7 @@ def get_nse_announcements(stock: dict) -> list[dict]:
 
 def get_events(stock: dict) -> list[dict]:
     """
-    Extract event-related NSE announcements.
+    Extract event-related NSE announcements from today only.
 
     This is not a complete future events calendar.
     """
@@ -333,6 +378,11 @@ def get_events(stock: dict) -> list[dict]:
     for item in announcements:
 
         title = item.get("title", "")
+        date_str = item.get("date", "")
+
+        # Only include today's announcements
+        if date_str and not is_today(date_str):
+            continue
 
         if any(
             keyword in title.lower()
@@ -349,7 +399,7 @@ def get_events(stock: dict) -> list[dict]:
 
 def get_block_deal_news(stock: dict) -> list[dict]:
     """
-    Fetch recent media-reported block/bulk deal news.
+    Fetch today's media-reported block/bulk deal news only.
 
     This is NOT an official exchange block-deal feed.
     """
@@ -387,7 +437,13 @@ def get_block_deal_news(stock: dict) -> list[dict]:
 
         results = []
 
-        for entry in feed.entries[:5]:
+        for entry in feed.entries[:10]:
+
+            published = entry.get("published", "")
+
+            # Only include today's news
+            if published and not is_today(published):
+                continue
 
             title = entry.get(
                 "title",
@@ -398,15 +454,12 @@ def get_block_deal_news(stock: dict) -> list[dict]:
                 {
                     "title": title,
                     "url": entry.get("link"),
-                    "published": entry.get(
-                        "published",
-                        "",
-                    ),
+                    "published": published,
                     "source": "Media-reported",
                 }
             )
 
-        return results
+        return results[:5]
 
     except Exception as exc:
 
@@ -424,7 +477,7 @@ def get_block_deal_news(stock: dict) -> list[dict]:
 # --------------------------------------------------
 
 def get_news(stock: dict) -> list[dict]:
-    """Fetch recent financial news."""
+    """Fetch today's financial news only."""
 
     name = stock["name"]
 
@@ -460,7 +513,13 @@ def get_news(stock: dict) -> list[dict]:
 
             feed = feedparser.parse(url)
 
-            for entry in feed.entries[:2]:
+            for entry in feed.entries[:5]:
+
+                published = entry.get("published", "")
+
+                # Only include today's news
+                if published and not is_today(published):
+                    continue
 
                 news.append(
                     {
@@ -469,10 +528,7 @@ def get_news(stock: dict) -> list[dict]:
                             "Untitled news",
                         ),
                         "url": entry.get("link"),
-                        "published": entry.get(
-                            "published",
-                            "",
-                        ),
+                        "published": published,
                         "source": source,
                     }
                 )

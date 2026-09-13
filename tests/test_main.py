@@ -1,6 +1,7 @@
 ﻿"""
 Unit tests for main pipeline execution.
 """
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import Mock, patch
 import pytest
@@ -8,6 +9,19 @@ import pytest
 from scheme_intel.main import load_config, run
 from scheme_intel.exceptions import ConfigurationError, SourceAccessError
 from scheme_intel.models import Article, Catalyst, SwingSetup
+
+# IST offset for test dates
+IST = timezone(timedelta(hours=5, minutes=30))
+
+
+def today_ist():
+    """Return today's date in IST."""
+    return datetime.now(IST).date()
+
+
+def today_utc():
+    """Return now in UTC (for published_at field)."""
+    return datetime.now(timezone.utc)
 
 
 class TestMainPipeline:
@@ -37,10 +51,11 @@ class TestMainPipeline:
     @patch('scheme_intel.pipeline.make_setup')
     def test_run_pipeline_success(self, mock_setup, mock_classify, mock_scan):
         """Test successful pipeline execution."""
-        sample_art = Article("Praj CBG contract awarded", "https://example.com/art1", "PIB", None)
+        # Use today's date so the article passes the today-only filter
+        sample_art = Article("Praj CBG contract awarded", "https://example.com/art1", "PIB", today_utc())
         mock_scan.return_value = [sample_art]
         mock_classify.return_value = Catalyst(sample_art, 90, "contract award", "rationale", ("Praj Industries",))
-        mock_setup.return_value = SwingSetup("Praj Industries", "PRAJIND.NS", 450.0, 460.0, 420.0, 500.0, 60.0, 90, "QUALIFIED", "2026-09-08T00:00:00Z")
+        mock_setup.return_value = SwingSetup("Praj Industries", "PRAJIND.NS", 450.0, 460.0, 420.0, 500.0, 60.0, 90, "QUALIFIED", "2026-09-13T00:00:00Z")
 
         report = run(send=False)
         assert len(report["catalysts"]) > 0

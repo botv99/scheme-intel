@@ -110,7 +110,14 @@ def run_all(send: bool = False, config_path: Optional[Path | str] = None) -> dic
             # 2d: Financial news
             news = get_news(stock)
 
-            # 2e: Build and send per-stock alert message
+            # 2e: Skip stocks with no fresh data at all
+            has_fresh_data = events or deals or news
+            if not has_fresh_data:
+                logger.info("No fresh news for %s — skipping alert", name)
+                result["stocks_succeeded"] += 1
+                continue
+
+            # 2f: Build and send per-stock alert message
             message = build_message(
                 stock=stock,
                 price=price_data,
@@ -147,7 +154,7 @@ def run_all(send: bool = False, config_path: Optional[Path | str] = None) -> dic
     # ----------------------------------------------------------------
     # Step 4: Send final consolidated digest
     # ----------------------------------------------------------------
-    if send and trade_calls:
+    if send:
         logger.info("Step 4: Sending consolidated digest...")
         digest = format_final_digest_telegram(trade_calls)
         digest = truncate_message(digest)
