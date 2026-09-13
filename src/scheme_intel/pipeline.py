@@ -1,36 +1,126 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
 from .catalyst import classify
+from .config import load_config
 from .exceptions import ConfigurationError, SourceAccessError, DataParseError, TelegramError
 from .logger import get_logger
-from .models import AnalysisReport, now_utc
+from .models import AnalysisReport, Article, now_utc
 from .notifier import send_telegram, validate_telegram_config
 from .signals import make_setup
 from .sources import deduplicate_articles, fetch_rss, scan_page
-from .config import load_config
 
 logger = get_logger(__name__)
+
+# Ingested price history is used for setups only while it is fresh.
+INGESTED_MAX_AGE_HOURS = 26
 
 
 class Pipeline:
     """
     Core pipeline that runs the full Scheme Intel workflow.
+
+    When ``data/ingested.json`` (written by the ingestion layer) exists it is
+    consumed as the shared data source:
+
+      * ingested news + exchange announcements -> catalyst candidates
+      * ingested OHLC price history -> swing setups (no live weather dependency)
+
+    everything else behaves as before, so the pipeline still runs standalone.
     """
 
     def __init__(self, config_path: Optional[Path | str] = None):
         self.config_path = config_path
         self.config: dict | None = None
+        self.root = Path(__file__).resolve().parents[2]
 
     def load_config(self) -> dict:
         """Load and validate watchlist configuration."""
         return load_config(self.config_path)
 
-    def fetch_articles(self, config: dict) -> tuple[list, list]:
-        """Fetch articles from configured sources."""
+    # ------------------------------------------------------------------ ingestion
+
+    def load_ingested(self, root: Optional[Path] = None) -> dict | None:
+        """Load the ingestion snapshot from data/ingested.json."""
+        path = (root or self.root) / "data" / "ingested.json"
+        if not path.exists():
+            return None
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            logger.info(f"Loaded ingested snapshot from {path}")
+            return payload if isinstance(payload, dict) else None
+        except (json.JSONDecodeError, OSError) as exc:
+            logger.warning(f"Could not parse ingested snapshot {path}: {exc}")
+            return None
+
+    @staticmethod
+    def _parse_date(value: object) -> Optional[datetime]:
+        if not value:
+            return None
+        try:
+            parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            return parsed
+        except ValueError:
+            return None
+
+    def ingested_articles(self, ingested: dict) -> list[Article]:
+        """Turn ingested news + exchange announcements into catalyst candidates."""
+        articles: list[Article] = []
+        for news in ingested.get("news", []):
+            articles.append(Article(
+                title=str(news.get("title", "")),
+                url=str(news.get("url", "")),
+                source=str(news.get("source", "Media")),
+                published_at=self._parse_date(news.get("published_at")),
+                summary=str(news.get("summary", "")),
+            ))
+        for announcement in ingested.get("announcements", []):
+            company = str(announcement.get("company", "")).strip()
+            title = str(announcement.get("title", "")).strip()
+            if company and company.lower() not in title.lower():
+                title = f"{company}: {title}"
+            articles.append(Article(
+                title=title,
+                url=str(announcement.get("url", "")),
+                source=f"{announcement.get('exchange', '')} announcement",
+                published_at=self._parse_date(announcement.get("date")),
+                summary="",
+            ))
+        return articles
+
+    def history_by_symbol(self, ingested: dict) -> dict[str, list[dict]]:
+        """
+        Map NSE ticker -> fresh OHLC history from the ingested price snapshots.
+
+        Snapshots are only used for setups while newer than INGESTED_MAX_AGE_HOURS;
+        older ones fall back to a live price fetch in ``make_setup``.
+        """
+        generated_at = self._parse_date(ingested.get("generated_at"))
+        if generated_at is None or (now_utc() - generated_at) > timedelta(hours=INGESTED_MAX_AGE_HOURS):
+            logger.info("Ingested price snapshot is stale; setups will fetch live prices")
+            return {}
+
+        history_map: dict[str, list[dict]] = {}
+        for snapshot in ingested.get("prices", []):
+            symbol = str(snapshot.get("symbol", ""))
+            if not symbol:
+                continue
+            history = snapshot.get("history")
+            if history:
+                history_map[symbol.split(".")[0].upper()] = history
+        logger.info(f"Mapped fresh ingested history for {len(history_map)} symbols")
+        return history_map
+
+    # ----------------------------------------------------------------- sources
+
+    def fetch_articles(self, config: dict, ingested: Optional[dict] = None) -> tuple[list, list]:
+        """Fetch articles from configured sources and ingested news/announcements."""
         aliases = config["scheme"].get("aliases", []) + [
             alias for company in config.get("stocks", [])
             for alias in [company["name"], *company.get("aliases", [])]
@@ -58,9 +148,21 @@ class Pipeline:
                 logger.error(f"Unexpected error scanning '{name}': {error}")
                 source_errors.append({"source": name, "error": str(error)[:180]})
 
+        if ingested:
+            ingested_articles = self.ingested_articles(ingested)
+            articles.extend(ingested_articles)
+            logger.info(f"Added {len(ingested_articles)} articles from the ingested snapshot")
+            for error in ingested.get("source_errors", []):
+                source_errors.append({
+                    "source": f"ingestion::{error.get('source', 'unknown')}",
+                    "error": str(error.get("error", ""))[:180],
+                })
+
         deduped = deduplicate_articles(articles)
         logger.info(f"Total unique articles gathered: {len(deduped)}")
         return deduped, source_errors
+
+    # ---------------------------------------------------------------- catalysts
 
     def detect_catalysts(self, articles: list, config: dict) -> tuple[list, list]:
         """Detect catalysts and filter material ones."""
@@ -70,20 +172,29 @@ class Pipeline:
         logger.info(f"Classified {len(catalysts)} catalysts ({len(material)} material with score >= {min_score})")
         return material, catalysts
 
-    def generate_setups(self, material_catalysts: list, config: dict) -> list:
+    # ------------------------------------------------------------------- setups
+
+    def generate_setups(self, material_catalysts: list, config: dict,
+                        history_by_symbol: Optional[dict[str, list[dict]]] = None) -> list:
         """Generate swing setups for material catalysts."""
+        history_by_symbol = history_by_symbol or {}
         setups = []
         for catalyst in material_catalysts:
             for company in config["stocks"]:
                 if company["name"] in catalyst.companies and company.get("symbol"):
                     try:
-                        setup = make_setup(company["name"], company["symbol"], catalyst.score)
+                        symbol = company["symbol"]
+                        history = history_by_symbol.get(symbol.split(".")[0].upper())
+                        setup = make_setup(company["name"], symbol, catalyst.score, history=history)
                         if setup:
                             setups.append(setup.to_dict())
-                            logger.info(f"Generated {setup.status} setup for {company['name']} ({company['symbol']})")
+                            source = "ingested" if history else "live"
+                            logger.info(f"Generated {setup.status} setup for {company['name']} ({symbol}) [{source}]")
                     except Exception as e:
                         logger.error(f"Failed to generate setup for {company['name']}: {e}")
         return setups
+
+    # ------------------------------------------------------------------ output
 
     def save_report(self, report: dict, root: Path):
         """Save the analysis report to data/latest.json."""
@@ -110,13 +221,18 @@ class Pipeline:
         else:
             logger.warning("Telegram send requested but credentials are not configured")
 
+    # -------------------------------------------------------------------- main
+
     def run(self, send: bool = False) -> dict:
-        """Execute the full pipeline."""
+        """Execute the full pipeline, consuming the ingested snapshot when present."""
         logger.info("Starting scheme-intel scan run...")
         self.config = self.load_config()
-        articles, source_errors = self.fetch_articles(self.config)
+
+        ingested = self.load_ingested(self.root)
+        articles, source_errors = self.fetch_articles(self.config, ingested)
         material_catalysts, all_catalysts = self.detect_catalysts(articles, self.config)
-        setups = self.generate_setups(material_catalysts, self.config)
+        history_by_symbol = self.history_by_symbol(ingested) if ingested else {}
+        setups = self.generate_setups(material_catalysts, self.config, history_by_symbol)
 
         generated_time = now_utc().isoformat()
         report_obj = AnalysisReport(
@@ -137,10 +253,9 @@ class Pipeline:
         )
         report = report_obj.to_dict()
 
-        root = Path(__file__).resolve().parents[2]
-        self.save_report(report, root)
+        self.save_report(report, self.root)
 
         if send:
-            self.send_alert(material_catalysts, setups, root)
+            self.send_alert(material_catalysts, setups, self.root)
 
         return report

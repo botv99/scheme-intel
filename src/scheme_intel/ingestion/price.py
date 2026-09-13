@@ -4,8 +4,8 @@ Screener.in price collector.
 Screener.in does not expose daily OHLC or RSI on its free company page, so this
 module reads what it does expose (current price, change %, 52-week high/low,
 market cap, and a daily close series + volume via the chart API) and computes
-RSI(14) locally. Open / high / low are enriched from Yahoo Finance when
-available (the project already depends on ``yfinance`` for setups).
+RSI(14) locally. A 6-month OHLC history is persisted from Yahoo Finance so the
+downstream pipeline can build swing setups without re-fetching price data.
 """
 from __future__ import annotations
 
@@ -178,16 +178,26 @@ def fetch_screener_snapshot(stock: dict, screener_id: Optional[str], days: int =
             change_pct = computed_change
 
         open_, high, low = None, None, None
+        history: list[dict] = []
         if symbol:
             try:
-                hist = yf.Ticker(symbol).history(period="1mo", interval="1d", auto_adjust=True)
+                hist = yf.Ticker(symbol).history(period="6mo", interval="1d", auto_adjust=True)
                 if not hist.empty:
-                    row = hist.iloc[-1]
-                    open_ = float(row["Open"])
-                    high = float(row["High"])
-                    low = float(row["Low"])
+                    history = [
+                        {
+                            "date": str(idx.date()),
+                            "open": round(float(row["Open"]), 2),
+                            "high": round(float(row["High"]), 2),
+                            "low": round(float(row["Low"]), 2),
+                            "close": round(float(row["Close"]), 2),
+                            "volume": int(float(row["Volume"])),
+                        }
+                        for idx, row in hist.iterrows()
+                    ]
+                    last = hist.iloc[-1]
+                    open_, high, low = float(last["Open"]), float(last["High"]), float(last["Low"])
             except Exception as exc:  # pragma: no cover - network dependent
-                logger.debug(f"yfinance enrichment failed for {symbol}: {exc}")
+                logger.debug(f"yfinance history failed for {symbol}: {exc}")
         if open_ is None and len(close_series) >= 2:
             open_ = close_series[-2]
 
@@ -208,6 +218,7 @@ def fetch_screener_snapshot(stock: dict, screener_id: Optional[str], days: int =
             low_52w=round(low_52w, 2) if low_52w else None,
             price_source="screener.in",
             error=None,
+            history=history,
         )
     except requests.RequestException as exc:
         logger.warning(f"Screener fetch failed for {name} ({screener_id}): {exc}")

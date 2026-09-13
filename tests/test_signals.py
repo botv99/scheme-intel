@@ -91,8 +91,47 @@ class TestMakeSetup:
         }, index=dates)
         
         mock_ticker.return_value.history.return_value = mock_data
-        
+
         setup = make_setup("Praj Industries", "PRAJIND.NS", catalyst_score=50)
-        
+
         assert setup is not None
         assert setup.status == "WATCH"
+
+
+class TestMakeSetupFromHistory:
+    """Tests for swing setup generation from injected OHLC history."""
+
+    @staticmethod
+    def _rows() -> list[dict]:
+        rows = []
+        for i in range(120):
+            base = 450 + i * 0.5
+            rows.append({
+                "date": f"2026-0{1 + i // 28}-{(i % 28) + 1:02d}",
+                "Open": base,
+                "High": base + 5,
+                "Low": base - 5,
+                "Close": base,
+                "Volume": 1000000,
+            })
+        return rows
+
+    @patch('scheme_intel.signals.yf.Ticker')
+    def test_make_setup_uses_injected_history(self, mock_ticker):
+        """Provided history must be used without any live yfinance call."""
+        setup = make_setup("Praj Industries", "PRAJIND.NS", catalyst_score=90, history=self._rows())
+
+        mock_ticker.assert_not_called()
+        assert setup is not None
+        assert setup.company == "Praj Industries"
+        assert setup.entry > setup.close
+        assert setup.stop < setup.entry
+        assert setup.target > setup.entry
+
+    @patch('scheme_intel.signals.yf.Ticker')
+    def test_make_setup_insufficient_injected_history(self, mock_ticker):
+        """Short injected history must yield no setup and skip yfinance."""
+        setup = make_setup("Praj Industries", "PRAJIND.NS", catalyst_score=90, history=self._rows()[-30:])
+
+        mock_ticker.assert_not_called()
+        assert setup is None

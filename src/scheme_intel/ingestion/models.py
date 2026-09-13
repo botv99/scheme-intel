@@ -31,6 +31,7 @@ class PriceSnapshot:
     low_52w: Optional[float]
     price_source: str
     error: Optional[str] = None
+    history: Optional[list[dict]] = None
 
     def to_dict(self) -> dict:
         return asdict(self)

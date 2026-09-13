@@ -32,10 +32,10 @@ class TestMainPipeline:
         with pytest.raises(ConfigurationError):
             load_config(bad_file)
 
-    @patch('scheme_intel.main.scan_page')
-    @patch('scheme_intel.main.classify')
-    @patch('scheme_intel.main.make_setup')
-    def test_run_pipeline_success(self, mock_setup, mock_classify, mock_scan, tmp_path):
+    @patch('scheme_intel.pipeline.scan_page')
+    @patch('scheme_intel.pipeline.classify')
+    @patch('scheme_intel.pipeline.make_setup')
+    def test_run_pipeline_success(self, mock_setup, mock_classify, mock_scan):
         """Test successful pipeline execution."""
         sample_art = Article("Praj CBG contract awarded", "https://example.com/art1", "PIB", None)
         mock_scan.return_value = [sample_art]
@@ -47,7 +47,7 @@ class TestMainPipeline:
         assert len(report["setups"]) > 0
         assert "source_errors" in report
 
-    @patch('scheme_intel.main.scan_page')
+    @patch('scheme_intel.pipeline.scan_page')
     def test_run_source_error_handling(self, mock_scan):
         """Test that individual source failures do not crash the pipeline."""
         mock_scan.side_effect = SourceAccessError("Connection timeout")

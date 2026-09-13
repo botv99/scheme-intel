@@ -33,9 +33,11 @@ python -m scheme_intel.ingest            # full run
 python -m scheme_intel.ingest --days-back 14
 ```
 
-- **Screener.in** – per-stock price snapshot: close, volume, % change, 52-week high/low, market cap and locally-computed RSI-14.
+- **Screener.in** – per-stock price snapshot: close, volume, % change, 52-week high/low, market cap and locally-computed RSI-14, plus a 6-month OHLC history from Yahoo Finance.
 - **NSE / BSE** – bulk (and block) deals plus tender/contract announcements.
 - **Mint / Financial Express / Moneycontrol** – news mentioning watchlist companies.
+
+The main pipeline (`python -m scheme_intel.main`) consumes the snapshot as its shared data source: ingested news and exchange announcements feed catalyst detection, fresh ingested OHLC history feeds swing setups, and ingestion source errors are merged into the report. When the snapshot is older than 26 hours (or missing), setups fall back to live prices while the rest of the pipeline still runs standalone.
 
 Source endpoints are best-effort: NSE/BSE JSON APIs can block datacenter IPs, so failures are recorded in the snapshot instead of stopping the run. Unlisted stocks (`symbol: null`) are news-monitored only. The GitHub Action runs weekdays at 6:30 PM IST and commits the snapshot.
 
