@@ -36,6 +36,15 @@ class SwingSetup:
     catalyst_score: int
     status: str
     generated_at: str
+    # Technical detail (volume breakout, MACD filter, weekly multi-timeframe).
+    prior_high20: Optional[float] = None
+    breakout: bool = False
+    volume_avg: Optional[float] = None
+    volume_ratio: Optional[float] = None
+    macd: Optional[float] = None
+    macd_signal: Optional[float] = None
+    macd_hist: Optional[float] = None
+    week_trend: Optional[str] = None
 
     def to_dict(self) -> dict:
         return asdict(self)

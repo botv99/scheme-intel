@@ -212,7 +212,19 @@ class Pipeline:
             lines.extend(f"• [{c.score}] {c.article.title}\n{c.article.url}" for c in material_catalysts)
             if setups:
                 lines.append("\nSetups require an entry trigger; this is research, not investment advice.")
-                lines.extend(f"• {s['company']}: entry {s['entry']}, stop {s['stop']}, target {s['target']} ({s['status']})" for s in setups)
+                for s in setups:
+                    extras = []
+                    if s.get("volume_ratio") is not None:
+                        extras.append(f"vol {s['volume_ratio']:.1f}x")
+                    if s.get("macd_hist") is not None:
+                        extras.append(f"MACD {s['macd_hist']:+.3f}")
+                    if s.get("week_trend"):
+                        extras.append(f"weekly {s['week_trend']}")
+                    suffix = f" — {', '.join(extras)}" if extras else ""
+                    lines.append(
+                        f"• {s['company']}: entry {s['entry']}, stop {s['stop']}, "
+                        f"target {s['target']} ({s['status']}){suffix}"
+                    )
             try:
                 send_telegram("\n".join(lines))
                 logger.info("Telegram notification sent successfully")

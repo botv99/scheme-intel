@@ -4,14 +4,14 @@ Provides structured logging across all modules.
 """
 import logging
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Create logs directory
 LOG_DIR = Path(__file__).resolve().parents[2] / "logs"
 LOG_DIR.mkdir(exist_ok=True)
 
 # Log file path with timestamp
-LOG_FILE = LOG_DIR / f"scheme-intel-{datetime.utcnow().strftime('%Y%m%d')}.log"
+LOG_FILE = LOG_DIR / f"scheme-intel-{datetime.now(timezone.utc).strftime('%Y%m%d')}.log"
 
 
 def get_logger(name: str) -> logging.Logger:
