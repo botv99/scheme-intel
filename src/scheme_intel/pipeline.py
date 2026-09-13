@@ -12,6 +12,7 @@ from .exceptions import ConfigurationError, SourceAccessError, DataParseError, T
 from .logger import get_logger
 from .models import AnalysisReport, Article, now_utc
 from .notifier import send_telegram, validate_telegram_config
+from .reliability import SourceReliabilityTracker
 from .signals import make_setup
 from .sources import deduplicate_articles, fetch_rss, scan_page
 
@@ -39,6 +40,7 @@ class Pipeline:
         self.config: dict | None = None
         self.root = Path(__file__).resolve().parents[2]
         self.db = SchemeIntelDB(db_path)
+        self.reliability = SourceReliabilityTracker(db=self.db)
 
     def load_config(self) -> dict:
         """Load and validate watchlist configuration."""
@@ -157,11 +159,14 @@ class Pipeline:
                 else:
                     fetched = scan_page(name, url, aliases)
                 articles.extend(fetched)
+                self.reliability.record_success(name)
                 logger.debug(f"Fetched {len(fetched)} articles from {name}")
             except (SourceAccessError, DataParseError) as error:
+                self.reliability.record_error(name)
                 logger.warning(f"Source failure for '{name}': {error}")
                 source_errors.append({"source": name, "error": str(error)[:180]})
             except Exception as error:
+                self.reliability.record_error(name)
                 logger.error(f"Unexpected error scanning '{name}': {error}")
                 source_errors.append({"source": name, "error": str(error)[:180]})
 
@@ -182,12 +187,16 @@ class Pipeline:
     # ---------------------------------------------------------------- catalysts
 
     def detect_catalysts(self, articles: list, config: dict) -> tuple[list, list]:
-        """Detect catalysts and filter material ones."""
+        """Detect catalysts, filter material ones, and score confidence."""
         catalysts = [item for article in articles if (item := classify(article, config["stocks"]))]
         min_score = config.get("settings", {}).get("minimum_catalyst_score", 60)
         material = [item for item in catalysts if item.score >= min_score]
+
+        # Score confidence for material catalysts
+        scored = self.reliability.score_catalysts(material, articles)
+
         logger.info(f"Classified {len(catalysts)} catalysts ({len(material)} material with score >= {min_score})")
-        return material, catalysts
+        return material, catalysts, scored
 
     # ------------------------------------------------------------------- setups
 
@@ -264,7 +273,7 @@ class Pipeline:
 
         ingested = self.load_ingested(self.root)
         articles, source_errors = self.fetch_articles(self.config, ingested)
-        material_catalysts, all_catalysts = self.detect_catalysts(articles, self.config)
+        material_catalysts, all_catalysts, scored_catalysts = self.detect_catalysts(articles, self.config)
         history_by_symbol = self.history_by_symbol(ingested) if ingested else {}
         dma200_by_symbol = self.dma200_by_symbol(ingested) if ingested else {}
         setups = self.generate_setups(material_catalysts, self.config, history_by_symbol, dma200_by_symbol)
@@ -279,8 +288,12 @@ class Pipeline:
                     "score": c.score,
                     "category": c.category,
                     "companies": c.companies,
+                    "confidence": round(conf.confidence, 2),
+                    "source_reliability": round(conf.source_reliability, 2),
+                    "corroboration_count": conf.corroboration_count,
+                    "sentiment": conf.sentiment.label if conf.sentiment else "neutral",
                 }
-                for c in material_catalysts
+                for c, conf in scored_catalysts
             ],
             setups=setups,
             source_errors=source_errors,
