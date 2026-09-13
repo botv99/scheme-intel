@@ -7,6 +7,7 @@ from typing import Optional
 
 from .catalyst import classify
 from .config import load_config
+from .db import SchemeIntelDB
 from .exceptions import ConfigurationError, SourceAccessError, DataParseError, TelegramError
 from .logger import get_logger
 from .models import AnalysisReport, Article, now_utc
@@ -33,10 +34,11 @@ class Pipeline:
     everything else behaves as before, so the pipeline still runs standalone.
     """
 
-    def __init__(self, config_path: Optional[Path | str] = None):
+    def __init__(self, config_path: Optional[Path | str] = None, db_path: Optional[Path | str] = None):
         self.config_path = config_path
         self.config: dict | None = None
         self.root = Path(__file__).resolve().parents[2]
+        self.db = SchemeIntelDB(db_path)
 
     def load_config(self) -> dict:
         """Load and validate watchlist configuration."""
@@ -287,6 +289,18 @@ class Pipeline:
         report = report_obj.to_dict()
 
         self.save_report(report, self.root)
+
+        try:
+            self.db.save_run(
+                generated_at=generated_time,
+                catalysts=report.get("catalysts", []),
+                setups=setups,
+                source_errors=source_errors,
+                summary=report.get("summary", ""),
+            )
+            logger.info("Pipeline run saved to database")
+        except Exception as exc:
+            logger.warning(f"Failed to save run to database: {exc}")
 
         if send:
             self.send_alert(material_catalysts, setups, self.root)

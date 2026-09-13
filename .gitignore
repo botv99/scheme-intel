@@ -3,6 +3,9 @@ __pycache__/
 
 # Ignore generated cache/snapshots
 data/latest.json
+data/scheme_intel.db
+data/scheme_intel.db-wal
+data/scheme_intel.db-shm
 
 # Local run artifacts
 logs/
