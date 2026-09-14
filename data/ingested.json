@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-13T10:55:21.814380+00:00",
+  "generated_at": "2026-09-14T16:50:13.629100+00:00",
   "prices": [
     {
       "company": "TruAlt Bioenergy",
@@ -17,32 +17,9 @@
       "high_52w": 550.0,
       "low_52w": 310.0,
       "price_source": "screener.in",
+      "dma200": 451.76,
       "error": null,
       "history": [
-        {
-          "date": "2026-03-11",
-          "open": 375.0,
-          "high": 396.9,
-          "low": 373.1,
-          "close": 388.65,
-          "volume": 216443
-        },
-        {
-          "date": "2026-03-12",
-          "open": 390.6,
-          "high": 404.9,
-          "low": 382.0,
-          "close": 402.6,
-          "volume": 139488
-        },
-        {
-          "date": "2026-03-13",
-          "open": 402.6,
-          "high": 402.6,
-          "low": 375.0,
-          "close": 389.55,
-          "volume": 117567
-        },
         {
           "date": "2026-03-16",
           "open": 390.65,
@@ -1069,32 +1046,9 @@
       "high_52w": 2320.0,
       "low_52w": 1033.0,
       "price_source": "screener.in",
+      "dma200": 1683.28,
       "error": null,
       "history": [
-        {
-          "date": "2026-03-11",
-          "open": 1286.86,
-          "high": 1315.59,
-          "low": 1240.07,
-          "close": 1248.85,
-          "volume": 2086729
-        },
-        {
-          "date": "2026-03-12",
-          "open": 1281.97,
-          "high": 1300.83,
-          "low": 1248.65,
-          "close": 1276.39,
-          "volume": 869900
-        },
-        {
-          "date": "2026-03-13",
-          "open": 1276.88,
-          "high": 1280.78,
-          "low": 1219.03,
-          "close": 1224.61,
-          "volume": 345291
-        },
         {
           "date": "2026-03-16",
           "open": 1266.91,
@@ -2121,32 +2075,9 @@
       "high_52w": 428.0,
       "low_52w": 273.0,
       "price_source": "screener.in",
+      "dma200": 355.6,
       "error": null,
       "history": [
-        {
-          "date": "2026-03-11",
-          "open": 311.43,
-          "high": 315.29,
-          "low": 306.49,
-          "close": 310.39,
-          "volume": 1350405
-        },
-        {
-          "date": "2026-03-12",
-          "open": 310.34,
-          "high": 316.37,
-          "low": 303.08,
-          "close": 310.89,
-          "volume": 2215550
-        },
-        {
-          "date": "2026-03-13",
-          "open": 310.89,
-          "high": 314.79,
-          "low": 296.6,
-          "close": 298.97,
-          "volume": 1920776
-        },
         {
           "date": "2026-03-16",
           "open": 301.05,
@@ -3165,32 +3096,9 @@
       "high_52w": 200.0,
       "low_52w": 137.0,
       "price_source": "screener.in",
+      "dma200": 161.95,
       "error": null,
       "history": [
-        {
-          "date": "2026-03-11",
-          "open": 153.4,
-          "high": 158.0,
-          "low": 153.37,
-          "close": 155.33,
-          "volume": 8100
-        },
-        {
-          "date": "2026-03-12",
-          "open": 154.47,
-          "high": 157.8,
-          "low": 154.47,
-          "close": 157.57,
-          "volume": 12600
-        },
-        {
-          "date": "2026-03-13",
-          "open": 155.73,
-          "high": 157.67,
-          "low": 155.73,
-          "close": 157.67,
-          "volume": 13500
-        },
         {
           "date": "2026-03-16",
           "open": 155.67,
@@ -4209,32 +4117,9 @@
       "high_52w": 1099.0,
       "low_52w": 478.0,
       "price_source": "screener.in",
+      "dma200": 713.46,
       "error": null,
       "history": [
-        {
-          "date": "2026-03-11",
-          "open": 562.37,
-          "high": 571.43,
-          "low": 552.52,
-          "close": 556.0,
-          "volume": 82896
-        },
-        {
-          "date": "2026-03-12",
-          "open": 552.52,
-          "high": 561.03,
-          "low": 542.02,
-          "close": 557.55,
-          "volume": 66786
-        },
-        {
-          "date": "2026-03-13",
-          "open": 552.52,
-          "high": 553.41,
-          "low": 530.07,
-          "close": 536.44,
-          "volume": 84996
-        },
         {
           "date": "2026-03-16",
           "open": 534.85,
@@ -5253,32 +5138,9 @@
       "high_52w": 187.0,
       "low_52w": 134.0,
       "price_source": "screener.in",
+      "dma200": 170.35,
       "error": null,
       "history": [
-        {
-          "date": "2026-03-11",
-          "open": 150.95,
-          "high": 154.45,
-          "low": 146.89,
-          "close": 147.54,
-          "volume": 23526066
-        },
-        {
-          "date": "2026-03-12",
-          "open": 146.57,
-          "high": 153.48,
-          "low": 144.25,
-          "close": 151.91,
-          "volume": 16072499
-        },
-        {
-          "date": "2026-03-13",
-          "open": 152.06,
-          "high": 152.85,
-          "low": 147.02,
-          "close": 147.35,
-          "volume": 11388686
-        },
         {
           "date": "2026-03-16",
           "open": 148.57,
@@ -6305,32 +6167,9 @@
       "high_52w": 189.0,
       "low_52w": 130.0,
       "price_source": "screener.in",
+      "dma200": 145.47,
       "error": null,
       "history": [
-        {
-          "date": "2026-03-11",
-          "open": 157.1,
-          "high": 159.54,
-          "low": 156.28,
-          "close": 157.23,
-          "volume": 22703344
-        },
-        {
-          "date": "2026-03-12",
-          "open": 156.01,
-          "high": 160.82,
-          "low": 152.7,
-          "close": 158.75,
-          "volume": 21636039
-        },
-        {
-          "date": "2026-03-13",
-          "open": 157.59,
-          "high": 158.92,
-          "low": 154.42,
-          "close": 155.16,
-          "volume": 11958819
-        },
         {
           "date": "2026-03-16",
           "open": 151.66,
@@ -10397,23 +10236,11 @@
     }
   ],
   "announcements": [],
-  "news": [
-    {
-      "title": "Top stocks to Buy under  \u20b9200: NHPC, IOCL, NBCC \u2014 Mehul Kothari of Anand Rathi recommends | Target, stop-loss",
-      "url": "https://www.livemint.com/market/stock-market-news/top-stocks-to-buy-under-rs-200-nhpc-iocl-nbcc-mehul-kothari-of-anand-rathi-stock-recommends-target-stoploss-11789184737207.html",
-      "source": "Mint",
-      "published_at": "2026-09-12T05:09:12+00:00",
-      "matched_stocks": [
-        "IOCL",
-        "IOC"
-      ],
-      "summary": "Stocks to buy under  \u20b9200: Mehul Kothari recommends three stocks to buy for the short term \u2014 NHPC, IOC, and NBCC"
-    }
-  ],
+  "news": [],
   "source_errors": [
     {
       "source": "NSE block deals",
-      "error": "503 Server Error: Service Unavailable for url: https://www.nseindia.com/api/historical/block-deals"
+      "error": "Expecting value: line 2 column 1 (char 1)"
     },
     {
       "source": "BSE bulk deals",
@@ -10426,7 +10253,11 @@
     {
       "source": "BSE announcements (tenders/contracts)",
       "error": "Expecting value: line 3 column 1 (char 4)"
+    },
+    {
+      "source": "Financial Express (markets)",
+      "error": "Failed to access Financial Express (markets): 403 Client Error: Forbidden for url: https://www.financialexpress.com/market/"
     }
   ],
-  "summary": "7 price snapshots, 218 bulk/block deals, 0 tender/contract announcements, 1 news items"
+  "summary": "7 price snapshots, 218 bulk/block deals, 0 tender/contract announcements, 0 news items"
 }
