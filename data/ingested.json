@@ -1,23 +1,23 @@
 {
-  "generated_at": "2026-09-14T16:50:13.629100+00:00",
+  "generated_at": "2026-09-15T15:28:53.391411+00:00",
   "prices": [
     {
       "company": "TruAlt Bioenergy",
       "symbol": "TRUALT.NS",
       "screener_id": "TRUALT",
-      "date": "2026-09-11",
-      "open": 416.1,
-      "close": 416.35,
-      "high": 423.95,
-      "low": 413.55,
-      "volume": 102816,
-      "change_pct": -0.79,
-      "rsi14": 34.7,
-      "market_cap": "\u20b9 3,570 Cr.",
+      "date": "2026-09-15",
+      "open": 415.0,
+      "close": 411.65,
+      "high": 428.0,
+      "low": 400.0,
+      "volume": 233154,
+      "change_pct": -1.13,
+      "rsi14": 32.4,
+      "market_cap": "\u20b9 3,530 Cr.",
       "high_52w": 550.0,
       "low_52w": 310.0,
       "price_source": "screener.in",
-      "dma200": 451.76,
+      "dma200": 451.37,
       "error": null,
       "history": [
         {
@@ -1027,6 +1027,14 @@
           "low": 413.55,
           "close": 416.35,
           "volume": 99815
+        },
+        {
+          "date": "2026-09-15",
+          "open": 415.0,
+          "high": 428.0,
+          "low": 400.0,
+          "close": 411.65,
+          "volume": 224114
         }
       ]
     },
@@ -1034,19 +1042,19 @@
       "company": "VA Tech Wabag",
       "symbol": "WABAG.NS",
       "screener_id": "WABAG",
-      "date": "2026-09-11",
-      "open": 2195.0,
-      "close": 2277.9,
-      "high": 2319.0,
-      "low": 2164.6,
-      "volume": 2329190,
-      "change_pct": 2.99,
-      "rsi14": 69.3,
-      "market_cap": "\u20b9 14,235 Cr.",
+      "date": "2026-09-15",
+      "open": 2283.0,
+      "close": 2103.4,
+      "high": 2289.0,
+      "low": 2091.1,
+      "volume": 935371,
+      "change_pct": -7.66,
+      "rsi14": 53.7,
+      "market_cap": "\u20b9 13,150 Cr.",
       "high_52w": 2320.0,
       "low_52w": 1033.0,
       "price_source": "screener.in",
-      "dma200": 1683.28,
+      "dma200": 1687.46,
       "error": null,
       "history": [
         {
@@ -2056,6 +2064,14 @@
           "low": 2164.6,
           "close": 2277.9,
           "volume": 2231415
+        },
+        {
+          "date": "2026-09-15",
+          "open": 2283.0,
+          "high": 2289.0,
+          "low": 2091.1,
+          "close": 2103.4,
+          "volume": 894248
         }
       ]
     },
@@ -2063,19 +2079,19 @@
       "company": "Praj Industries",
       "symbol": "PRAJIND.NS",
       "screener_id": "PRAJIND",
-      "date": "2026-09-11",
-      "open": 323.35,
-      "close": 322.15,
-      "high": 324.5,
-      "low": 318.3,
-      "volume": 502630,
-      "change_pct": -1.44,
-      "rsi14": 39.7,
-      "market_cap": "\u20b9 5,922 Cr.",
+      "date": "2026-09-15",
+      "open": 321.05,
+      "close": 318.0,
+      "high": 322.8,
+      "low": 316.25,
+      "volume": 554730,
+      "change_pct": -1.29,
+      "rsi14": 37.4,
+      "market_cap": "\u20b9 5,846 Cr.",
       "high_52w": 428.0,
       "low_52w": 273.0,
       "price_source": "screener.in",
-      "dma200": 355.6,
+      "dma200": 355.23,
       "error": null,
       "history": [
         {
@@ -3077,6 +3093,14 @@
           "low": 318.3,
           "close": 322.15,
           "volume": 479380
+        },
+        {
+          "date": "2026-09-15",
+          "open": 321.05,
+          "high": 322.8,
+          "low": 316.25,
+          "close": 318.0,
+          "volume": 504699
         }
       ]
     },
@@ -3084,19 +3108,19 @@
       "company": "Organic Recycling Systems",
       "symbol": "ORGANICREC.BO",
       "screener_id": "543997",
-      "date": "2026-09-11",
-      "open": 175.5,
-      "close": 172.55,
-      "high": 178.35,
-      "low": 171.1,
-      "volume": 36900,
-      "change_pct": -3.68,
-      "rsi14": 61.9,
-      "market_cap": "\u20b9 269 Cr.",
+      "date": "2026-09-15",
+      "open": 170.0,
+      "close": 164.0,
+      "high": 170.15,
+      "low": 162.7,
+      "volume": 45000,
+      "change_pct": -4.96,
+      "rsi14": 51.7,
+      "market_cap": "\u20b9 256 Cr.",
       "high_52w": 200.0,
       "low_52w": 137.0,
       "price_source": "screener.in",
-      "dma200": 161.95,
+      "dma200": 161.97,
       "error": null,
       "history": [
         {
@@ -4098,6 +4122,14 @@
           "low": 171.1,
           "close": 172.55,
           "volume": 36900
+        },
+        {
+          "date": "2026-09-15",
+          "open": 170.0,
+          "high": 170.15,
+          "low": 162.7,
+          "close": 164.0,
+          "volume": 45000
         }
       ]
     },
@@ -4105,19 +4137,19 @@
       "company": "Kirloskar Pneumatic",
       "symbol": "KIRLPNU.NS",
       "screener_id": "KIRLPNU",
-      "date": "2026-09-11",
-      "open": 715.05,
-      "close": 719.9,
-      "high": 726.4,
-      "low": 706.4,
-      "volume": 124804,
-      "change_pct": 0.03,
-      "rsi14": 39.8,
-      "market_cap": "\u20b9 9,353 Cr.",
+      "date": "2026-09-15",
+      "open": 718.45,
+      "close": 698.15,
+      "high": 718.45,
+      "low": 694.3,
+      "volume": 183343,
+      "change_pct": -3.02,
+      "rsi14": 34.1,
+      "market_cap": "\u20b9 9,072 Cr.",
       "high_52w": 1099.0,
       "low_52w": 478.0,
       "price_source": "screener.in",
-      "dma200": 713.46,
+      "dma200": 713.31,
       "error": null,
       "history": [
         {
@@ -5119,6 +5151,14 @@
           "low": 706.4,
           "close": 719.9,
           "volume": 115300
+        },
+        {
+          "date": "2026-09-15",
+          "open": 718.45,
+          "high": 718.45,
+          "low": 694.3,
+          "close": 698.15,
+          "volume": 172157
         }
       ]
     },
@@ -5126,15 +5166,15 @@
       "company": "GAIL",
       "symbol": "GAIL.NS",
       "screener_id": "GAIL",
-      "date": "2026-09-11",
-      "open": 173.5,
-      "close": 173.62,
-      "high": 175.18,
-      "low": 173.01,
-      "volume": 7014069,
-      "change_pct": -0.5,
-      "rsi14": 49.0,
-      "market_cap": "\u20b9 1,14,157 Cr.",
+      "date": "2026-09-15",
+      "open": 173.62,
+      "close": 170.88,
+      "high": 173.82,
+      "low": 169.73,
+      "volume": 6437093,
+      "change_pct": -1.58,
+      "rsi14": 43.5,
+      "market_cap": "\u20b9 1,12,174 Cr.",
       "high_52w": 187.0,
       "low_52w": 134.0,
       "price_source": "screener.in",
@@ -6148,6 +6188,14 @@
           "low": 173.01,
           "close": 173.62,
           "volume": 6770227
+        },
+        {
+          "date": "2026-09-15",
+          "open": 173.62,
+          "high": 173.82,
+          "low": 169.73,
+          "close": 170.88,
+          "volume": 6196213
         }
       ]
     },
@@ -6155,19 +6203,19 @@
       "company": "Indian Oil Corporation",
       "symbol": "IOC.NS",
       "screener_id": "IOC",
-      "date": "2026-09-11",
-      "open": 134.0,
-      "close": 135.11,
-      "high": 136.16,
-      "low": 133.25,
-      "volume": 7724454,
-      "change_pct": 0.13,
-      "rsi14": 41.4,
-      "market_cap": "\u20b9 1,90,792 Cr.",
+      "date": "2026-09-15",
+      "open": 135.5,
+      "close": 132.03,
+      "high": 135.69,
+      "low": 132.03,
+      "volume": 11587274,
+      "change_pct": -2.28,
+      "rsi14": 34.2,
+      "market_cap": "\u20b9 1,86,250 Cr.",
       "high_52w": 189.0,
       "low_52w": 130.0,
       "price_source": "screener.in",
-      "dma200": 145.47,
+      "dma200": 145.33,
       "error": null,
       "history": [
         {
@@ -7177,6 +7225,14 @@
           "low": 133.25,
           "close": 135.11,
           "volume": 7203039
+        },
+        {
+          "date": "2026-09-15",
+          "open": 135.5,
+          "high": 135.69,
+          "low": 132.03,
+          "close": 132.03,
+          "volume": 10862553
         }
       ]
     }
