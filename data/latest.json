@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-16T17:11:57.064462+00:00",
+  "generated_at": "2026-09-17T15:30:25.000445+00:00",
   "catalysts": [],
   "setups": [],
   "source_errors": [
@@ -9,7 +9,7 @@
     },
     {
       "source": "ingestion::BSE bulk deals",
-      "error": "Exceeded 30 redirects."
+      "error": "Expecting value: line 3 column 1 (char 4)"
     },
     {
       "source": "ingestion::NSE announcements (tenders/contracts)",
@@ -17,7 +17,7 @@
     },
     {
       "source": "ingestion::BSE announcements (tenders/contracts)",
-      "error": "Exceeded 30 redirects."
+      "error": "Expecting value: line 3 column 1 (char 4)"
     },
     {
       "source": "ingestion::Financial Express (markets)",
