@@ -41,8 +41,11 @@ from .risk import evaluate_risk
 from .waiting import generate_wait_condition
 from .storage import Stage2Database
 from .telegram import build_full_telegram_report
+from .tracker import OutcomeTracker
 from ..config import load_config
+from ..notifier import send_telegram
 from ..logger import get_logger
+import time
 
 logger = get_logger(__name__)
 
@@ -116,6 +119,7 @@ class Stage2Pipeline:
         self.market_engine = market_engine or MarketDataEngine(mode=mode)
         self.news_engine = news_engine or NewsEngine(mode=mode)
         self.debate_orchestrator = DebateOrchestrator(self.provider)
+        self.tracker = OutcomeTracker(self.db)
         self.config_path = config_path
 
     def run(
@@ -123,6 +127,7 @@ class Stage2Pipeline:
         target_symbol: Optional[str] = None,
         session_date: Optional[str] = None,
         dry_run: bool = False,
+        send: bool = False,
     ) -> Dict[str, Any]:
         """
         Execute full after-market intelligence & swing preparation pipeline:
@@ -173,6 +178,17 @@ class Stage2Pipeline:
                     market_snapshots[stock.symbol] = snap
             except Exception as e:
                 logger.warning("Error fetching technical snapshot for %s: %s", stock.symbol, e)
+
+        # 2b. Automated Trade Outcome Tracking for previously active setups
+        outcome_updates: Optional[Dict[str, Any]] = None
+        if not dry_run:
+            try:
+                outcome_updates = self.tracker.evaluate_active_setups(
+                    market_snapshots=market_snapshots,
+                    session_date=session_info.analysis_date,
+                )
+            except Exception as e:
+                logger.warning("Error evaluating active setup outcomes: %s", e)
 
         # 3. Ingest News and Group by Company
         raw_news = self.news_engine.fetch_latest_news()
@@ -283,6 +299,10 @@ class Stage2Pipeline:
             setups=trade_setups,
         )
 
+        # 8. Dispatch to Telegram if send=True
+        if send:
+            self._dispatch_telegram_report(report, outcome_updates)
+
         logger.info(
             "=== Stage 2 Complete: %d Scanned, %d Qualified, %d Waiting, %d No Trade ===",
             len(stocks),
@@ -297,7 +317,64 @@ class Stage2Pipeline:
             "candidates": list(candidates.values()),
             "setups": trade_setups,
             "report": report,
+            "outcome_updates": outcome_updates,
         }
+
+    def _dispatch_telegram_report(
+        self,
+        report: Dict[str, str],
+        outcome_updates: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """Send complete 3-section report + outcome update to Telegram with character chunking & rate limit handling."""
+        logger.info("Dispatching Stage 2 Intelligence Report to Telegram...")
+        sections = [
+            ("Section 1: Daily Intelligence", report.get("section1", "")),
+            ("Section 2: Swing Radar", report.get("section2", "")),
+            ("Section 3: Actionable & Waiting Setups", report.get("section3", "")),
+        ]
+        if outcome_updates and outcome_updates.get("summary_text"):
+            sections.append(("Active Positions & Outcome Tracker", outcome_updates["summary_text"]))
+
+        for name, text in sections:
+            if not text.strip():
+                continue
+            chunks = self._chunk_message(text, max_chars=4000)
+            for chunk in chunks:
+                try:
+                    success = send_telegram(chunk, parse_mode="Markdown")
+                    if success:
+                        logger.info("Successfully sent %s chunk (%d chars) to Telegram", name, len(chunk))
+                    else:
+                        logger.warning("Telegram notification skipped or secrets not configured for %s", name)
+                except Exception as e:
+                    logger.error("Error sending %s to Telegram: %s", name, e)
+                time.sleep(1.2)  # Throttling to prevent Telegram flood limits
+
+    @staticmethod
+    def _chunk_message(text: str, max_chars: int = 4000) -> List[str]:
+        """Split a long markdown message into chunk sizes acceptable to Telegram (<= 4096 chars)."""
+        if len(text) <= max_chars:
+            return [text]
+        lines = text.split("\n")
+        chunks = []
+        current = []
+        current_len = 0
+        for line in lines:
+            if current_len + len(line) + 1 > max_chars:
+                if current:
+                    chunks.append("\n".join(current))
+                    current = [line]
+                    current_len = len(line) + 1
+                else:
+                    chunks.append(line[:max_chars])
+                    current = [line[max_chars:]]
+                    current_len = len(line[max_chars:]) + 1
+            else:
+                current.append(line)
+                current_len += len(line) + 1
+        if current:
+            chunks.append("\n".join(current))
+        return chunks
 
 
 def main():
@@ -308,6 +385,7 @@ def main():
     parser.add_argument("--provider", type=str, default="mock", help="LLM Provider: mock, gemini, openai")
     parser.add_argument("--mode", type=str, default="production", choices=["production", "mock"], help="Execution mode: production (live Stage 1 sources) or mock")
     parser.add_argument("--dry-run", action="store_true", help="Run without persisting to database")
+    parser.add_argument("--send", action="store_true", help="Send report to Telegram if credentials configured")
     parser.add_argument("--print-report", action="store_true", default=True, help="Print full Telegram report")
     parser.add_argument("--config", type=str, default=None, help="Path to watchlist.yaml")
     args = parser.parse_args()
@@ -315,11 +393,13 @@ def main():
     mode = "mock" if (args.dry_run or args.mode == "mock" or args.provider == "mock") else "production"
     provider = get_llm_provider(args.provider)
     pipeline = Stage2Pipeline(provider=provider, config_path=args.config, mode=mode)
-    result = pipeline.run(target_symbol=args.symbol, session_date=args.date, dry_run=args.dry_run)
+    result = pipeline.run(target_symbol=args.symbol, session_date=args.date, dry_run=args.dry_run, send=args.send)
 
     if args.print_report:
         print("\n" + "=" * 60)
         print(result["report"]["full_text"])
+        if result.get("outcome_updates") and result["outcome_updates"].get("summary_text"):
+            print("\n" + result["outcome_updates"]["summary_text"])
         print("=" * 60 + "\n")
 
 

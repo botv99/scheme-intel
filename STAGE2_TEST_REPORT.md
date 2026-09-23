@@ -10,12 +10,12 @@
 
 | Metric | Result |
 |--------|--------|
-| **Total Tests Collected** | **329** |
-| **Total Tests Passed** | **329** |
+| **Total Tests Collected** | **336** |
+| **Total Tests Passed** | **336** |
 | **Failed** | **0** |
 | **Errors** | **0** |
 | **Skipped / Deselected** | **0** |
-| **Total Execution Time** | **27.21 seconds** |
+| **Total Execution Time** | **32.30 seconds** |
 | **Success Rate** | **100.0%** |
 
 ---
@@ -83,13 +83,20 @@
 | `test_telegram_empty_catalysts_safe` | PASS | Crash-proof against empty catalyst lists in stock cards |
 | `test_production_mode_uses_live_sources_not_mocks` | PASS | Production pipeline enforces live sources and does not mock data |
 | `test_full_pipeline_run` | PASS | End-to-end dry-run of complete Stage 2 preparation pipeline |
-| **Stage 2 Subtotal** | **34** | **PASS** | **100% executable and tested** |
+| `test_entry_trigger_detection` | PASS | OutcomeTracker detects entry trigger occurrence from daily OHLC |
+| `test_mfe_mae_and_holding_period_tracking` | PASS | Continuous tracking of MFE %, MAE %, and holding period days |
+| `test_target_1_hit_detection` | PASS | Detects Target 1 exit and calculates realized gain % |
+| `test_stop_loss_hit_detection` | PASS | Detects Stop Loss exit and calculates realized loss % |
+| `test_closed_trade_not_reprocessed` | PASS | Ensures exited setups are never reprocessed or double counted |
+| `test_pipeline_dispatch_sends_sections` | PASS | Verifies multi-section Telegram dispatch with chunking |
+| `test_main_run_unifies_stage1_and_stage2` | PASS | Verifies main.py unifies Stage 1 ingestion + Stage 2 execution |
+| **Stage 2 / Production Subtotal** | **41** | **PASS** | **100% executable and tested** |
 
 ---
 
 ## 3. Integration Verification
 
 - Command executed: `python -m pytest -q`
-- Output: `329 passed in 27.21s`
+- Output: `336 passed in 32.30s`
 - Zero regressions against Stage 1 tag `stage1-complete`.
 - No mock leaks or dependencies on live external network connections for tests.
