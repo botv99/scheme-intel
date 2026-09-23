@@ -252,24 +252,27 @@ class TestDigest:
         assert digest == []
 
     def test_includes_earnings(self, tracker: EarningsTracker):
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         tracker.save_earnings([
-            EarningsReport("TruAlt", "TRUALT.NS", "Q1 FY25", "2026-09-10", 100.0, 20.0, 5.0),
+            EarningsReport("TruAlt", "TRUALT.NS", "Q1 FY25", today, 100.0, 20.0, 5.0),
         ])
         stocks = [{"name": "TruAlt", "symbol": "TRUALT.NS"}]
         digest = tracker.generate_digest(stocks)
         assert any(d.kind == "earnings" for d in digest)
 
     def test_includes_ratings(self, tracker: EarningsTracker):
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         tracker.save_analyst_ratings([
-            AnalystRating("Praj", "PRAJIND.NS", "ICICI", "BUY", 600.0, date="2026-09-12"),
+            AnalystRating("Praj", "PRAJIND.NS", "ICICI", "BUY", 600.0, date=today),
         ])
         stocks = [{"name": "Praj", "symbol": "PRAJIND.NS"}]
         digest = tracker.generate_digest(stocks)
         assert any(d.kind == "analyst" for d in digest)
 
     def test_includes_concalls(self, tracker: EarningsTracker):
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         tracker.save_concalls([
-            ConcallTranscript("GAIL", "GAIL.NS", "2026-09-10", "Q1 Earnings Call"),
+            ConcallTranscript("GAIL", "GAIL.NS", today, "Q1 Earnings Call"),
         ])
         stocks = [{"name": "GAIL", "symbol": "GAIL.NS"}]
         digest = tracker.generate_digest(stocks)
@@ -287,8 +290,9 @@ class TestTelegramFormat:
         assert "No recent" in msg
 
     def test_formats_earnings(self, tracker: EarningsTracker):
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         tracker.save_earnings([
-            EarningsReport("TruAlt", "TRUALT.NS", "Q1 FY25", "2026-09-10", 100.0, 20.0),
+            EarningsReport("TruAlt", "TRUALT.NS", "Q1 FY25", today, 100.0, 20.0),
         ])
         stocks = [{"name": "TruAlt", "symbol": "TRUALT.NS"}]
         digest = tracker.generate_digest(stocks)
@@ -298,8 +302,9 @@ class TestTelegramFormat:
         assert "Digest" in msg
 
     def test_formats_ratings(self, tracker: EarningsTracker):
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         tracker.save_analyst_ratings([
-            AnalystRating("Praj", "PRAJIND.NS", "ICICI", "BUY", 600.0, date="2026-09-12"),
+            AnalystRating("Praj", "PRAJIND.NS", "ICICI", "BUY", 600.0, date=today),
         ])
         stocks = [{"name": "Praj", "symbol": "PRAJIND.NS"}]
         digest = tracker.generate_digest(stocks)

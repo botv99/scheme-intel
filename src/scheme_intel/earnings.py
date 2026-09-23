@@ -22,6 +22,13 @@ import requests
 from .db import SchemeIntelDB
 from .logger import get_logger
 from .exceptions import SourceAccessError
+from .models import (
+    Article,
+    Catalyst,
+    TIER_1_GOV_REGULATOR,
+    TIER_2_COMPANY_DISCLOSURE,
+    TIER_4_ANALYST_RESEARCH,
+)
 
 logger = get_logger(__name__)
 
@@ -609,7 +616,7 @@ class EarningsTracker:
         for the given watchlist stocks from the last N days.
         """
         items: list[DigestItem] = []
-        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
 
         for stock in stocks:
             name = stock["name"]
@@ -617,7 +624,8 @@ class EarningsTracker:
 
             # Recent earnings
             for e in self.get_earnings(company=name, limit=5):
-                if e.get("report_date", "") >= cutoff or not e.get("report_date"):
+                rep_date = (e.get("report_date") or "")[:10]
+                if not rep_date or rep_date >= cutoff:
                     summary_parts = []
                     if e.get("revenue"):
                         summary_parts.append(f"Rev ₹{e['revenue']:,.0f}")
@@ -636,7 +644,8 @@ class EarningsTracker:
 
             # Recent analyst ratings
             for r in self.get_analyst_ratings(company=name, limit=5):
-                if r.get("report_date", "") >= cutoff or not r.get("report_date"):
+                rep_date = (r.get("report_date") or "")[:10]
+                if not rep_date or rep_date >= cutoff:
                     tp = f" → ₹{r['target_price']:.0f}" if r.get("target_price") else ""
                     items.append(DigestItem(
                         kind="analyst",
@@ -650,7 +659,8 @@ class EarningsTracker:
 
             # Recent concalls
             for c in self.get_concalls(company=name, limit=3):
-                if c.get("call_date", "") >= cutoff or not c.get("call_date"):
+                call_date = (c.get("call_date") or "")[:10]
+                if not call_date or call_date >= cutoff:
                     items.append(DigestItem(
                         kind="concall",
                         company=name,
@@ -684,3 +694,223 @@ class EarningsTracker:
 
         lines.append("⚠️ Data from public sources. Not investment advice.")
         return "\n".join(lines)
+
+    # ------------------------------------------------------------------
+    # Phase 6: Catalyst Engine Integration
+    # ------------------------------------------------------------------
+
+    def to_catalysts(self, stocks: list[dict], days: int = 7) -> list[Catalyst]:
+        """
+        Convert recent earnings reports, analyst ratings, and concall events
+        into Catalyst objects that feed directly into the central Catalyst Engine.
+        """
+        catalysts: list[Catalyst] = []
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
+
+        for stock in stocks:
+            name = stock["name"]
+            symbol = stock.get("symbol", "")
+
+            # 1. Earnings -> Catalysts
+            for e in self.get_earnings(company=name, limit=3):
+                rep_date = (e.get("report_date") or "")[:10]
+                if rep_date and rep_date < cutoff:
+                    continue
+                period = e.get("period", "Quarterly Results")
+                rev = e.get("revenue")
+                pat = e.get("profit")
+                headline = f"{name} {period} Results: Revenue ₹{rev:,.0f} Cr, PAT ₹{pat:,.0f} Cr" if (rev and pat) else f"{name} announces {period}"
+
+                # Materiality scoring: Strong results get higher catalyst score
+                score = 80 if (pat and pat > 0) else 70
+                art = Article(
+                    title=headline,
+                    url=e.get("url") or f"https://www.nseindia.com/companies-listing/corporate-filings-financial-results",
+                    source="NSE Corporate Filing",
+                    published_at=datetime.now(timezone.utc),
+                    summary=f"Financial results for {period}. Revenue: {rev}, PAT: {pat}, EPS: {e.get('eps')}",
+                    source_tier=TIER_1_GOV_REGULATOR,
+                )
+                catalysts.append(Catalyst(
+                    article=art,
+                    score=score,
+                    category="results",
+                    rationale=f"Reported {period} financial performance on exchange",
+                    companies=(name,),
+                    catalyst_type="Results",
+                    headline=headline,
+                    published_at=rep_date or datetime.now(timezone.utc).isoformat(),
+                    event_date=rep_date,
+                    confidence=float(score),
+                    sentiment_label="positive" if (pat and pat > 0) else "neutral",
+                    expected_duration="short-term",
+                    affected_business_segment="Financial Results",
+                    related_scheme="Corporate Disclosure",
+                    related_sector="Equities",
+                    source_tier=TIER_1_GOV_REGULATOR,
+                ))
+
+            # 2. Analyst Ratings -> Catalysts
+            for r in self.get_analyst_ratings(company=name, limit=3):
+                rep_date = (r.get("report_date") or "")[:10]
+                if rep_date and rep_date < cutoff:
+                    continue
+                rating = (r.get("rating") or "BUY").upper()
+                broker = r.get("broker") or "Analyst"
+                tp = r.get("target_price")
+                headline = f"{broker} assigns {rating} on {name}" + (f" with target ₹{tp:.0f}" if tp else "")
+                score = 75 if "BUY" in rating or "OUTPERFORM" in rating else 65
+                art = Article(
+                    title=headline,
+                    url=r.get("url") or "https://www.scripbox.com",
+                    source=f"Research: {broker}",
+                    published_at=datetime.now(timezone.utc),
+                    summary=r.get("summary") or f"Research report from {broker} with {rating} recommendation.",
+                    source_tier=TIER_4_ANALYST_RESEARCH,
+                )
+                catalysts.append(Catalyst(
+                    article=art,
+                    score=score,
+                    category="analyst report",
+                    rationale=f"Institutional coverage update from {broker}",
+                    companies=(name,),
+                    catalyst_type="Analyst report",
+                    headline=headline,
+                    published_at=rep_date or datetime.now(timezone.utc).isoformat(),
+                    event_date=rep_date,
+                    confidence=float(score),
+                    sentiment_label="positive" if ("BUY" in rating or "OUTPERFORM" in rating) else "neutral",
+                    expected_duration="medium-term",
+                    affected_business_segment="Institutional Equity Research",
+                    related_scheme="Market Consensus",
+                    related_sector="Equities",
+                    source_tier=TIER_4_ANALYST_RESEARCH,
+                ))
+
+            # 3. Concalls -> Catalysts
+            for c in self.get_concalls(company=name, limit=2):
+                call_date = (c.get("call_date") or "")[:10]
+                if call_date and call_date < cutoff:
+                    continue
+                title = c.get("title") or f"{name} Earnings Call"
+                headline = f"{name} Investor Conference Call: {title}"
+                score = 70
+                art = Article(
+                    title=headline,
+                    url=c.get("url") or "",
+                    source="Screener / Investor Concall",
+                    published_at=datetime.now(timezone.utc),
+                    summary=c.get("key_highlights") or f"Investor concall discussion and management guidance for {name}.",
+                    source_tier=TIER_2_COMPANY_DISCLOSURE,
+                )
+                catalysts.append(Catalyst(
+                    article=art,
+                    score=score,
+                    category="earnings call",
+                    rationale=f"Investor concall transcript and management interaction",
+                    companies=(name,),
+                    catalyst_type="Earnings call",
+                    headline=headline,
+                    published_at=call_date or datetime.now(timezone.utc).isoformat(),
+                    event_date=call_date,
+                    confidence=float(score),
+                    sentiment_label="neutral",
+                    expected_duration="medium-term",
+                    affected_business_segment="Investor Relations & Management Commentary",
+                    related_scheme="Corporate Disclosure",
+                    related_sector="Equities",
+                    source_tier=TIER_2_COMPANY_DISCLOSURE,
+                ))
+
+        return catalysts
+
+
+@dataclass
+class CorporateIntelligence:
+    company: str
+    symbol: str
+    source_type: str  # disclosure, concall, earnings, presentation, analyst
+    what_changed: str
+    why_it_matters: str
+    affected_segment: str
+    management_guidance: str = ""
+    capex: str = ""
+    orders: str = ""
+    margins: str = ""
+    capacity: str = ""
+    risks: str = ""
+    forward_looking: str = ""
+    scheme_exposure: str = ""
+    date: str = ""
+    url: str = ""
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+def extract_corporate_intelligence(
+    text: str,
+    company: str,
+    symbol: str,
+    source_type: str = "disclosure",
+    date: str = "",
+    url: str = "",
+) -> CorporateIntelligence:
+    """
+    Structured information extractor for company disclosures, earnings call transcripts,
+    and analyst reports.
+    """
+    clean_text = " ".join(text.split())
+
+    # 1. Capex
+    capex_m = re.search(r"(?:capex|capital expenditure|investment) (?:of|around|approx\.?)? (?:rs\.?|inr|₹)?\s*([\d,]+(?:\.\d+)?\s*(?:cr|crore|lakh)?)", clean_text, re.IGNORECASE)
+    capex = capex_m.group(0) if capex_m else ""
+
+    # 2. Orders
+    orders_m = re.search(r"(?:order win|order book|received order|awarded contract) (?:valued at|worth|of)?\s*(?:rs\.?|inr|₹)?\s*([\d,]+(?:\.\d+)?\s*(?:cr|crore|lakh)?)?", clean_text, re.IGNORECASE)
+    orders = orders_m.group(0) if orders_m else ""
+
+    # 3. Margins
+    margin_m = re.search(r"(?:ebitda margin|operating margin|gross margin) (?:expanded by|at|of)?\s*([\d,]+(?:\.\d+)?%?|\d+\s*bps)", clean_text, re.IGNORECASE)
+    margins = margin_m.group(0) if margin_m else ""
+
+    # 4. Capacity
+    cap_m = re.search(r"([\d,]+(?:\.\d+)?\s*(?:tpd|klpd|mtpa|mw|t/day|litres/day))\s*(?:capacity|expansion|plant)", clean_text, re.IGNORECASE)
+    capacity = cap_m.group(0) if cap_m else ""
+
+    # 5. Risks
+    risk_m = re.search(r"(?:risk|concern|challenge|headwind|delay|raw material cost) [^.;]{10,80}", clean_text, re.IGNORECASE)
+    risks = risk_m.group(0) if risk_m else ""
+
+    # 6. Management Guidance / Forward-looking
+    guidance_m = re.search(r"(?:guidance|expect|targets to achieve|projected to|aims to) [^.;]{10,100}", clean_text, re.IGNORECASE)
+    guidance = guidance_m.group(0) if guidance_m else ""
+
+    # 7. Scheme Exposure
+    scheme_m = re.search(r"(?:gobardhan|satat|bio-energy|ethanol blending|cbg blending|cbo mandate)[^.;]{0,60}", clean_text, re.IGNORECASE)
+    scheme = scheme_m.group(0) if scheme_m else "General Bio-Energy"
+
+    # 8. What Changed & Why It Matters
+    what_changed = clean_text[:120] if len(clean_text) > 120 else clean_text
+    why_it_matters = f"Impacts {company}'s operations in {scheme}."
+    if capex or orders:
+        why_it_matters += f" Highlights: {orders or capex}."
+
+    return CorporateIntelligence(
+        company=company,
+        symbol=symbol,
+        source_type=source_type,
+        what_changed=what_changed,
+        why_it_matters=why_it_matters,
+        affected_segment="Biofuels / Renewable Energy",
+        management_guidance=guidance,
+        capex=capex,
+        orders=orders,
+        margins=margins,
+        capacity=capacity,
+        risks=risks,
+        forward_looking=guidance,
+        scheme_exposure=scheme,
+        date=date,
+        url=url,
+    )

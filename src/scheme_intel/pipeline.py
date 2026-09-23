@@ -302,20 +302,38 @@ class Pipeline:
         dma200_by_symbol = self.dma200_by_symbol(ingested) if ingested else {}
         setups = self.generate_setups(material_catalysts, self.config, history_by_symbol, dma200_by_symbol)
 
+        if ingested and "prices" in ingested:
+            for p in ingested.get("prices", []):
+                sym = p.get("symbol")
+                hist = p.get("history")
+                if sym and hist:
+                    try:
+                        self.db.save_historical_prices(sym, hist)
+                    except Exception as e:
+                        logger.debug(f"Failed to save historical prices for {sym}: {e}")
+
         generated_time = now_utc().isoformat()
         report_obj = AnalysisReport(
             generated_at=generated_time,
             catalysts=[
                 {
                     "title": c.article.title,
+                    "headline": getattr(c, "headline", c.article.title),
                     "url": c.article.url,
                     "score": c.score,
                     "category": c.category,
+                    "catalyst_type": getattr(c, "catalyst_type", c.category),
                     "companies": c.companies,
                     "confidence": round(conf.confidence, 2),
+                    "source": c.article.source,
+                    "source_tier": getattr(c, "source_tier", 3),
                     "source_reliability": round(conf.source_reliability, 2),
                     "corroboration_count": conf.corroboration_count,
                     "sentiment": conf.sentiment.label if conf.sentiment else "neutral",
+                    "expected_duration": getattr(c, "expected_duration", "medium-term"),
+                    "affected_business_segment": getattr(c, "affected_business_segment", ""),
+                    "related_scheme": getattr(c, "related_scheme", ""),
+                    "related_sector": getattr(c, "related_sector", ""),
                 }
                 for c, conf in scored_catalysts
             ],
