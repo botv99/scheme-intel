@@ -520,6 +520,23 @@ def test_risk_engine_liquidity_veto():
     assert "Insufficient liquidity" in risk.veto_reason
 
 
+def test_risk_engine_inverted_entry_zone_veto():
+    """Verify that if max acceptable entry falls below entry_min, risk engine vetoes setup."""
+    stock = Stock(name="Marginal Stock", symbol="MARG.NS")
+    tech = TechnicalSnapshot(
+        close=520.0,
+        support=495.0,
+        resistance=525.0,
+        atr14=12.0,
+        volume=250_000,
+    )
+    cand = CandidateSetup(stock=stock, archetype="Breakout", score=85, rationale="Test", technicals=tech)
+    # Require an extremely high min_rr that forces max_acceptable_entry below entry_min
+    risk = evaluate_risk(cand, min_rr=4.0)
+    assert risk.passed is False
+    assert "below minimum required" in risk.veto_reason or "Entry zone inverted" in risk.veto_reason
+
+
 # ============================================================================
 # 9. Setup Waiting Engine
 # ============================================================================
@@ -659,6 +676,24 @@ def test_telegram_report_formatting():
     assert "Breakout Failure Condition:" in report["full_text"]
     assert "Position Sizing & Risk Management" in report["full_text"]
     assert "QUALIFIED_SETUP" in report["full_text"]
+
+
+def test_telegram_empty_catalysts_safe():
+    """Verify build_full_telegram_report does not crash when catalysts list is empty."""
+    stock = Stock(name="Quiet Stock", symbol="QUIET.NS")
+    card = DailyStockCard(
+        stock=stock,
+        price=100.0,
+        day_change_pct=0.0,
+        volume=50_000,
+        volume_avg_20d=50_000,
+        volume_ratio=1.0,
+        catalysts=[],  # completely empty
+        developments=[],
+    )
+    report = build_full_telegram_report("23 Sep 2026 — AFTER MARKET", [card], [], [])
+    assert report is not None
+    assert "QUIET" in report["full_text"]
 
 
 # ============================================================================

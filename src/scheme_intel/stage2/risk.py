@@ -245,6 +245,38 @@ def evaluate_risk(
             max_portfolio_risk_pct=risk_per_trade_pct,
         )
 
+    # Inverted Entry Zone Veto
+    if entry_max < entry_min:
+        return RiskAssessment(
+            passed=False,
+            veto_reason=f"Entry zone inverted: maximum acceptable entry (₹{max_acceptable_entry:.2f}) for 1:{min_rr:.1f} R:R is below entry floor (₹{entry_min:.2f}).",
+            entry_min=entry_min,
+            entry_max=entry_max,
+            ideal_entry=ideal_entry,
+            max_acceptable_entry=max_acceptable_entry,
+            min_rr_at_max_entry=min_rr,
+            trigger_condition=trigger_cond,
+            stop_loss=stop_loss,
+            target_1=target_1,
+            target_2=target_2,
+            target_3=target_3,
+            expected_holding_period="5–15 sessions",
+            risk_reward_ratio=rr_ratio,
+            rr_basis=rr_basis,
+            risk_per_share=risk_per_share,
+            reward_per_share=reward_per_share,
+            technical_invalidation=technical_invalidation,
+            breakout_failure_condition=breakout_failure_condition,
+            share_quantity=share_quantity,
+            capital_deployed=capital_deployed,
+            position_size_pct=position_size_pct,
+            maximum_loss_at_stop=maximum_loss_at_stop,
+            actual_risk_pct=actual_risk_pct,
+            volume_to_watch=">1.5x 20D average",
+            portfolio_capital=portfolio_capital,
+            max_portfolio_risk_pct=risk_per_trade_pct,
+        )
+
     return RiskAssessment(
         passed=True,
         veto_reason=None,

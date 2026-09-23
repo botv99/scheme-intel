@@ -10,12 +10,12 @@
 
 | Metric | Result |
 |--------|--------|
-| **Total Tests Collected** | **327** |
-| **Total Tests Passed** | **327** |
+| **Total Tests Collected** | **329** |
+| **Total Tests Passed** | **329** |
 | **Failed** | **0** |
 | **Errors** | **0** |
 | **Skipped / Deselected** | **0** |
-| **Total Execution Time** | **24.72 seconds** |
+| **Total Execution Time** | **27.21 seconds** |
 | **Success Rate** | **100.0%** |
 
 ---
@@ -75,19 +75,21 @@
 | `test_position_sizing_mathematical_limits` | PASS | Verified 1% rupee risk limit and 10% maximum capital allocation |
 | `test_risk_engine_stop_distance_veto` | PASS | Mathematical veto: Stop loss > 8% rejected |
 | `test_risk_engine_liquidity_veto` | PASS | Mathematical veto: Volume < 20,000 shares rejected |
+| `test_risk_engine_inverted_entry_zone_veto` | PASS | Mathematical veto: Compressed / inverted entry zone rejected |
 | `test_waiting_engine_generation` | PASS | Setup Waiting Engine generates concrete future trigger blueprints |
 | `test_watchlist_full_coverage` | PASS | Scanner guarantees 100% watchlist coverage without silent omissions |
 | `test_storage_and_outcome_tracking` | PASS | SQLite persistence for setups, debates, and MFE/MAE outcomes |
 | `test_telegram_report_formatting` | PASS | 3-Section Telegram report formatting with explicit NEXT SESSION |
+| `test_telegram_empty_catalysts_safe` | PASS | Crash-proof against empty catalyst lists in stock cards |
 | `test_production_mode_uses_live_sources_not_mocks` | PASS | Production pipeline enforces live sources and does not mock data |
 | `test_full_pipeline_run` | PASS | End-to-end dry-run of complete Stage 2 preparation pipeline |
-| **Stage 2 Subtotal** | **32** | **PASS** | **100% executable and tested** |
+| **Stage 2 Subtotal** | **34** | **PASS** | **100% executable and tested** |
 
 ---
 
 ## 3. Integration Verification
 
 - Command executed: `python -m pytest -q`
-- Output: `327 passed in 24.72s`
+- Output: `329 passed in 27.21s`
 - Zero regressions against Stage 1 tag `stage1-complete`.
 - No mock leaks or dependencies on live external network connections for tests.

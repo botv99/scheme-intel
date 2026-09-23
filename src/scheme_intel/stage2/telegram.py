@@ -215,7 +215,7 @@ def build_full_telegram_report(
     qualified_count = sum(1 for s in setups if s.status == "QUALIFIED_SETUP")
     wait_count = sum(1 for s in setups if s.status == "WAIT")
     no_trade_count = sum(1 for s in setups if s.status == "NO_TRADE")
-    cat_count = sum(1 for c in cards if "Sector" not in c.catalysts[0])
+    cat_count = sum(1 for c in cards if c.catalysts and "Sector" not in c.catalysts[0])
 
     stats = {
         "catalysts_found": cat_count,
