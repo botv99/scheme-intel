@@ -1,12 +1,8 @@
 {
-  "generated_at": "2026-09-24T15:48:36.692284+00:00",
+  "generated_at": "2026-09-24T17:26:10.677211+00:00",
   "catalysts": [],
   "setups": [],
   "source_errors": [
-    {
-      "source": "Central Public Procurement Portal (tenders)",
-      "error": "Failed to access Central Public Procurement Portal (tenders): HTTPSConnectionPool(host='eprocure.gov.in', port=443): Read timed out. (read timeout=25)"
-    },
     {
       "source": "ingestion::NSE block deals",
       "error": "Expecting value: line 2 column 1 (char 1)"
