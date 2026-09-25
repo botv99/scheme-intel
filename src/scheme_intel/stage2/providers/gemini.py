@@ -84,5 +84,15 @@ class GeminiProvider(LLMProvider):
                 tokens_used=data.get("usageMetadata", {}).get("totalTokenCount", 0),
             )
         except Exception as exc:
-            logger.error("Gemini API generation failed: %s", exc)
+            resp_obj = getattr(exc, "response", None)
+            err_text = ""
+            if resp_obj is not None:
+                try:
+                    err_json = resp_obj.json()
+                    err_text = err_json.get("error", {}).get("message", resp_obj.text)
+                except Exception:
+                    err_text = resp_obj.text
+            if self.api_key:
+                err_text = err_text.replace(self.api_key, "***")
+            logger.error("Gemini API generation failed (%s): %s", exc, err_text)
             raise
