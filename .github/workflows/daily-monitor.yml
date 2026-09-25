@@ -18,6 +18,10 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
+      - name: Discover available Gemini models
+        run: python scripts/list_gemini_models.py
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       - name: Run market ingestion layer
         run: python -m scheme_intel.ingest
         env:
