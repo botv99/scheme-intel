@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS stage2_outcomes (
     realized_pnl_pct    REAL,
     target_hit          INTEGER DEFAULT 0,
     stop_hit            INTEGER DEFAULT 0,
+    expired             INTEGER DEFAULT 0,
     holding_period_days INTEGER DEFAULT 0,
     updated_at          TEXT NOT NULL,
     FOREIGN KEY(setup_id) REFERENCES stage2_setups(setup_id)
@@ -84,6 +85,10 @@ class Stage2Database:
     def _init_schema(self) -> None:
         with self._get_connection() as conn:
             conn.executescript(_STAGE2_SCHEMA)
+            try:
+                conn.execute("ALTER TABLE stage2_outcomes ADD COLUMN expired INTEGER DEFAULT 0;")
+            except Exception:
+                pass
             conn.commit()
 
     def save_setup(self, setup: TradeSetup) -> None:
@@ -185,8 +190,8 @@ class Stage2Database:
         INSERT INTO stage2_outcomes (
             setup_id, symbol, entry_triggered, actual_entry_price, entry_date,
             exit_price, exit_date, mfe_pct, mae_pct, realized_pnl_pct,
-            target_hit, stop_hit, holding_period_days, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            target_hit, stop_hit, expired, holding_period_days, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(setup_id) DO UPDATE SET
             entry_triggered = excluded.entry_triggered,
             actual_entry_price = excluded.actual_entry_price,
@@ -198,6 +203,7 @@ class Stage2Database:
             realized_pnl_pct = excluded.realized_pnl_pct,
             target_hit = excluded.target_hit,
             stop_hit = excluded.stop_hit,
+            expired = excluded.expired,
             holding_period_days = excluded.holding_period_days,
             updated_at = excluded.updated_at;
         """
@@ -215,6 +221,7 @@ class Stage2Database:
                 outcome.realized_pnl_pct,
                 1 if outcome.target_hit else 0,
                 1 if outcome.stop_hit else 0,
+                1 if outcome.expired else 0,
                 outcome.holding_period_days,
                 now,
             ))
@@ -227,6 +234,7 @@ class Stage2Database:
             row = conn.execute(query, (setup_id,)).fetchone()
             if not row:
                 return None
+            keys = row.keys()
             return SetupOutcome(
                 setup_id=row["setup_id"],
                 symbol=row["symbol"],
@@ -240,6 +248,7 @@ class Stage2Database:
                 realized_pnl_pct=row["realized_pnl_pct"],
                 target_hit=bool(row["target_hit"]),
                 stop_hit=bool(row["stop_hit"]),
+                expired=bool(row["expired"]) if "expired" in keys else False,
                 holding_period_days=row["holding_period_days"],
             )
 

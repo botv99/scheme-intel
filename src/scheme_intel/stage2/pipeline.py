@@ -128,7 +128,7 @@ class Stage2Pipeline:
         self.market_engine = market_engine or MarketDataEngine(mode=mode)
         self.news_engine = news_engine or NewsEngine(mode=mode)
         self.debate_orchestrator = DebateOrchestrator(self.provider)
-        self.tracker = OutcomeTracker(self.db)
+        self.tracker = OutcomeTracker(self.db, config_path=config_path)
         self.config_path = config_path
 
     def run(

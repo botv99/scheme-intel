@@ -141,9 +141,11 @@ def scan_all_stocks(
         candidate = candidates.get(stock.symbol) or candidates.get(stock.name)
         d_status = data_statuses.get(stock.symbol, data_statuses.get(stock.name, DATA_OK if snapshot else DATA_UNAVAILABLE))
 
-        # Determine status
-        if not snapshot:
-            default_status = d_status if d_status in (DATA_UNAVAILABLE, DATA_STALE, DATA_INSUFFICIENT) else DATA_UNAVAILABLE
+        # Determine status: missing or stale data MUST produce DATA_UNAVAILABLE / DATA_STALE
+        if d_status in (DATA_UNAVAILABLE, DATA_STALE, DATA_INSUFFICIENT):
+            default_status = d_status
+        elif not snapshot:
+            default_status = DATA_UNAVAILABLE
         elif candidate:
             default_status = "QUALIFIED_SETUP"
         elif snapshot.trend_status == "BULLISH":
@@ -152,7 +154,7 @@ def scan_all_stocks(
             default_status = "WAIT"
 
         status = statuses.get(stock.symbol, default_status)
-        if not snapshot and status in ("WAIT", "WATCH", "QUALIFIED_SETUP"):
+        if d_status in (DATA_UNAVAILABLE, DATA_STALE, DATA_INSUFFICIENT) or not snapshot:
             status = d_status if d_status in (DATA_UNAVAILABLE, DATA_STALE, DATA_INSUFFICIENT) else DATA_UNAVAILABLE
 
         card = build_stock_card(

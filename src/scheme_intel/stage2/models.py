@@ -273,4 +273,5 @@ class SetupOutcome(BaseModel):
     realized_pnl_pct: Optional[float] = None
     target_hit: bool = False
     stop_hit: bool = False
+    expired: bool = False
     holding_period_days: int = 0

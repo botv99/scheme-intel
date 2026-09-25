@@ -22,8 +22,21 @@ class OutcomeTracker:
     Automated tracker that evaluates existing setups against daily market sessions.
     """
 
-    def __init__(self, db: Stage2Database):
+    def __init__(
+        self,
+        db: Stage2Database,
+        max_setup_age_days: int = 5,
+        config_path: Optional[str] = None,
+    ):
         self.db = db
+        age = max_setup_age_days
+        try:
+            from ..config import load_config
+            cfg = load_config(config_path)
+            age = int(cfg.get("settings", {}).get("max_setup_age_days", max_setup_age_days))
+        except Exception:
+            pass
+        self.max_setup_age_days = age
 
     def evaluate_active_setups(
         self,
@@ -46,6 +59,7 @@ class OutcomeTracker:
         triggered_entries: List[SetupOutcome] = []
         target_hits: List[SetupOutcome] = []
         stop_hits: List[SetupOutcome] = []
+        expired_positions: List[SetupOutcome] = []
         active_positions: List[SetupOutcome] = []
 
         for setup in all_qualified:
@@ -63,7 +77,7 @@ class OutcomeTracker:
                 )
 
             # Already closed trade - skip
-            if outcome.target_hit or outcome.stop_hit:
+            if outcome.target_hit or outcome.stop_hit or outcome.expired:
                 continue
 
             risk = setup.risk
@@ -117,6 +131,15 @@ class OutcomeTracker:
                     stop_hits.append(outcome)
                     logger.info("Setup %s (%s) STOP LOSS HIT at ₹%.2f (%.2f%%)", setup.setup_id, setup.stock.symbol, risk.stop_loss, outcome.realized_pnl_pct)
 
+                # Check Automatic Expiry (holding_period_days >= max_setup_age_days)
+                elif outcome.holding_period_days >= self.max_setup_age_days:
+                    outcome.expired = True
+                    outcome.exit_price = snap.close
+                    outcome.exit_date = today_str
+                    outcome.realized_pnl_pct = round(((snap.close - entry) / entry) * 100.0, 2)
+                    expired_positions.append(outcome)
+                    logger.info("Setup %s (%s) EXPIRED after %d days at ₹%.2f (%.2f%%)", setup.setup_id, setup.stock.symbol, outcome.holding_period_days, snap.close, outcome.realized_pnl_pct)
+
                 else:
                     active_positions.append(outcome)
 
@@ -128,6 +151,7 @@ class OutcomeTracker:
             triggered=triggered_entries,
             targets=target_hits,
             stops=stop_hits,
+            expired=expired_positions,
             active=active_positions,
         )
 
@@ -136,6 +160,7 @@ class OutcomeTracker:
             "triggered": triggered_entries,
             "target_hits": target_hits,
             "stop_hits": stop_hits,
+            "expired": expired_positions,
             "active_positions": active_positions,
             "summary_text": summary_text,
         }
@@ -146,6 +171,7 @@ class OutcomeTracker:
         triggered: List[SetupOutcome],
         targets: List[SetupOutcome],
         stops: List[SetupOutcome],
+        expired: List[SetupOutcome],
         active: List[SetupOutcome],
     ) -> str:
         """Format an informative Telegram update section for active trades."""
@@ -154,7 +180,7 @@ class OutcomeTracker:
             f"_(Session Date: {today_str})_\n",
         ]
 
-        if not (triggered or targets or stops or active):
+        if not (triggered or targets or stops or expired or active):
             lines.append("• No open or newly triggered swing positions to update.")
             return "\n".join(lines)
 
@@ -168,6 +194,12 @@ class OutcomeTracker:
             lines.append("🛑 *STOP LOSSES HIT TODAY:*")
             for o in stops:
                 lines.append(f"• *{o.symbol}*: Stop hit at ₹{o.exit_price:.2f} (Realized: *{o.realized_pnl_pct:.2f}%* over {o.holding_period_days} sessions)")
+            lines.append("")
+
+        if expired:
+            lines.append("⌛ *EXPIRED POSITIONS (MAX AGE REACHED):*")
+            for o in expired:
+                lines.append(f"• *{o.symbol}*: Expired after {o.holding_period_days} sessions | Closed at ₹{o.exit_price:.2f} (Realized: *{o.realized_pnl_pct:+.2f}%*)")
             lines.append("")
 
         if triggered:

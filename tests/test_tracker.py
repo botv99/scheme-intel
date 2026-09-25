@@ -7,14 +7,24 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 import pytest
 
-from src.scheme_intel.stage2.models import (
-    Stock, TradeSetup, SetupOutcome, RiskAssessment, TechnicalSnapshot, DailyStockCard
-)
-from src.scheme_intel.stage2.storage import Stage2Database
-from src.scheme_intel.stage2.tracker import OutcomeTracker
-from src.scheme_intel.stage2.pipeline import Stage2Pipeline
-from src.scheme_intel.stage2.providers.mock import MockProvider
-from src.scheme_intel.main import run as main_run
+try:
+    from scheme_intel.stage2.models import (
+        Stock, TradeSetup, SetupOutcome, RiskAssessment, TechnicalSnapshot, DailyStockCard
+    )
+    from scheme_intel.stage2.storage import Stage2Database
+    from scheme_intel.stage2.tracker import OutcomeTracker
+    from scheme_intel.stage2.pipeline import Stage2Pipeline
+    from scheme_intel.stage2.providers.mock import MockProvider
+    from scheme_intel.main import run as main_run
+except ImportError:
+    from src.scheme_intel.stage2.models import (
+        Stock, TradeSetup, SetupOutcome, RiskAssessment, TechnicalSnapshot, DailyStockCard
+    )
+    from src.scheme_intel.stage2.storage import Stage2Database
+    from src.scheme_intel.stage2.tracker import OutcomeTracker
+    from src.scheme_intel.stage2.pipeline import Stage2Pipeline
+    from src.scheme_intel.stage2.providers.mock import MockProvider
+    from src.scheme_intel.main import run as main_run
 
 
 @pytest.fixture
@@ -215,9 +225,59 @@ class TestOutcomeTracker:
         assert len(result["target_hits"]) == 0
         assert len(result["active_positions"]) == 0
 
+    def test_position_expiry_at_max_setup_age(self, temp_db: Stage2Database):
+        setup = _make_sample_setup()
+        temp_db.save_setup(setup)
+
+        tracker = OutcomeTracker(temp_db, max_setup_age_days=5)
+
+        # Day 1: Trigger entry
+        snap_day1 = TechnicalSnapshot(close=522.0, high=525.0, low=518.0, volume=300_000)
+        tracker.evaluate_active_setups({"PRAJIND.NS": snap_day1}, session_date="2026-09-24")
+
+        outcome = temp_db.get_outcome(setup.setup_id)
+        assert outcome.entry_triggered is True
+        assert outcome.holding_period_days == 1
+        assert outcome.expired is False
+
+        # Days 2 to 4: Inside range (no target, no stop)
+        for day, date in enumerate(["2026-09-25", "2026-09-26", "2026-09-27"], start=2):
+            snap = TechnicalSnapshot(close=523.0, high=535.0, low=510.0, volume=200_000)
+            res = tracker.evaluate_active_setups({"PRAJIND.NS": snap}, session_date=date)
+            assert len(res["active_positions"]) == 1
+            assert len(res["expired"]) == 0
+
+        outcome = temp_db.get_outcome(setup.setup_id)
+        assert outcome.holding_period_days == 4
+        assert outcome.expired is False
+
+        # Day 5: Reaches max_setup_age_days (5) -> must EXPIRE
+        snap_day5 = TechnicalSnapshot(close=526.0, high=530.0, low=515.0, volume=250_000)
+        res_day5 = tracker.evaluate_active_setups({"PRAJIND.NS": snap_day5}, session_date="2026-09-28")
+
+        assert len(res_day5["expired"]) == 1
+        assert len(res_day5["active_positions"]) == 0
+        assert "EXPIRED POSITIONS (MAX AGE REACHED)" in res_day5["summary_text"]
+        assert "PRAJIND.NS" in res_day5["summary_text"]
+
+        outcome_final = temp_db.get_outcome(setup.setup_id)
+        assert outcome_final.expired is True
+        assert outcome_final.target_hit is False
+        assert outcome_final.stop_hit is False
+        assert outcome_final.holding_period_days == 5
+        assert outcome_final.exit_price == 526.0
+        assert outcome_final.exit_date == "2026-09-28"
+        assert outcome_final.realized_pnl_pct == round(((526.0 - 520.0) / 520.0) * 100, 2)  # +1.15%
+
+        # Subsequent day: already expired trade must not be reprocessed
+        snap_day6 = TechnicalSnapshot(close=530.0, high=540.0, low=520.0, volume=200_000)
+        res_day6 = tracker.evaluate_active_setups({"PRAJIND.NS": snap_day6}, session_date="2026-09-29")
+        assert len(res_day6["expired"]) == 0
+        assert len(res_day6["active_positions"]) == 0
+
 
 class TestStage2PipelineTelegramDispatch:
-    @patch('src.scheme_intel.stage2.pipeline.send_telegram', return_value=True)
+    @patch('scheme_intel.stage2.pipeline.send_telegram', return_value=True)
     def test_pipeline_dispatch_sends_sections(self, mock_send, tmp_path: Path):
         db_file = tmp_path / "dispatch_test.db"
         pipeline = Stage2Pipeline(
@@ -232,8 +292,8 @@ class TestStage2PipelineTelegramDispatch:
 
 
 class TestMainUnifiedExecution:
-    @patch('src.scheme_intel.main.Pipeline.run')
-    @patch('src.scheme_intel.stage2.pipeline.Stage2Pipeline.run')
+    @patch('scheme_intel.main.Pipeline.run')
+    @patch('scheme_intel.stage2.pipeline.Stage2Pipeline.run')
     def test_main_run_unifies_stage1_and_stage2(self, mock_stage2, mock_stage1):
         mock_stage1.return_value = {
             "catalysts": ["Praj GOBARdhan"],
