@@ -35,23 +35,23 @@ def main():
         except Exception as e:
             print(f"ListModels [{version}] exception: {e}")
 
-    # Test direct generateContent on gemini-2.5-flash
-    print("\n=== Testing gemini-2.5-flash generateContent live ===")
-    test_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+    # Test direct generateContent on gemini-3.8-flash
+    print("\n=== Testing gemini-3.8-flash generateContent live ===")
+    test_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={api_key}"
     try:
         test_resp = requests.post(
             test_url,
             json={"contents": [{"parts": [{"text": "Reply with ONLY: LIVE_GEMINI_OK"}]}]},
             timeout=15,
         )
-        print(f"gemini-2.5-flash HTTP status: {test_resp.status_code}")
+        print(f"gemini-3.8-flash HTTP status: {test_resp.status_code}")
         if test_resp.status_code == 200:
             res_text = test_resp.json().get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-            print(f"gemini-2.5-flash response text: {res_text.strip()}")
+            print(f"gemini-3.8-flash response text: {res_text.strip()}")
         else:
-            print(f"gemini-2.5-flash test error: {test_resp.text}")
+            print(f"gemini-3.8-flash test error: {test_resp.text}")
     except Exception as exc:
-        print(f"gemini-2.5-flash test exception: {exc}")
+        print(f"gemini-3.8-flash test exception: {exc}")
 
 if __name__ == "__main__":
     main()

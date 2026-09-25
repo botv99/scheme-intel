@@ -24,7 +24,7 @@ class GeminiProvider(LLMProvider):
     ):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         # Default to Google ListModels-confirmed production Flash model
-        self.model = model or os.getenv("GEMINI_MODEL") or "gemini-2.5-flash"
+        self.model = model or os.getenv("GEMINI_MODEL") or "gemini-3.8-flash"
         self.api_version = api_version
 
     def generate(
