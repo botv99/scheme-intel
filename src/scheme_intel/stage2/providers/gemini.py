@@ -16,9 +16,16 @@ logger = get_logger(__name__)
 class GeminiProvider(LLMProvider):
     """Provider connecting to Google Gemini REST API."""
 
-    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-1.5-flash"):
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        model: Optional[str] = None,
+        api_version: str = "v1beta",
+    ):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-        self.model = model
+        # Default to Google ListModels-confirmed production Flash model
+        self.model = model or os.getenv("GEMINI_MODEL") or "gemini-2.5-flash"
+        self.api_version = api_version
 
     def generate(
         self,
@@ -30,7 +37,11 @@ class GeminiProvider(LLMProvider):
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY or GOOGLE_API_KEY is required for GeminiProvider")
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
+        model_name = self.model
+        if model_name.startswith("models/"):
+            model_name = model_name[7:]
+
+        url = f"https://generativelanguage.googleapis.com/{self.api_version}/models/{model_name}:generateContent?key={self.api_key}"
 
         contents = []
         if system_prompt:
@@ -64,24 +75,36 @@ class GeminiProvider(LLMProvider):
             if not candidates:
                 raise ValueError("No candidates returned from Gemini API")
 
-            part_text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+            parts = candidates[0].get("content", {}).get("parts", [])
+            part_text = "".join(p.get("text", "") for p in parts if isinstance(p, dict) and "text" in p)
+            if not part_text and parts and isinstance(parts[0], dict):
+                part_text = parts[0].get("text", "")
+
             raw_json = None
             if schema or "{" in part_text:
                 try:
                     clean = part_text.strip()
-                    if clean.startswith("```json"):
-                        clean = clean[7:]
-                    if clean.endswith("```"):
-                        clean = clean[:-3]
+                    if "```json" in clean:
+                        clean = clean.split("```json", 1)[1].split("```", 1)[0].strip()
+                    elif "```" in clean:
+                        clean = clean.split("```", 1)[1].split("```", 1)[0].strip()
+                    elif "{" in clean and "}" in clean:
+                        s_idx = clean.find("{")
+                        e_idx = clean.rfind("}")
+                        if s_idx != -1 and e_idx != -1 and e_idx > s_idx:
+                            clean = clean[s_idx : e_idx + 1]
                     raw_json = json.loads(clean.strip())
                 except json.JSONDecodeError:
                     pass
 
+            tokens = data.get("usageMetadata", {}).get("totalTokenCount", 0)
+            logger.info("Gemini live API (%s) generated response: %d tokens used", model_name, tokens)
+
             return ProviderResponse(
                 content=part_text,
                 raw_json=raw_json,
-                model=self.model,
-                tokens_used=data.get("usageMetadata", {}).get("totalTokenCount", 0),
+                model=model_name,
+                tokens_used=tokens,
             )
         except Exception as exc:
             resp_obj = getattr(exc, "response", None)
