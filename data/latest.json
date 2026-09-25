@@ -1,36 +1,8 @@
 {
-  "generated_at": "2026-09-25T19:27:22.530140+00:00",
+  "generated_at": "2026-09-25T19:29:36.626521+00:00",
   "catalysts": [],
   "setups": [],
   "source_errors": [
-    {
-      "source": "PIB Ministry of Petroleum & Natural Gas",
-      "error": "Connection timeout"
-    },
-    {
-      "source": "GOBARdhan Unified Registration Portal",
-      "error": "Connection timeout"
-    },
-    {
-      "source": "Ministry of New and Renewable Energy",
-      "error": "Connection timeout"
-    },
-    {
-      "source": "Ministry of Jal Shakti",
-      "error": "Connection timeout"
-    },
-    {
-      "source": "Central Public Procurement Portal (tenders)",
-      "error": "Connection timeout"
-    },
-    {
-      "source": "NSE corporate filings",
-      "error": "Connection timeout"
-    },
-    {
-      "source": "BSE corporate announcements",
-      "error": "Connection timeout"
-    },
     {
       "source": "ingestion::NSE block deals",
       "error": "Expecting value: line 2 column 1 (char 1)"

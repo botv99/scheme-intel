@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-09-25T15:45:43.141520+00:00",
+  "generated_at": "2026-09-25T19:29:24.890161+00:00",
   "prices": [
     {
       "company": "TruAlt Bioenergy",
       "symbol": "TRUALT.NS",
       "screener_id": "TRUALT",
       "date": "2026-09-25",
-      "open": 429.3,
+      "open": NaN,
       "close": 441.9,
-      "high": 444.2,
-      "low": 421.2,
+      "high": NaN,
+      "low": NaN,
       "volume": 457107,
       "change_pct": 3.01,
       "rsi14": 55.9,
@@ -1046,10 +1046,10 @@
         },
         {
           "date": "2026-09-25",
-          "open": 429.3,
-          "high": 444.2,
-          "low": 421.2,
-          "close": 441.9,
+          "open": NaN,
+          "high": NaN,
+          "low": NaN,
+          "close": NaN,
           "volume": 442257
         }
       ]
@@ -1059,10 +1059,10 @@
       "symbol": "WABAG.NS",
       "screener_id": "WABAG",
       "date": "2026-09-25",
-      "open": 2029.6,
+      "open": NaN,
       "close": 2008.4,
-      "high": 2049.5,
-      "low": 1991.1,
+      "high": NaN,
+      "low": NaN,
       "volume": 286639,
       "change_pct": -1.03,
       "rsi14": 46.0,
@@ -2099,10 +2099,10 @@
         },
         {
           "date": "2026-09-25",
-          "open": 2029.6,
-          "high": 2049.5,
-          "low": 1991.1,
-          "close": 2008.4,
+          "open": NaN,
+          "high": NaN,
+          "low": NaN,
+          "close": NaN,
           "volume": 272084
         }
       ]
@@ -2112,10 +2112,10 @@
       "symbol": "PRAJIND.NS",
       "screener_id": "PRAJIND",
       "date": "2026-09-25",
-      "open": 316.05,
+      "open": NaN,
       "close": 315.9,
-      "high": 318.85,
-      "low": 311.95,
+      "high": NaN,
+      "low": NaN,
       "volume": 369087,
       "change_pct": -0.06,
       "rsi14": 40.2,
@@ -3152,10 +3152,10 @@
         },
         {
           "date": "2026-09-25",
-          "open": 316.05,
-          "high": 318.85,
-          "low": 311.95,
-          "close": 315.9,
+          "open": NaN,
+          "high": NaN,
+          "low": NaN,
+          "close": NaN,
           "volume": 337652
         }
       ]
@@ -3165,10 +3165,10 @@
       "symbol": "ORGANICREC.BO",
       "screener_id": "543997",
       "date": "2026-09-25",
-      "open": 175.0,
+      "open": NaN,
       "close": 197.45,
-      "high": 202.95,
-      "low": 175.0,
+      "high": NaN,
+      "low": NaN,
       "volume": 106200,
       "change_pct": 9.63,
       "rsi14": 71.6,
@@ -4197,10 +4197,10 @@
         },
         {
           "date": "2026-09-25",
-          "open": 175.0,
-          "high": 202.95,
-          "low": 175.0,
-          "close": 197.45,
+          "open": NaN,
+          "high": NaN,
+          "low": NaN,
+          "close": NaN,
           "volume": 106200
         }
       ]
@@ -4210,10 +4210,10 @@
       "symbol": "KIRLPNU.NS",
       "screener_id": "KIRLPNU",
       "date": "2026-09-25",
-      "open": 699.8,
+      "open": NaN,
       "close": 691.95,
-      "high": 699.8,
-      "low": 685.5,
+      "high": NaN,
+      "low": NaN,
       "volume": 79251,
       "change_pct": -0.83,
       "rsi14": 36.7,
@@ -5242,10 +5242,10 @@
         },
         {
           "date": "2026-09-25",
-          "open": 699.8,
-          "high": 699.8,
-          "low": 685.5,
-          "close": 691.95,
+          "open": NaN,
+          "high": NaN,
+          "low": NaN,
+          "close": NaN,
           "volume": 72155
         }
       ]
@@ -5255,10 +5255,10 @@
       "symbol": "GAIL.NS",
       "screener_id": "GAIL",
       "date": "2026-09-25",
-      "open": 173.9,
+      "open": NaN,
       "close": 172.7,
-      "high": 173.98,
-      "low": 171.59,
+      "high": NaN,
+      "low": NaN,
       "volume": 5547977,
       "change_pct": -0.66,
       "rsi14": 48.4,
@@ -6295,10 +6295,10 @@
         },
         {
           "date": "2026-09-25",
-          "open": 173.9,
-          "high": 173.98,
-          "low": 171.59,
-          "close": 172.7,
+          "open": NaN,
+          "high": NaN,
+          "low": NaN,
+          "close": NaN,
           "volume": 5454617
         }
       ]
@@ -6308,10 +6308,10 @@
       "symbol": "IOC.NS",
       "screener_id": "IOC",
       "date": "2026-09-25",
-      "open": 136.5,
+      "open": NaN,
       "close": 135.7,
-      "high": 137.06,
-      "low": 135.33,
+      "high": NaN,
+      "low": NaN,
       "volume": 8112373,
       "change_pct": -0.42,
       "rsi14": 46.4,
@@ -7348,10 +7348,10 @@
         },
         {
           "date": "2026-09-25",
-          "open": 136.5,
-          "high": 137.06,
-          "low": 135.33,
-          "close": 135.7,
+          "open": NaN,
+          "high": NaN,
+          "low": NaN,
+          "close": NaN,
           "volume": 7768248
         }
       ]
