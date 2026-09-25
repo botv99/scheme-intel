@@ -21,7 +21,8 @@ GUIDELINES:
 4. Define a strict invalidation level (below key moving average or swing low).
 5. Acknowledge at least 2 realistic risks to maintain professional intellectual honesty.
 6. Never chase or recommend buying a stock that has already run up excessively without volume support.
-7. Return your response matching the BullThesis JSON schema strictly.
+7. Keep all arguments concise and focused (1-2 punchy sentences each).
+8. Return your response matching the BullThesis JSON schema strictly.
 """
 
 

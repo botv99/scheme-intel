@@ -49,9 +49,14 @@ class DebateOrchestrator:
         bull_thesis = self.bull_agent.build_thesis(candidate, evidence)
         logger.info("Bull thesis generated for %s (Target: Rs. %s)", candidate.stock.symbol, bull_thesis.expected_target)
 
+        import time
+        time.sleep(1.5)
+
         # 3. Bear Thesis
         bear_thesis = self.bear_agent.build_thesis(candidate, evidence, bull_thesis)
         logger.info("Bear thesis generated for %s (Invalidation: %s)", candidate.stock.symbol, bear_thesis.what_would_invalidate_bear[:40])
+
+        time.sleep(1.5)
 
         # 4. Arbitration
         debate_result = self.arbitrator_agent.arbitrate(candidate, evidence, bull_thesis, bear_thesis)

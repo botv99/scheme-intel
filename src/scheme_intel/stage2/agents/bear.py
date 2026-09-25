@@ -20,7 +20,8 @@ GUIDELINES:
 3. Crucially, define:
    - 'what_would_invalidate_bear': The specific market price action or evidence that would prove you wrong.
    - 'required_confirmation_to_buy': The exact trigger or price confirmation the trader must WAIT for before pulling the trigger (e.g., 'Wait for breakout above ₹530 on >1.5x volume and daily closing confirmation').
-4. Return your response matching the BearThesis JSON schema strictly.
+4. Keep all flaws and arguments concise and focused (1-2 punchy sentences each).
+5. Return your response matching the BearThesis JSON schema strictly.
 """
 
 

@@ -56,7 +56,7 @@ class GeminiProvider(LLMProvider):
 
         generation_config: dict = {
             "temperature": temperature,
-            "maxOutputTokens": 2048,
+            "maxOutputTokens": 8192,
         }
         if schema:
             generation_config["responseMimeType"] = "application/json"
@@ -66,56 +66,82 @@ class GeminiProvider(LLMProvider):
             "generationConfig": generation_config,
         }
 
-        try:
-            resp = requests.post(url, json=payload, timeout=30)
-            resp.raise_for_status()
-            data = resp.json()
+        import time
 
-            candidates = data.get("candidates", [])
-            if not candidates:
-                raise ValueError("No candidates returned from Gemini API")
+        max_retries = 4
+        last_exc = None
+        for attempt in range(max_retries):
+            try:
+                resp = requests.post(url, json=payload, timeout=45)
+                if resp.status_code in (429, 503):
+                    if attempt < max_retries - 1:
+                        sleep_time = (attempt + 1) * 3.0
+                        logger.warning(
+                            "Gemini API %d (%s), retrying in %.1fs (attempt %d/%d)...",
+                            resp.status_code,
+                            model_name,
+                            sleep_time,
+                            attempt + 1,
+                            max_retries,
+                        )
+                        time.sleep(sleep_time)
+                        continue
+                resp.raise_for_status()
+                data = resp.json()
 
-            parts = candidates[0].get("content", {}).get("parts", [])
-            part_text = "".join(p.get("text", "") for p in parts if isinstance(p, dict) and "text" in p)
-            if not part_text and parts and isinstance(parts[0], dict):
-                part_text = parts[0].get("text", "")
+                candidates = data.get("candidates", [])
+                if not candidates:
+                    raise ValueError("No candidates returned from Gemini API")
 
-            raw_json = None
-            if schema or "{" in part_text:
-                try:
-                    clean = part_text.strip()
-                    if "```json" in clean:
-                        clean = clean.split("```json", 1)[1].split("```", 1)[0].strip()
-                    elif "```" in clean:
-                        clean = clean.split("```", 1)[1].split("```", 1)[0].strip()
-                    elif "{" in clean and "}" in clean:
-                        s_idx = clean.find("{")
-                        e_idx = clean.rfind("}")
-                        if s_idx != -1 and e_idx != -1 and e_idx > s_idx:
-                            clean = clean[s_idx : e_idx + 1]
-                    raw_json = json.loads(clean.strip())
-                except json.JSONDecodeError:
-                    pass
+                parts = candidates[0].get("content", {}).get("parts", [])
+                part_text = "".join(p.get("text", "") for p in parts if isinstance(p, dict) and "text" in p)
+                if not part_text and parts and isinstance(parts[0], dict):
+                    part_text = parts[0].get("text", "")
 
-            tokens = data.get("usageMetadata", {}).get("totalTokenCount", 0)
-            logger.info("Gemini live API (%s) generated response: %d tokens used", model_name, tokens)
+                raw_json = None
+                if schema or "{" in part_text:
+                    try:
+                        clean = part_text.strip()
+                        if "```json" in clean:
+                            clean = clean.split("```json", 1)[1].split("```", 1)[0].strip()
+                        elif "```" in clean:
+                            clean = clean.split("```", 1)[1].split("```", 1)[0].strip()
+                        elif "{" in clean and "}" in clean:
+                            s_idx = clean.find("{")
+                            e_idx = clean.rfind("}")
+                            if s_idx != -1 and e_idx != -1 and e_idx > s_idx:
+                                clean = clean[s_idx : e_idx + 1]
+                        raw_json = json.loads(clean.strip())
+                    except json.JSONDecodeError:
+                        pass
 
-            return ProviderResponse(
-                content=part_text,
-                raw_json=raw_json,
-                model=model_name,
-                tokens_used=tokens,
-            )
-        except Exception as exc:
-            resp_obj = getattr(exc, "response", None)
-            err_text = ""
-            if resp_obj is not None:
-                try:
-                    err_json = resp_obj.json()
-                    err_text = err_json.get("error", {}).get("message", resp_obj.text)
-                except Exception:
-                    err_text = resp_obj.text
-            if self.api_key:
-                err_text = err_text.replace(self.api_key, "***")
-            logger.error("Gemini API generation failed (%s): %s", exc, err_text)
-            raise
+                tokens = data.get("usageMetadata", {}).get("totalTokenCount", 0)
+                logger.info("Gemini live API (%s) generated response: %d tokens used", model_name, tokens)
+
+                return ProviderResponse(
+                    content=part_text,
+                    raw_json=raw_json,
+                    model=model_name,
+                    tokens_used=tokens,
+                )
+            except Exception as exc:
+                last_exc = exc
+                status = getattr(getattr(exc, "response", None), "status_code", None)
+                if status in (429, 503) and attempt < max_retries - 1:
+                    sleep_time = (attempt + 1) * 3.0
+                    logger.warning("Retrying Gemini API on %d in %.1fs...", status, sleep_time)
+                    time.sleep(sleep_time)
+                    continue
+
+                resp_obj = getattr(exc, "response", None)
+                err_text = ""
+                if resp_obj is not None:
+                    try:
+                        err_json = resp_obj.json()
+                        err_text = err_json.get("error", {}).get("message", resp_obj.text)
+                    except Exception:
+                        err_text = resp_obj.text
+                if self.api_key:
+                    err_text = err_text.replace(self.api_key, "***")
+                logger.error("Gemini API generation failed (%s): %s", exc, err_text)
+                raise

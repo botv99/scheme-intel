@@ -24,7 +24,8 @@ GUIDELINES:
 2. Score bull_strength (0-100) and bear_strength (0-100) based on verified factual evidence.
 3. List agreed points, disputed points, and resolved claims.
 4. Extract the single key catalyst, the single key risk, and the definitive confirmation needed to trade.
-5. Return your response matching the DebateResult JSON schema strictly.
+5. Keep rounds (maximum 3 concise rounds), agreed points, and disputed points concise and crisp (1-2 sentences each).
+6. Return your response matching the DebateResult JSON schema strictly.
 """
 
 

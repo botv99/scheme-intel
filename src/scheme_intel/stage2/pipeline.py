@@ -259,6 +259,7 @@ class Stage2Pipeline:
             elif cand:
                 # Run Adversarial Debate (Bull, Bear, Arbitrator)
                 bull, bear, debate = self.debate_orchestrator.run_debate(cand)
+                time.sleep(1.0)
 
                 # Hard Risk Engine Assessment (Mathematical Veto)
                 risk = evaluate_risk(cand, bull)
