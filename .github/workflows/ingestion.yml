@@ -2,9 +2,6 @@ name: Daily ingestion (4:30 PM IST)
 
 on:
   workflow_dispatch:
-  schedule:
-    # 4:30 PM IST = 11:00 UTC, Mon-Fri
-    - cron: "0 11 * * 1-5"
 
 permissions:
   contents: write
@@ -18,11 +15,10 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
-      - name: Run ingestion layer
-        run: python -m scheme_intel.ingest
+      - run: python -m scheme_intel.ingest
         env:
           PYTHONPATH: src
-      - name: Store ingestion snapshot
+      - name: Store daily ingestion snapshot
         run: |
           git config user.name "scheme-intel[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
