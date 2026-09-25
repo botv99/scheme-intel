@@ -15,35 +15,63 @@ def format_section1_daily_intelligence(
     session_title: str,
     cards: List[DailyStockCard],
     stats: Dict[str, int],
+    health_stats: Optional[Dict[str, int]] = None,
 ) -> str:
     """
     SECTION 1: DAILY MARKET/SCHEME INTELLIGENCE
     Guarantees 100% full coverage across every watchlist stock.
     """
     total = len(cards)
+    health = health_stats or {}
+    total_health = health.get("total", total)
+    valid_health = health.get("valid", sum(1 for c in cards if getattr(c, "data_status", "DATA_OK") == "DATA_OK" and c.price is not None))
+    stale_health = health.get("stale", sum(1 for c in cards if getattr(c, "data_status", "") == "DATA_STALE"))
+    unavail_health = health.get("unavailable", sum(1 for c in cards if getattr(c, "data_status", "") in ("DATA_UNAVAILABLE", "DATA_INSUFFICIENT") or c.price is None))
+
     lines = [
         f"📊 *SECTION 1: DAILY MARKET & SCHEME INTELLIGENCE*",
         f"*{session_title}*",
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    ]
+
+    # Global Market-Data Health Banner
+    if total_health > 0 and unavail_health == total_health:
+        lines.append("🚨 *MARKET DATA FAILURE*\n")
+        lines.append(f"*{total_health}/{total_health} stocks have unavailable market data.*")
+        lines.append("No technical setups or trade triggers generated.\n")
+        lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    elif unavail_health > 0 or stale_health > 0:
+        lines.append(f"• *Market Data Health:* Valid: {valid_health}/{total_health} | Stale: {stale_health}/{total_health} | Unavailable: {unavail_health}/{total_health}")
+
+    lines.extend([
         f"• *Watchlist scanned:* {total}",
         f"• *Catalysts found:* {stats.get('catalysts_found', 0)}",
         f"• *Swing candidates:* {stats.get('candidates', 0)}",
         f"• *Qualified setups:* {stats.get('qualified', 0)}",
         f"• *Waiting:* {stats.get('waiting', 0)}",
         f"• *No trade:* {stats.get('no_trade', 0)}",
+        f"• *Data unavailable:* {stats.get('data_unavailable', unavail_health)}",
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━\n",
         f"📋 *ALL WATCHLIST STOCKS (100% COVERAGE):*",
-    ]
+    ])
 
     for card in cards:
-        chg_emoji = "🟢" if card.day_change_pct >= 0 else "🔴"
         status_badge = f"`[{card.tomorrow_status}]`"
-
         lines.append(f"\n🏷️ *{card.stock.name}* (`{card.stock.symbol}`) {status_badge}")
-        lines.append(
-            f"• *Price:* ₹{card.price:.2f} ({chg_emoji} {card.day_change_pct:+.2f}%) | "
-            f"*Vol:* {card.volume:,.0f} ({card.volume_ratio:.1f}x of 20D {card.volume_avg_20d:,.0f})"
-        )
+
+        if card.tomorrow_status in ("DATA_UNAVAILABLE", "DATA_STALE", "DATA_INSUFFICIENT") or card.price is None:
+            lines.append("• *Price:* —")
+            lines.append("• *Volume:* —")
+        else:
+            chg_emoji = "🟢" if (card.day_change_pct or 0.0) >= 0 else "🔴"
+            day_pct_str = f"{card.day_change_pct:+.2f}%" if card.day_change_pct is not None else "+0.00%"
+            vol_str = f"{card.volume:,.0f}" if card.volume is not None else "0"
+            vol_ratio_str = f"{card.volume_ratio:.1f}x" if card.volume_ratio is not None else "1.0x"
+            vol_avg_str = f"{card.volume_avg_20d:,.0f}" if card.volume_avg_20d is not None else "0"
+            lines.append(
+                f"• *Price:* ₹{card.price:.2f} ({chg_emoji} {day_pct_str}) | "
+                f"*Vol:* {vol_str} ({vol_ratio_str} of 20D {vol_avg_str})"
+            )
 
         # News & Disclosures
         news_summary = card.developments[0] if card.developments else "No material disclosures."
@@ -54,10 +82,15 @@ def format_section1_daily_intelligence(
         lines.append(f"• *Catalyst:* {cat_summary} (Dir: {card.catalyst_direction}, Str: {card.catalyst_strength}/100)")
 
         # Technical State
-        lines.append(
-            f"• *Technicals:* Trend: {card.trend} | Support: ₹{card.support:.1f} | "
-            f"Resistance: ₹{card.resistance:.1f} | {card.technical_summary}"
-        )
+        if card.tomorrow_status in ("DATA_UNAVAILABLE", "DATA_STALE", "DATA_INSUFFICIENT") or card.price is None:
+            lines.append("• *Technicals:* Market data unavailable")
+        else:
+            sup_str = f"₹{card.support:.1f}" if card.support is not None else "N/A"
+            res_str = f"₹{card.resistance:.1f}" if card.resistance is not None else "N/A"
+            lines.append(
+                f"• *Technicals:* Trend: {card.trend} | Support: {sup_str} | "
+                f"Resistance: {res_str} | {card.technical_summary}"
+            )
         lines.append(f"• *Status for Next Session:* *{card.tomorrow_status}*")
         lines.append("───────────────────────────")
 
@@ -107,6 +140,7 @@ def format_section3_actionable_and_waiting(setups: List[TradeSetup]) -> str:
     qualified = [s for s in setups if s.status == "QUALIFIED_SETUP"]
     waiting = [s for s in setups if s.status == "WAIT"]
     no_trade = [s for s in setups if s.status == "NO_TRADE"]
+    data_unavailable = [s for s in setups if s.status in ("DATA_UNAVAILABLE", "DATA_STALE", "DATA_INSUFFICIENT")]
 
     # 1. QUALIFIED SETUPS
     if qualified:
@@ -121,7 +155,7 @@ def format_section3_actionable_and_waiting(setups: List[TradeSetup]) -> str:
             lines.append("🚨 *QUALIFIED SETUP*")
             lines.append(f"*{stock.name.upper()}* (`{stock.symbol}`)")
             lines.append(f"*NEXT SESSION:* {s.next_trading_session}")
-            lines.append(f"*Current Close:* ₹{tech.close:.2f}" if tech else f"*Current Close:* ₹0.00")
+            lines.append(f"*Current Close:* ₹{tech.close:.2f}" if tech and tech.close > 0 else "*Current Close:* —")
             lines.append("")
 
             if risk:
@@ -200,6 +234,15 @@ def format_section3_actionable_and_waiting(setups: List[TradeSetup]) -> str:
             lines.append(f"  *FINAL: NO_TRADE*")
         lines.append("───────────────────────────\n")
 
+    # 4. DATA UNAVAILABLE / STALE
+    if data_unavailable:
+        lines.append("⚠️ *MARKET DATA UNAVAILABLE / STALE*\n")
+        for s in data_unavailable:
+            reason = s.no_trade_reason or "Market data unavailable or stale"
+            lines.append(f"• *{s.stock.name}* (`{s.stock.symbol}`): {reason}")
+            lines.append(f"  *FINAL: {s.status}*")
+        lines.append("───────────────────────────\n")
+
     return "\n".join(lines)
 
 
@@ -208,6 +251,7 @@ def build_full_telegram_report(
     cards: List[DailyStockCard],
     candidates: List[CandidateSetup],
     setups: List[TradeSetup],
+    health_stats: Optional[Dict[str, int]] = None,
 ) -> Dict[str, str]:
     """
     Build the complete 3-Section Telegram report payload.
@@ -215,6 +259,7 @@ def build_full_telegram_report(
     qualified_count = sum(1 for s in setups if s.status == "QUALIFIED_SETUP")
     wait_count = sum(1 for s in setups if s.status == "WAIT")
     no_trade_count = sum(1 for s in setups if s.status == "NO_TRADE")
+    data_unavail_count = sum(1 for s in setups if s.status in ("DATA_UNAVAILABLE", "DATA_STALE", "DATA_INSUFFICIENT"))
     cat_count = sum(1 for c in cards if c.catalysts and "Sector" not in c.catalysts[0])
 
     stats = {
@@ -223,9 +268,10 @@ def build_full_telegram_report(
         "qualified": qualified_count,
         "waiting": wait_count,
         "no_trade": no_trade_count,
+        "data_unavailable": data_unavail_count,
     }
 
-    sec1 = format_section1_daily_intelligence(session_title, cards, stats)
+    sec1 = format_section1_daily_intelligence(session_title, cards, stats, health_stats=health_stats)
     sec2 = format_section2_radar(candidates)
     sec3 = format_section3_actionable_and_waiting(setups)
 

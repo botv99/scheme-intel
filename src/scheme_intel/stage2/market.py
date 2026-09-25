@@ -5,14 +5,21 @@ Supports both live production ingestion (Stage 1 price layer) and deterministic 
 """
 from __future__ import annotations
 
-from typing import Optional, Dict, Any, List
+import json
+from pathlib import Path
+from datetime import datetime, timezone, timedelta, date
+from typing import Optional, Dict, Any, List, Tuple
 import numpy as np
 import pandas as pd
 
-from .models import TechnicalSnapshot
+from .models import (
+    TechnicalSnapshot, DATA_OK, DATA_UNAVAILABLE, DATA_STALE, DATA_INSUFFICIENT,
+)
+from .calendar import is_trading_day
 from ..logger import get_logger
 
 logger = get_logger(__name__)
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def _to_dataframe(history: list[dict] | pd.DataFrame) -> pd.DataFrame:
@@ -250,40 +257,234 @@ def build_technical_snapshot(
     )
 
 
+def validate_ohlcv_bars(bars: list[dict], min_bars: int = 20) -> tuple[bool, str, list[dict]]:
+    """
+    Validate OHLCV history bars before calculating technical metrics:
+    - At least min_bars (default 20)
+    - Valid dates
+    - Positive open, high, low, close
+    - Non-negative volume
+    - High >= Low, High >= Open/Close, Low <= Open/Close
+    - Chronologically sorted ascending by date
+    """
+    if not bars:
+        return False, "No price history bars provided", []
+    if len(bars) < min_bars:
+        return False, f"Insufficient history: {len(bars)} bars found, minimum {min_bars} required", []
+
+    try:
+        sorted_bars = sorted(bars, key=lambda b: str(b.get("date") or b.get("Date") or ""))
+    except Exception as e:
+        return False, f"Failed to sort bars by date: {e}", []
+
+    for i, bar in enumerate(sorted_bars):
+        d_val = bar.get("date") or bar.get("Date")
+        if not d_val:
+            return False, f"Bar #{i} missing date field", []
+
+        try:
+            o = float(bar.get("open") if bar.get("open") is not None else bar.get("Open"))
+            h = float(bar.get("high") if bar.get("high") is not None else bar.get("High"))
+            l = float(bar.get("low") if bar.get("low") is not None else bar.get("Low"))
+            c = float(bar.get("close") if bar.get("close") is not None else bar.get("Close"))
+            v = float(bar.get("volume") if bar.get("volume") is not None else bar.get("Volume", 0.0))
+        except (TypeError, ValueError) as e:
+            return False, f"Bar on {d_val} contains invalid non-numeric price data: {e}", []
+
+        if o <= 0 or h <= 0 or l <= 0 or c <= 0:
+            return False, f"Bar on {d_val} has non-positive prices (O:{o}, H:{h}, L:{l}, C:{c})", []
+        if v < 0:
+            return False, f"Bar on {d_val} has negative volume: {v}", []
+        if h < l:
+            return False, f"Bar on {d_val} has high ({h}) < low ({l})", []
+        if (o - h) > 0.05 or (c - h) > 0.05:
+            return False, f"Bar on {d_val} has high ({h}) lower than open ({o}) or close ({c})", []
+        if (l - o) > 0.05 or (l - c) > 0.05:
+            return False, f"Bar on {d_val} has low ({l}) higher than open ({o}) or close ({c})", []
+
+    return True, "", sorted_bars
+
+
+def check_history_freshness(
+    latest_bar_date_str: str,
+    analysis_date_str: Optional[str] = None,
+    max_trading_days: int = 3,
+) -> tuple[bool, str]:
+    """
+    Validate data freshness against the requested analysis date.
+    Calculates trading days lag, accounting for weekends and NSE holidays.
+    """
+    try:
+        latest_date = datetime.strptime(str(latest_bar_date_str)[:10], "%Y-%m-%d").date()
+    except Exception as e:
+        return False, f"Invalid latest bar date '{latest_bar_date_str}': {e}"
+
+    if analysis_date_str:
+        try:
+            target_date = datetime.strptime(str(analysis_date_str)[:10], "%Y-%m-%d").date()
+        except Exception:
+            target_date = datetime.now(timezone.utc).date()
+    else:
+        target_date = datetime.now(timezone.utc).date()
+
+    if latest_date >= target_date:
+        return True, "Fresh"
+
+    trading_days_lag = 0
+    cur = latest_date + timedelta(days=1)
+    while cur <= target_date:
+        if is_trading_day(cur):
+            trading_days_lag += 1
+        cur += timedelta(days=1)
+
+    if trading_days_lag > max_trading_days:
+        return False, f"Data is {trading_days_lag} trading days old (latest bar: {latest_date}, target: {target_date})"
+
+    return True, "Fresh"
+
+
+def load_ingested_history(symbol: str, ingested_path: Optional[Path | str] = None) -> list[dict]:
+    """Retrieve historical OHLCV bars for a symbol from data/ingested.json."""
+    candidates = []
+    if ingested_path:
+        candidates.append(Path(ingested_path))
+    candidates.extend([
+        ROOT / "data" / "ingested.json",
+        Path.cwd() / "data" / "ingested.json",
+    ])
+
+    data_file = next((p for p in candidates if p.is_file()), None)
+    if not data_file:
+        return []
+
+    try:
+        content = json.loads(data_file.read_text(encoding="utf-8"))
+        prices = content.get("prices", [])
+        sym_clean = symbol.split(".")[0].upper()
+        for p in prices:
+            p_sym = str(p.get("symbol", ""))
+            if p_sym.upper() == symbol.upper() or p_sym.split(".")[0].upper() == sym_clean:
+                hist = p.get("history")
+                if hist and isinstance(hist, list):
+                    return hist
+    except Exception as e:
+        logger.debug("Failed reading ingested.json for symbol %s: %s", symbol, e)
+
+    return []
+
+
 class MarketDataEngine:
     """
     Market Data & Technical Snapshot Engine for Stage 2.
-    Explicitly distinguishes production mode (real Stage 1 ingestion) from mock mode.
+    Explicitly distinguishes production mode (real Stage 1 ingestion & DB) from mock mode.
     """
 
     def __init__(
         self,
         price_lookup: Optional[Dict[str, List[Dict[str, Any]]]] = None,
+        db: Optional[Any] = None,
+        db_path: Optional[Path | str] = None,
+        ingested_path: Optional[Path | str] = None,
         mode: str = "production",
+        freshness_max_trading_days: int = 3,
     ):
         self.price_lookup = price_lookup or {}
+        self.db = db
+        self.db_path = db_path
+        self.ingested_path = ingested_path
         self.mode = mode
+        self.freshness_max_trading_days = freshness_max_trading_days
+
+    def get_snapshot_with_status(
+        self, symbol: str, analysis_date: Optional[str] = None
+    ) -> tuple[Optional[TechnicalSnapshot], str, Optional[str]]:
+        """
+        Fetch snapshot and data quality status for a symbol.
+        Returns:
+            (snapshot, data_status, reason)
+        """
+        if symbol in self.price_lookup:
+            bars = self.price_lookup[symbol]
+            valid, reason, sorted_bars = validate_ohlcv_bars(bars)
+            if not valid:
+                logger.warning("Price lookup data invalid for %s: %s", symbol, reason)
+                status = DATA_INSUFFICIENT if "Insufficient" in reason else DATA_UNAVAILABLE
+                return None, status, reason
+            return build_technical_snapshot(sorted_bars), DATA_OK, None
+
+        if self.mode == "production":
+            # 1. SchemeIntelDB historical prices
+            try:
+                if self.db is not None:
+                    db_instance = self.db
+                else:
+                    from ..db import SchemeIntelDB
+                    db_instance = SchemeIntelDB(self.db_path)
+                db_bars = db_instance.get_historical_prices(symbol, limit=120)
+                if db_bars and len(db_bars) >= 20:
+                    valid, reason, sorted_bars = validate_ohlcv_bars(db_bars)
+                    if valid:
+                        latest_date = str(sorted_bars[-1].get("date") or sorted_bars[-1].get("Date") or "")
+                        is_fresh, freshness_msg = check_history_freshness(
+                            latest_date, analysis_date, self.freshness_max_trading_days
+                        )
+                        if not is_fresh:
+                            logger.warning("DB historical prices for %s are stale: %s", symbol, freshness_msg)
+                            return None, DATA_STALE, freshness_msg
+                        return build_technical_snapshot(sorted_bars), DATA_OK, None
+                    else:
+                        logger.warning("DB historical prices for %s failed validation: %s", symbol, reason)
+            except Exception as e:
+                logger.debug("Stage 1 DB price query failed for %s: %s", symbol, e)
+
+            # 2. data/ingested.json snapshot fallback
+            try:
+                ingested_bars = load_ingested_history(symbol, self.ingested_path)
+                if ingested_bars and len(ingested_bars) >= 20:
+                    valid, reason, sorted_bars = validate_ohlcv_bars(ingested_bars)
+                    if valid:
+                        latest_date = str(sorted_bars[-1].get("date") or sorted_bars[-1].get("Date") or "")
+                        is_fresh, freshness_msg = check_history_freshness(
+                            latest_date, analysis_date, self.freshness_max_trading_days
+                        )
+                        if not is_fresh:
+                            logger.warning("Ingested prices for %s are stale: %s", symbol, freshness_msg)
+                            return None, DATA_STALE, freshness_msg
+                        return build_technical_snapshot(sorted_bars), DATA_OK, None
+                    else:
+                        logger.warning("Ingested prices for %s failed validation: %s", symbol, reason)
+            except Exception as e:
+                logger.debug("Ingested snapshot lookup failed for %s: %s", symbol, e)
+
+            # 3. Optional direct live yfinance fallback
+            try:
+                from ..ingestion.price import _yfinance_history
+                yf_bars, _, _, _ = _yfinance_history(symbol)
+                if yf_bars and len(yf_bars) >= 20:
+                    valid, reason, sorted_bars = validate_ohlcv_bars(yf_bars)
+                    if valid:
+                        latest_date = str(sorted_bars[-1].get("date") or sorted_bars[-1].get("Date") or "")
+                        is_fresh, freshness_msg = check_history_freshness(
+                            latest_date, analysis_date, self.freshness_max_trading_days
+                        )
+                        if not is_fresh:
+                            logger.warning("Live yfinance prices for %s are stale: %s", symbol, freshness_msg)
+                            return None, DATA_STALE, freshness_msg
+                        return build_technical_snapshot(sorted_bars), DATA_OK, None
+                    else:
+                        logger.warning("Live yfinance prices for %s failed validation: %s", symbol, reason)
+            except Exception as e:
+                logger.debug("Live yfinance fallback unavailable for %s: %s", symbol, e)
+
+            return None, DATA_UNAVAILABLE, f"No valid OHLCV history was available for {symbol}"
+
+        # Mode == 'mock': Return deterministic offline test snapshot
+        return self._generate_default_snapshot(symbol), DATA_OK, None
 
     def get_snapshot(self, symbol: str) -> Optional[TechnicalSnapshot]:
         """Fetch snapshot for symbol using production sources or mock fallback."""
-        if symbol in self.price_lookup:
-            return build_technical_snapshot(self.price_lookup[symbol])
-
-        if self.mode == "production":
-            # Attempt to retrieve live OHLCV price history from Stage 1 ingestion
-            try:
-                from ..ingestion.price import get_stock_history
-                bars = get_stock_history(symbol, days=120)
-                if bars and len(bars) >= 20:
-                    return build_technical_snapshot(bars)
-            except Exception as e:
-                logger.debug("Stage 1 live price ingestion unavailable for %s (%s)", symbol, e)
-
-            # In production, do NOT silently generate synthetic breakout data if live feed is absent
-            return None
-
-        # Mode == 'mock': Return deterministic offline test snapshot
-        return self._generate_default_snapshot(symbol)
+        snap, _, _ = self.get_snapshot_with_status(symbol)
+        return snap
 
     def _generate_default_snapshot(self, symbol: str) -> TechnicalSnapshot:
         """Create deterministic, realistic snapshot for offline testing."""

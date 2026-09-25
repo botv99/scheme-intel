@@ -6,7 +6,10 @@ Guarantees 100% full coverage without silent omissions.
 from __future__ import annotations
 
 from typing import Optional, List, Dict
-from .models import Stock, DailyStockCard, TechnicalSnapshot, NewsItem, CandidateSetup, CatalystImpact
+from .models import (
+    Stock, DailyStockCard, TechnicalSnapshot, NewsItem, CandidateSetup, CatalystImpact,
+    DATA_OK, DATA_UNAVAILABLE, DATA_STALE, DATA_INSUFFICIENT,
+)
 from ..logger import get_logger
 
 logger = get_logger(__name__)
@@ -19,20 +22,36 @@ def build_stock_card(
     catalysts: Optional[List[CatalystImpact]] = None,
     candidate: Optional[CandidateSetup] = None,
     tomorrow_status: str = "WAIT",
+    data_status: Optional[str] = None,
 ) -> DailyStockCard:
     """
     Construct the Daily Stock Intelligence Card for a single watchlist stock.
-    No stock is omitted.
+    No stock is omitted. Missing data remains explicitly unavailable.
     """
     catalysts = catalysts or []
-    price = snapshot.close if snapshot else 0.0
-    day_pct = snapshot.day_change_pct if snapshot else 0.0
-    vol = snapshot.volume if snapshot else 0.0
-    vol_20d = snapshot.volume_20d_avg if snapshot else 0.0
-    vol_ratio = snapshot.volume_ratio if snapshot else 1.0
-    support = snapshot.support if snapshot else 0.0
-    resistance = snapshot.resistance if snapshot else 0.0
-    trend = snapshot.trend_status.title() if snapshot else "Neutral"
+
+    if snapshot:
+        price = snapshot.close
+        day_pct = snapshot.day_change_pct
+        vol = snapshot.volume
+        vol_20d = snapshot.volume_20d_avg
+        vol_ratio = snapshot.volume_ratio
+        support = snapshot.support
+        resistance = snapshot.resistance
+        trend = snapshot.trend_status.title()
+        current_data_status = data_status or DATA_OK
+        card_tomorrow_status = tomorrow_status
+    else:
+        price = None
+        day_pct = None
+        vol = None
+        vol_20d = None
+        vol_ratio = None
+        support = None
+        resistance = None
+        trend = "Unavailable"
+        current_data_status = data_status or DATA_UNAVAILABLE
+        card_tomorrow_status = tomorrow_status if tomorrow_status in (DATA_UNAVAILABLE, DATA_STALE, DATA_INSUFFICIENT) else DATA_UNAVAILABLE
 
     # Developments
     developments = []
@@ -67,12 +86,14 @@ def build_stock_card(
     if snapshot:
         above_20 = "Above 20 DMA" if snapshot.close >= snapshot.sma20 else "Below 20 DMA"
         above_50 = "Above 50 DMA" if snapshot.close >= snapshot.sma50 else "Below 50 DMA"
+        sup_str = f"Support: ₹{support:.1f}" if support is not None else "Support: N/A"
+        res_str = f"Resistance: ₹{resistance:.1f}" if resistance is not None else "Resistance: N/A"
         tech_summary = (
             f"Trend: {trend} | RSI: {snapshot.rsi14:.0f} | "
-            f"{above_20} | {above_50} | Support: ₹{support:.1f} | Resistance: ₹{resistance:.1f}"
+            f"{above_20} | {above_50} | {sup_str} | {res_str}"
         )
     else:
-        tech_summary = "Technical snapshot pending data feed."
+        tech_summary = "Market data unavailable: no valid OHLCV history feed."
 
     return DailyStockCard(
         stock=stock,
@@ -89,7 +110,8 @@ def build_stock_card(
         support=support,
         resistance=resistance,
         trend=trend,
-        tomorrow_status=tomorrow_status,
+        tomorrow_status=card_tomorrow_status,
+        data_status=current_data_status,
     )
 
 
@@ -100,6 +122,7 @@ def scan_all_stocks(
     stock_catalysts: Optional[Dict[str, List[CatalystImpact]]] = None,
     candidates: Optional[Dict[str, CandidateSetup]] = None,
     statuses: Optional[Dict[str, str]] = None,
+    data_statuses: Optional[Dict[str, str]] = None,
 ) -> List[DailyStockCard]:
     """
     Generate daily intelligence cards for all watchlist stocks.
@@ -108,6 +131,7 @@ def scan_all_stocks(
     candidates = candidates or {}
     stock_catalysts = stock_catalysts or {}
     statuses = statuses or {}
+    data_statuses = data_statuses or {}
     cards: List[DailyStockCard] = []
 
     for stock in stocks:
@@ -115,10 +139,21 @@ def scan_all_stocks(
         news = stock_news.get(stock.name, []) or stock_news.get(stock.symbol, [])
         cats = stock_catalysts.get(stock.symbol, []) or stock_catalysts.get(stock.name, [])
         candidate = candidates.get(stock.symbol) or candidates.get(stock.name)
+        d_status = data_statuses.get(stock.symbol, data_statuses.get(stock.name, DATA_OK if snapshot else DATA_UNAVAILABLE))
 
         # Determine status
-        default_status = "QUALIFIED_SETUP" if candidate else ("WATCH" if snapshot and snapshot.trend_status == "BULLISH" else "WAIT")
+        if not snapshot:
+            default_status = d_status if d_status in (DATA_UNAVAILABLE, DATA_STALE, DATA_INSUFFICIENT) else DATA_UNAVAILABLE
+        elif candidate:
+            default_status = "QUALIFIED_SETUP"
+        elif snapshot.trend_status == "BULLISH":
+            default_status = "WATCH"
+        else:
+            default_status = "WAIT"
+
         status = statuses.get(stock.symbol, default_status)
+        if not snapshot and status in ("WAIT", "WATCH", "QUALIFIED_SETUP"):
+            status = d_status if d_status in (DATA_UNAVAILABLE, DATA_STALE, DATA_INSUFFICIENT) else DATA_UNAVAILABLE
 
         card = build_stock_card(
             stock=stock,
@@ -127,6 +162,7 @@ def scan_all_stocks(
             catalysts=cats,
             candidate=candidate,
             tomorrow_status=status,
+            data_status=d_status,
         )
         cards.append(card)
 

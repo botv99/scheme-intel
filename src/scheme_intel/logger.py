@@ -29,12 +29,18 @@ def get_logger(name: str) -> logging.Logger:
     if not logger.handlers:
         logger.setLevel(logging.DEBUG)
         
-        # File handler - DEBUG level
-        file_handler = logging.FileHandler(LOG_FILE)
+        # File handler - DEBUG level (UTF-8 encoded)
+        file_handler = logging.FileHandler(LOG_FILE, encoding="utf-8", errors="replace")
         file_handler.setLevel(logging.DEBUG)
         
         # Console handler - INFO level
-        console_handler = logging.StreamHandler()
+        import sys
+        if sys.stdout and hasattr(sys.stdout, "reconfigure"):
+            try:
+                sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+        console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setLevel(logging.INFO)
         
         # Formatter

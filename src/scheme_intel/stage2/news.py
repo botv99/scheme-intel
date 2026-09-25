@@ -5,7 +5,9 @@ Supports both live production ingestion (Stage 1 database & media feeds) and det
 """
 from __future__ import annotations
 
+import json
 import re
+from pathlib import Path
 from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 from .models import NewsItem, Stock
@@ -14,6 +16,7 @@ from ..catalyst import MATERIAL_EVENTS, _detect_scheme, _detect_sector
 from ..models import resolve_source_tier
 
 logger = get_logger(__name__)
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def classify_news_item(
@@ -42,12 +45,30 @@ def classify_news_item(
                 matched_cat = cat
                 matched_sentiment = sent
 
-    # Match watchlist companies
+    # Match watchlist companies with robust word-bounded entity matching
     matched_companies = []
     if stocks:
+        raw_text = f"{title} {summary}"
         for stock in stocks:
-            names = [stock.name.lower()] + [a.lower() for a in stock.aliases]
-            if any(n in text for n in names):
+            terms = [stock.name] + list(stock.aliases)
+            if stock.symbol:
+                terms.append(stock.symbol)
+                ticker = stock.symbol.split(".")[0]
+                if len(ticker) >= 3:
+                    terms.append(ticker)
+            if stock.screener_id and len(stock.screener_id) >= 3:
+                terms.append(stock.screener_id)
+
+            matched = False
+            for term in terms:
+                if not term or len(term.strip()) < 2:
+                    continue
+                term_clean = term.strip()
+                pattern = rf"\b{re.escape(term_clean)}\b"
+                if re.search(pattern, raw_text, re.IGNORECASE):
+                    matched = True
+                    break
+            if matched:
                 matched_companies.append(stock.name)
 
     return NewsItem(
@@ -144,8 +165,36 @@ class NewsEngine:
             except Exception as e:
                 logger.debug("Stage 1 database news lookup unavailable (%s)", e)
 
-            # In production, do NOT inject synthetic news if live source is empty
-            return []
+            if not live_items:
+                # Fallback to data/ingested.json news and announcements
+                try:
+                    candidates = [
+                        ROOT / "data" / "ingested.json",
+                        Path.cwd() / "data" / "ingested.json",
+                    ]
+                    data_file = next((p for p in candidates if p.is_file()), None)
+                    if data_file:
+                        ing = json.loads(data_file.read_text(encoding="utf-8"))
+                        for n in ing.get("news", []):
+                            live_items.append({
+                                "title": n.get("title", ""),
+                                "url": n.get("url", ""),
+                                "source": n.get("source", "Media"),
+                                "summary": n.get("summary", ""),
+                                "published_at": n.get("published_at"),
+                            })
+                        for a in ing.get("announcements", []):
+                            live_items.append({
+                                "title": a.get("headline") or a.get("title", ""),
+                                "url": a.get("url", ""),
+                                "source": f"{a.get('exchange', 'Exchange')} Filing",
+                                "summary": a.get("details") or a.get("summary", ""),
+                                "published_at": a.get("date"),
+                            })
+                except Exception as e:
+                    logger.debug("Failed reading news from ingested.json: %s", e)
+
+            return live_items
 
         # Mode == 'mock': Return deterministic offline test news
         return [

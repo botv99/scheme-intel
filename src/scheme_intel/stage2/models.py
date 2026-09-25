@@ -100,22 +100,29 @@ class TechnicalSnapshot(BaseModel):
     trend_status: str = "NEUTRAL"  # BULLISH, BEARISH, NEUTRAL
 
 
+DATA_OK = "DATA_OK"
+DATA_UNAVAILABLE = "DATA_UNAVAILABLE"
+DATA_STALE = "DATA_STALE"
+DATA_INSUFFICIENT = "DATA_INSUFFICIENT"
+
+
 class DailyStockCard(BaseModel):
     stock: Stock
-    price: float
-    day_change_pct: float
-    volume: float = 0.0
-    volume_avg_20d: float = 0.0
-    volume_ratio: float = 1.0
+    price: Optional[float] = None
+    day_change_pct: Optional[float] = None
+    volume: Optional[float] = 0.0
+    volume_avg_20d: Optional[float] = 0.0
+    volume_ratio: Optional[float] = 1.0
     developments: List[str] = Field(default_factory=list)
     catalysts: List[str] = Field(default_factory=list)
     catalyst_direction: str = "Neutral"  # Bullish, Bearish, Neutral
     catalyst_strength: int = 50
     technical_summary: str = ""
-    support: float = 0.0
-    resistance: float = 0.0
+    support: Optional[float] = 0.0
+    resistance: Optional[float] = 0.0
     trend: str = "Neutral"
-    tomorrow_status: str = "WAIT"  # QUALIFIED_SETUP, WATCH, WAIT, NO_TRADE
+    tomorrow_status: str = "WAIT"  # QUALIFIED_SETUP, WATCH, WAIT, NO_TRADE, DATA_UNAVAILABLE, DATA_STALE
+    data_status: str = DATA_OK
 
 
 class CandidateSetup(BaseModel):
@@ -240,7 +247,8 @@ class TradeSetup(BaseModel):
     next_trading_session: str
     market_close_timestamp: str = ""
     stock: Stock
-    status: str  # QUALIFIED_SETUP, WAIT, WATCH, NO_TRADE
+    status: str  # QUALIFIED_SETUP, WAIT, WATCH, NO_TRADE, DATA_UNAVAILABLE, DATA_STALE
+    data_status: str = DATA_OK
     candidate: Optional[CandidateSetup] = None
     bull_thesis: Optional[BullThesis] = None
     bear_thesis: Optional[BearThesis] = None

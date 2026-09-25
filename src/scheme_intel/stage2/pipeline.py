@@ -25,6 +25,7 @@ if sys.stderr and hasattr(sys.stderr, "reconfigure"):
 from .models import (
     Stock, DailyStockCard, CandidateSetup, TradeSetup, TechnicalSnapshot,
     NewsItem, WaitCondition, RiskAssessment, CatalystImpact,
+    DATA_OK, DATA_UNAVAILABLE, DATA_STALE, DATA_INSUFFICIENT,
 )
 from .calendar import get_market_session_info, MarketSessionInfo
 from .providers.base import LLMProvider
@@ -55,13 +56,21 @@ def get_llm_provider(name: str = "mock") -> LLMProvider:
     provider_lower = name.lower()
     if provider_lower == "gemini":
         try:
-            return GeminiProvider()
+            p = GeminiProvider()
+            if not p.api_key:
+                logger.warning("GEMINI_API_KEY / GOOGLE_API_KEY not found in environment, falling back to MockProvider for debate reasoning")
+                return MockProvider()
+            return p
         except Exception as e:
             logger.warning("Could not initialize GeminiProvider (%s), falling back to MockProvider", e)
             return MockProvider()
     elif provider_lower == "openai":
         try:
-            return OpenAIProvider()
+            p = OpenAIProvider()
+            if not p.api_key:
+                logger.warning("OPENAI_API_KEY not found in environment, falling back to MockProvider for debate reasoning")
+                return MockProvider()
+            return p
         except Exception as e:
             logger.warning("Could not initialize OpenAIProvider (%s), falling back to MockProvider", e)
             return MockProvider()
@@ -138,7 +147,7 @@ class Stage2Pipeline:
         5. Generate Actionable Triggers for waiting engine
         6. Persist to SQLite and compile 3-Section Telegram Report
         """
-        if dry_run or self.mode == "mock":
+        if self.mode == "mock":
             self.market_engine.mode = "mock"
             self.news_engine.mode = "mock"
         # 1. Authoritative Timing & Session Info
@@ -171,13 +180,23 @@ class Stage2Pipeline:
 
         # 2. Ingest Technical Snapshots for all stocks
         market_snapshots: Dict[str, TechnicalSnapshot] = {}
+        data_statuses: Dict[str, str] = {}
+        data_reasons: Dict[str, str] = {}
+
         for stock in stocks:
             try:
-                snap = self.market_engine.get_snapshot(stock.symbol)
+                snap, d_status, reason = self.market_engine.get_snapshot_with_status(
+                    stock.symbol, analysis_date=session_info.analysis_date
+                )
+                data_statuses[stock.symbol] = d_status
+                if reason:
+                    data_reasons[stock.symbol] = reason
                 if snap:
                     market_snapshots[stock.symbol] = snap
             except Exception as e:
                 logger.warning("Error fetching technical snapshot for %s: %s", stock.symbol, e)
+                data_statuses[stock.symbol] = DATA_UNAVAILABLE
+                data_reasons[stock.symbol] = str(e)
 
         # 2b. Automated Trade Outcome Tracking for previously active setups
         outcome_updates: Optional[Dict[str, Any]] = None
@@ -204,10 +223,12 @@ class Stage2Pipeline:
             catalysts = evaluate_stock_catalysts(news_items, stock, snap)
             stock_catalysts[stock.symbol] = catalysts
 
-            cand = find_candidate_setup(stock, snap, catalysts)
-            if cand:
-                candidates[stock.symbol] = cand
-                logger.info("Candidate detected for %s: %s (score: %d)", stock.symbol, cand.archetype, cand.score)
+            # Only evaluate candidate setup if valid market snapshot exists!
+            if snap:
+                cand = find_candidate_setup(stock, snap, catalysts)
+                if cand:
+                    candidates[stock.symbol] = cand
+                    logger.info("Candidate detected for %s: %s (score: %d)", stock.symbol, cand.archetype, cand.score)
 
         # 5. Process Candidates through Dual Debate & Hard Risk Engine
         trade_setups: List[TradeSetup] = []
@@ -216,9 +237,26 @@ class Stage2Pipeline:
         for stock in stocks:
             snap = market_snapshots.get(stock.symbol)
             cand = candidates.get(stock.symbol)
+            d_status = data_statuses.get(stock.symbol, DATA_OK if snap else DATA_UNAVAILABLE)
             setup_id = f"SETUP-{stock.symbol.replace('.', '_')}-{session_info.analysis_date.replace('-', '')}"
 
-            if cand:
+            if not snap:
+                # Explicit data failure handling: Never fall through to WAIT or fake triggers!
+                status = d_status if d_status in (DATA_UNAVAILABLE, DATA_STALE, DATA_INSUFFICIENT) else DATA_UNAVAILABLE
+                reason = data_reasons.get(stock.symbol, "No valid OHLCV history was available for this symbol.")
+                setup = TradeSetup(
+                    setup_id=setup_id,
+                    analysis_date=session_info.analysis_date,
+                    setup_date=session_info.setup_date,
+                    next_trading_session=session_info.next_trading_session,
+                    market_close_timestamp=session_info.market_close_timestamp,
+                    stock=stock,
+                    status=status,
+                    data_status=status,
+                    wait_conditions=None,
+                    no_trade_reason=f"Market data unavailable: {reason}",
+                )
+            elif cand:
                 # Run Adversarial Debate (Bull, Bear, Arbitrator)
                 bull, bear, debate = self.debate_orchestrator.run_debate(cand)
 
@@ -243,6 +281,7 @@ class Stage2Pipeline:
                     market_close_timestamp=session_info.market_close_timestamp,
                     stock=stock,
                     status=status,
+                    data_status=DATA_OK,
                     candidate=cand,
                     bull_thesis=bull,
                     bear_thesis=bear,
@@ -253,7 +292,7 @@ class Stage2Pipeline:
                 )
             else:
                 # Not a candidate: Check if WAIT or NO_TRADE
-                if snap and snap.trend_status == "BEARISH" and (not stock_catalysts.get(stock.symbol)):
+                if snap.trend_status == "BEARISH" and (not stock_catalysts.get(stock.symbol)):
                     status = "NO_TRADE"
                     wait_cond = None
                     no_trade_reason = f"Downtrend below 50 DMA (₹{snap.sma50:.1f}) with no active scheme catalysts."
@@ -270,6 +309,7 @@ class Stage2Pipeline:
                     market_close_timestamp=session_info.market_close_timestamp,
                     stock=stock,
                     status=status,
+                    data_status=DATA_OK,
                     wait_conditions=wait_cond,
                     no_trade_reason=no_trade_reason,
                 )
@@ -288,15 +328,23 @@ class Stage2Pipeline:
             stock_catalysts=stock_catalysts,
             candidates=candidates,
             statuses=statuses,
+            data_statuses=data_statuses,
         )
 
         # 7. Format 3-Section Telegram Report
         session_title = f"{session_info.analysis_date} — AFTER MARKET (Prep for {session_info.next_trading_session})"
+        health_stats = {
+            "total": len(stocks),
+            "valid": sum(1 for st in data_statuses.values() if st == DATA_OK),
+            "stale": sum(1 for st in data_statuses.values() if st == DATA_STALE),
+            "unavailable": sum(1 for st in data_statuses.values() if st in (DATA_UNAVAILABLE, DATA_INSUFFICIENT)),
+        }
         report = build_full_telegram_report(
             session_title=session_title,
             cards=cards,
             candidates=list(candidates.values()),
             setups=trade_setups,
+            health_stats=health_stats,
         )
 
         # 8. Dispatch to Telegram if send=True
@@ -304,11 +352,12 @@ class Stage2Pipeline:
             self._dispatch_telegram_report(report, outcome_updates)
 
         logger.info(
-            "=== Stage 2 Complete: %d Scanned, %d Qualified, %d Waiting, %d No Trade ===",
+            "=== Stage 2 Complete: %d Scanned, %d Qualified, %d Waiting, %d No Trade, %d Data Unavailable ===",
             len(stocks),
             sum(1 for s in trade_setups if s.status == "QUALIFIED_SETUP"),
             sum(1 for s in trade_setups if s.status == "WAIT"),
             sum(1 for s in trade_setups if s.status == "NO_TRADE"),
+            sum(1 for s in trade_setups if s.status in (DATA_UNAVAILABLE, DATA_STALE, DATA_INSUFFICIENT)),
         )
 
         return {
@@ -318,6 +367,7 @@ class Stage2Pipeline:
             "setups": trade_setups,
             "report": report,
             "outcome_updates": outcome_updates,
+            "health_stats": health_stats,
         }
 
     def _dispatch_telegram_report(
@@ -390,7 +440,7 @@ def main():
     parser.add_argument("--config", type=str, default=None, help="Path to watchlist.yaml")
     args = parser.parse_args()
 
-    mode = "mock" if (args.dry_run or args.mode == "mock" or args.provider == "mock") else "production"
+    mode = "mock" if args.mode == "mock" else "production"
     provider = get_llm_provider(args.provider)
     pipeline = Stage2Pipeline(provider=provider, config_path=args.config, mode=mode)
     result = pipeline.run(target_symbol=args.symbol, session_date=args.date, dry_run=args.dry_run, send=args.send)

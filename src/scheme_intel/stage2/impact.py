@@ -4,6 +4,7 @@ Maps news, policy schemes, and corporate developments to stock-level impact.
 """
 from __future__ import annotations
 
+import re
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 from .models import Stock, NewsItem, CatalystImpact, TechnicalSnapshot
@@ -30,6 +31,13 @@ INDIRECT_KEYWORDS = [
     "policy framework", "subsidies announced", "guidelines issued"
 ]
 
+POLICY_SECTOR_KEYWORDS = [
+    "gobardhan", "satat", "bioenergy", "biofuel", "ethanol", "compressed biogas", "cbg",
+    "cabinet", "ministry", "subsidy", "tender", "pli", "guidelines", "policy", "national bioenergy",
+    "mandate", "blending", "water treatment", "wastewater", "water infrastructure",
+    "railway capex", "metro rolling stock", "rolling stock", "railways", "defense capex"
+]
+
 HIGH_CERTAINTY_SOURCES = [
     "PIB", "Gazette of India", "BSE", "NSE", "Cabinet", "Ministry", "SEBI", "RBI"
 ]
@@ -44,28 +52,53 @@ def score_catalyst_impact(
     Score the impact of a news/catalyst item on a given stock.
     Determines beneficiary type, strength (0-100), duration, certainty, freshness,
     and whether it is already priced in based on technical snapshot.
+    Uses strict 4-tier hierarchy:
+    1. Direct company match (word-bounded)
+    2. Official company / exchange filing match
+    3. Verified sector / policy catalyst
+    4. Generic market news (Neutral)
     """
     title_lower = news.title.lower()
     summary_lower = news.summary.lower()
     full_text = f"{title_lower} {summary_lower}"
 
-    # 1. Beneficiary Type
-    # Check if stock explicitly mentioned
-    symbol_match = stock.symbol.lower() in full_text
-    name_match = stock.name.lower() in full_text
-    alias_match = any(a.lower() in full_text for a in stock.aliases)
-    directly_named = symbol_match or name_match or alias_match or (stock.name in news.companies_mentioned)
+    # 1. Beneficiary Type with robust word-bounded matching
+    terms = [stock.name] + list(stock.aliases)
+    if stock.symbol:
+        terms.append(stock.symbol)
+        ticker = stock.symbol.split(".")[0]
+        if len(ticker) >= 3:
+            terms.append(ticker)
+    if stock.screener_id and len(stock.screener_id) >= 3:
+        terms.append(stock.screener_id)
+
+    raw_text = f"{news.title} {news.summary}"
+    directly_named = (stock.name in news.companies_mentioned) or any(
+        re.search(rf"\b{re.escape(t.strip())}\b", raw_text, re.IGNORECASE)
+        for t in terms if t and len(t.strip()) >= 2
+    )
+
+    is_official_filing = (
+        news.source_tier in (1, 2) or
+        any(x in news.source.lower() for x in ["filing", "announcement", "exchange", "bse", "nse", "pib", "ministry"])
+    )
+    is_policy_catalyst = (
+        any(pk in full_text for pk in POLICY_SECTOR_KEYWORDS) or
+        any(ik in full_text for ik in INDIRECT_KEYWORDS)
+    )
+    matches_sector = any(s.lower() in full_text for s in stock.sectors)
 
     is_negative = any(neg in full_text for neg in NEGATIVE_KEYWORDS) or news.sentiment == "negative"
     is_direct_action = any(dk in full_text for dk in DIRECT_KEYWORDS)
 
-    if is_negative and directly_named:
-        beneficiary_type = "Negative"
-    elif directly_named and is_direct_action:
-        beneficiary_type = "Direct"
-    elif directly_named:
-        beneficiary_type = "Direct" if news.sentiment == "positive" else ("Negative" if is_negative else "Neutral")
-    elif any(ik in full_text for ik in INDIRECT_KEYWORDS) or any(s.lower() in full_text for s in stock.sectors):
+    if directly_named:
+        if is_negative:
+            beneficiary_type = "Negative"
+        elif is_direct_action or news.sentiment == "positive" or is_official_filing:
+            beneficiary_type = "Direct"
+        else:
+            beneficiary_type = "Neutral"
+    elif (is_policy_catalyst and matches_sector) or (is_official_filing and matches_sector):
         beneficiary_type = "Negative" if is_negative else "Indirect"
     else:
         beneficiary_type = "Neutral"
@@ -159,8 +192,8 @@ def evaluate_stock_catalysts(
     impacts: List[CatalystImpact] = []
     for item in news_items:
         impact = score_catalyst_impact(item, stock, snapshot)
-        # Keep non-neutral or significant catalysts
-        if impact.beneficiary_type != "Neutral" or impact.strength >= 60:
+        # Only keep genuine beneficiary catalysts (Direct, Indirect, Negative)
+        if impact.beneficiary_type in ("Direct", "Indirect", "Negative"):
             impacts.append(impact)
 
     impacts.sort(key=lambda x: x.strength, reverse=True)

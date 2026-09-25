@@ -22,10 +22,16 @@ def generate_wait_condition(
     """
     Construct a precise WaitCondition specifying what concrete triggers
     would turn this stock into a qualified swing trade.
+    Requires a valid TechnicalSnapshot with positive price.
     """
-    price = snapshot.close if snapshot else 0.0
-    support = snapshot.support if snapshot else 0.0
-    resistance = snapshot.resistance if snapshot else 0.0
+    if snapshot is None or snapshot.close <= 0:
+        raise ValueError(
+            f"Cannot generate wait condition for {stock.symbol}: missing or non-positive price snapshot."
+        )
+
+    price = snapshot.close
+    support = snapshot.support
+    resistance = snapshot.resistance
 
     confirmations: List[str] = []
     trigger_price = round(resistance if resistance > 0 else price * 1.02, 1)
