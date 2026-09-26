@@ -23,13 +23,12 @@ from ...logger import get_logger
 logger = get_logger(__name__)
 
 DEFAULT_OPENROUTER_FALLBACKS = [
+    "liquid/lfm-2.5-2.6b:free",
     "qwen/qwen3.8-27b:free",
     "google/gemini-2.0-flash-exp:free",
     "meta-llama/llama-3.3-70b-instruct:free",
     "mistralai/mistral-small-24b-instruct-2501:free",
     "deepseek/deepseek-r1:free",
-    "meta-llama/llama-3.2-3b-instruct:free",
-    "liquid/lfm-2.5-2.6b:free",
 ]
 
 
@@ -45,7 +44,7 @@ class OpenRouterProvider(LLMProvider):
         timeout: float = 30.0,
     ):
         self.api_key = api_key or os.getenv("OPENROUTER_API_KEY")
-        self.model = model or os.getenv("OPENROUTER_MODEL") or "qwen/qwen3.8-27b:free"
+        self.model = model or os.getenv("OPENROUTER_MODEL") or "liquid/lfm-2.5-2.6b:free"
         self.timeout = timeout
 
     def generate(

@@ -23,12 +23,12 @@ from ...logger import get_logger
 logger = get_logger(__name__)
 
 DEFAULT_GROQ_FALLBACKS = [
-    "llama-3.3-70b-versatile",
-    "llama-3.1-8b-instant",
+    "openai/gpt-oss-safeguard-20b",
     "openai/gpt-oss-120b",
     "openai/gpt-oss-20b",
-    "llama3-70b-8192",
-    "mixtral-8x7b-32768",
+    "qwen/qwen3.8-27b",
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant",
 ]
 
 
@@ -44,7 +44,7 @@ class GroqProvider(LLMProvider):
         timeout: float = 30.0,
     ):
         self.api_key = api_key or os.getenv("GROQ_API_KEY")
-        self.model = model or os.getenv("GROQ_MODEL") or "llama-3.3-70b-versatile"
+        self.model = model or os.getenv("GROQ_MODEL") or "openai/gpt-oss-safeguard-20b"
         self.timeout = timeout
 
     def generate(
