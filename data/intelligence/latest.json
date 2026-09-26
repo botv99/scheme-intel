@@ -1,8 +1,8 @@
 {
-  "snapshot_id": "SNAP-20260926-182658",
+  "snapshot_id": "SNAP-20260926-183049",
   "schema_version": "1.0",
-  "generated_at": "2026-09-26T18:26:58.888835+00:00",
-  "pipeline_run_id": null,
+  "generated_at": "2026-09-26T18:30:49.212989+00:00",
+  "pipeline_run_id": "2026-09-25",
   "scheme_ids": [
     "gobardhan"
   ],
@@ -12,8 +12,8 @@
       "name": "GOBARdhan (Galvanizing Organic Bio-Agro Resources Dhan)",
       "description": "Government umbrella initiative covering CBG, Bio-CNG, SATAT, and organic bio-fertilizer commercialization.",
       "watchlist_count": 7,
-      "qualified_setups_count": 2,
-      "waiting_count": 1,
+      "qualified_setups_count": 1,
+      "waiting_count": 2,
       "no_trade_count": 4,
       "data_unavailable_count": 0,
       "key_developments": [],
@@ -23,7 +23,7 @@
         "Ministry of New and Renewable Energy",
         "Ministry of Jal Shakti"
       ],
-      "last_update": "2026-09-26T18:26:58.888835+00:00"
+      "last_update": "2026-09-26T18:30:49.212989+00:00"
     }
   },
   "companies": {
@@ -58,7 +58,7 @@
       "next_session": "28 Sep 2026 (Monday)",
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-25T18:02:56.745577+00:00"
+      "updated_at": "2026-09-26T18:30:22.716183+00:00"
     },
     "PRAJIND": {
       "symbol": "PRAJIND.NS",
@@ -91,7 +91,7 @@
       "next_session": "28 Sep 2026 (Monday)",
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-25T18:02:56.745577+00:00"
+      "updated_at": "2026-09-26T18:30:22.716183+00:00"
     },
     "TRUALT.NS": {
       "symbol": "TRUALT.NS",
@@ -117,14 +117,14 @@
       "trigger_price": 441.9,
       "stop_loss": 417.27,
       "target": 486.23,
-      "bull_thesis": "Strong momentum breakout confirmed by CBG government scheme and 1.8x volume expansion.",
-      "bear_thesis": "Approaching major overhead resistance with potential false breakout risk.",
+      "bull_thesis": "The stock is poised for a breakout above ₹445 after a tight consolidation, supported by strong volume and a bullish RSI trend.",
+      "bear_thesis": "The proposed breakout above ₹445 is unsupported by sufficient volume, overbought RSI, and lack of a clear catalyst, making the trade risky.",
       "risk_summary": "R:R 1.8:1 | Max Risk 0.56% | Target 486.23",
       "waiting_conditions": [],
       "next_session": "28 Sep 2026 (Monday)",
-      "ai_provider": "Mock",
+      "ai_provider": "Groq",
       "evidence": [],
-      "updated_at": "2026-09-25T18:02:56.667553+00:00"
+      "updated_at": "2026-09-26T18:30:22.712358+00:00"
     },
     "TRUALT": {
       "symbol": "TRUALT.NS",
@@ -150,14 +150,14 @@
       "trigger_price": 441.9,
       "stop_loss": 417.27,
       "target": 486.23,
-      "bull_thesis": "Strong momentum breakout confirmed by CBG government scheme and 1.8x volume expansion.",
-      "bear_thesis": "Approaching major overhead resistance with potential false breakout risk.",
+      "bull_thesis": "The stock is poised for a breakout above ₹445 after a tight consolidation, supported by strong volume and a bullish RSI trend.",
+      "bear_thesis": "The proposed breakout above ₹445 is unsupported by sufficient volume, overbought RSI, and lack of a clear catalyst, making the trade risky.",
       "risk_summary": "R:R 1.8:1 | Max Risk 0.56% | Target 486.23",
       "waiting_conditions": [],
       "next_session": "28 Sep 2026 (Monday)",
-      "ai_provider": "Mock",
+      "ai_provider": "Groq",
       "evidence": [],
-      "updated_at": "2026-09-25T18:02:56.667553+00:00"
+      "updated_at": "2026-09-26T18:30:22.712358+00:00"
     },
     "IONEXCHANG.NS": {
       "symbol": "IONEXCHANG.NS",
@@ -190,7 +190,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-26T18:26:58.888835+00:00"
+      "updated_at": "2026-09-26T18:30:49.212989+00:00"
     },
     "IONEXCHANG": {
       "symbol": "IONEXCHANG.NS",
@@ -223,7 +223,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-26T18:26:58.888835+00:00"
+      "updated_at": "2026-09-26T18:30:49.212989+00:00"
     },
     "WABAG.NS": {
       "symbol": "WABAG.NS",
@@ -259,7 +259,7 @@
       "next_session": "28 Sep 2026 (Monday)",
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-25T18:02:56.736512+00:00"
+      "updated_at": "2026-09-26T18:30:22.715134+00:00"
     },
     "WABAG": {
       "symbol": "WABAG.NS",
@@ -295,7 +295,7 @@
       "next_session": "28 Sep 2026 (Monday)",
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-25T18:02:56.736512+00:00"
+      "updated_at": "2026-09-26T18:30:22.715134+00:00"
     },
     "KIRLPNU.NS": {
       "symbol": "KIRLPNU.NS",
@@ -328,7 +328,7 @@
       "next_session": "28 Sep 2026 (Monday)",
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-25T18:02:56.769222+00:00"
+      "updated_at": "2026-09-26T18:30:35.589431+00:00"
     },
     "KIRLPNU": {
       "symbol": "KIRLPNU.NS",
@@ -361,7 +361,7 @@
       "next_session": "28 Sep 2026 (Monday)",
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-25T18:02:56.769222+00:00"
+      "updated_at": "2026-09-26T18:30:35.589431+00:00"
     },
     "GAIL.NS": {
       "symbol": "GAIL.NS",
@@ -394,7 +394,7 @@
       "next_session": "28 Sep 2026 (Monday)",
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-25T18:02:56.777910+00:00"
+      "updated_at": "2026-09-26T18:30:35.590387+00:00"
     },
     "GAIL": {
       "symbol": "GAIL.NS",
@@ -427,7 +427,7 @@
       "next_session": "28 Sep 2026 (Monday)",
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-25T18:02:56.777910+00:00"
+      "updated_at": "2026-09-26T18:30:35.590387+00:00"
     },
     "IOC.NS": {
       "symbol": "IOC.NS",
@@ -437,7 +437,7 @@
       "scheme_name": "GOBARdhan (Galvanizing Organic Bio-Agro Resources Dhan)",
       "relevance": "High",
       "mapping_rationale": "Largest OMC with CBG offtake agreements (IndiGreen brand); SATAT commercial offtake.",
-      "latest_development": null,
+      "latest_development": "Bear stress-test prevailed; waiting for confirmation.",
       "catalyst": null,
       "price": 135.7,
       "change_pct": -0.42,
@@ -447,20 +447,23 @@
       "support": 131.7,
       "resistance": 139.3,
       "rsi": 51.7,
-      "status": "QUALIFIED_SETUP",
+      "status": "WAIT",
       "archetype": "Breakout Anticipation",
       "score": 75,
-      "trigger_price": 135.7,
-      "stop_loss": 130.85,
+      "trigger_price": 139.3,
+      "stop_loss": 131.7,
       "target": 144.43,
-      "bull_thesis": "Strong momentum breakout confirmed by CBG government scheme and 1.8x volume expansion.",
-      "bear_thesis": "Approaching major overhead resistance with potential false breakout risk.",
+      "bull_thesis": "Breakout Anticipation setup supported by constructive momentum and volume expansion.",
+      "bear_thesis": "Breakout Anticipation setup supported by constructive momentum and volume expansion.",
       "risk_summary": "R:R 1.8:1 | Max Risk 0.36% | Target 144.43",
-      "waiting_conditions": [],
+      "waiting_conditions": [
+        "Wait for a close above ₹139.3 with volume >1.5× the 20‑day average and a subsequent RSI >60 before entering.",
+        "Bear invalidation signal: A sustained breakout above ₹139.3 on volume >1.5× the 20‑day average, closing above resistance for two consecutive days, and RSI rising above 60 would invalidate the bearish view."
+      ],
       "next_session": "28 Sep 2026 (Monday)",
-      "ai_provider": "Mock",
+      "ai_provider": "Deterministic Fallback",
       "evidence": [],
-      "updated_at": "2026-09-25T18:02:56.787128+00:00"
+      "updated_at": "2026-09-26T18:30:49.136525+00:00"
     },
     "IOC": {
       "symbol": "IOC.NS",
@@ -470,7 +473,7 @@
       "scheme_name": "GOBARdhan (Galvanizing Organic Bio-Agro Resources Dhan)",
       "relevance": "High",
       "mapping_rationale": "Largest OMC with CBG offtake agreements (IndiGreen brand); SATAT commercial offtake.",
-      "latest_development": null,
+      "latest_development": "Bear stress-test prevailed; waiting for confirmation.",
       "catalyst": null,
       "price": 135.7,
       "change_pct": -0.42,
@@ -480,28 +483,31 @@
       "support": 131.7,
       "resistance": 139.3,
       "rsi": 51.7,
-      "status": "QUALIFIED_SETUP",
+      "status": "WAIT",
       "archetype": "Breakout Anticipation",
       "score": 75,
-      "trigger_price": 135.7,
-      "stop_loss": 130.85,
+      "trigger_price": 139.3,
+      "stop_loss": 131.7,
       "target": 144.43,
-      "bull_thesis": "Strong momentum breakout confirmed by CBG government scheme and 1.8x volume expansion.",
-      "bear_thesis": "Approaching major overhead resistance with potential false breakout risk.",
+      "bull_thesis": "Breakout Anticipation setup supported by constructive momentum and volume expansion.",
+      "bear_thesis": "Breakout Anticipation setup supported by constructive momentum and volume expansion.",
       "risk_summary": "R:R 1.8:1 | Max Risk 0.36% | Target 144.43",
-      "waiting_conditions": [],
+      "waiting_conditions": [
+        "Wait for a close above ₹139.3 with volume >1.5× the 20‑day average and a subsequent RSI >60 before entering.",
+        "Bear invalidation signal: A sustained breakout above ₹139.3 on volume >1.5× the 20‑day average, closing above resistance for two consecutive days, and RSI rising above 60 would invalidate the bearish view."
+      ],
       "next_session": "28 Sep 2026 (Monday)",
-      "ai_provider": "Mock",
+      "ai_provider": "Deterministic Fallback",
       "evidence": [],
-      "updated_at": "2026-09-25T18:02:56.787128+00:00"
+      "updated_at": "2026-09-26T18:30:49.136525+00:00"
     }
   },
   "qualified_setups": [
-    "TRUALT.NS",
-    "IOC.NS"
+    "TRUALT.NS"
   ],
   "waiting_setups": [
-    "WABAG.NS"
+    "WABAG.NS",
+    "IOC.NS"
   ],
   "performance": {
     "completed_trades": 0,
