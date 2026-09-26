@@ -1,4 +1,4 @@
-"""OpenAI LLM Provider for Stage 2."""
+"""Groq LLM Provider for Stage 2."""
 from __future__ import annotations
 
 import json
@@ -23,10 +23,10 @@ from ...logger import get_logger
 logger = get_logger(__name__)
 
 
-class OpenAIProvider(LLMProvider):
-    """Provider connecting to OpenAI Chat Completions API."""
+class GroqProvider(LLMProvider):
+    """Provider connecting to Groq OpenAI-compatible Chat Completions API."""
 
-    name: str = "openai"
+    name: str = "groq"
 
     def __init__(
         self,
@@ -34,8 +34,8 @@ class OpenAIProvider(LLMProvider):
         model: Optional[str] = None,
         timeout: float = 30.0,
     ):
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        self.model = model or os.getenv("OPENAI_MODEL") or "gpt-4o-mini"
+        self.api_key = api_key or os.getenv("GROQ_API_KEY")
+        self.model = model or os.getenv("GROQ_MODEL") or "llama-3.3-70b-versatile"
         self.timeout = timeout
 
     def generate(
@@ -47,9 +47,9 @@ class OpenAIProvider(LLMProvider):
         caller: str = "",
     ) -> ProviderResponse:
         if not self.api_key:
-            raise LLMProviderError("OPENAI_API_KEY is not configured", provider=self.name)
+            raise LLMProviderError("GROQ_API_KEY is not configured", provider=self.name)
 
-        url = "https://api.openai.com/v1/chat/completions"
+        url = "https://api.groq.com/openai/v1/chat/completions"
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
@@ -77,10 +77,10 @@ class OpenAIProvider(LLMProvider):
         try:
             resp = requests.post(url, headers=headers, json=payload, timeout=self.timeout)
         except requests.exceptions.Timeout as exc:
-            msg = sanitize_secret(f"OpenAI API request timed out after {self.timeout}s: {exc}", self.api_key)
+            msg = sanitize_secret(f"Groq API request timed out after {self.timeout}s: {exc}", self.api_key)
             raise ProviderTimeoutError(msg, provider=self.name) from exc
         except requests.exceptions.RequestException as exc:
-            msg = sanitize_secret(f"OpenAI API network error: {exc}", self.api_key)
+            msg = sanitize_secret(f"Groq API network error: {exc}", self.api_key)
             raise LLMProviderError(msg, provider=self.name) from exc
 
         if resp.status_code == 429:
@@ -96,7 +96,7 @@ class OpenAIProvider(LLMProvider):
 
             err_text = self._extract_error_message(resp)
             raise RateLimitError(
-                f"OpenAI quota/rate limit reached (429): {err_text}",
+                f"Groq quota/rate limit reached (429): {err_text}",
                 provider=self.name,
                 status_code=429,
                 retry_after=retry_after,
@@ -105,7 +105,7 @@ class OpenAIProvider(LLMProvider):
         if resp.status_code == 404:
             err_text = self._extract_error_message(resp)
             raise ModelNotFoundError(
-                f"OpenAI model '{self.model}' not found (404): {err_text}",
+                f"Groq model '{self.model}' not found (404): {err_text}",
                 provider=self.name,
                 status_code=404,
             )
@@ -113,7 +113,7 @@ class OpenAIProvider(LLMProvider):
         if 500 <= resp.status_code < 600:
             err_text = self._extract_error_message(resp)
             raise ServerError(
-                f"OpenAI server error ({resp.status_code}): {err_text}",
+                f"Groq server error ({resp.status_code}): {err_text}",
                 provider=self.name,
                 status_code=resp.status_code,
             )
@@ -121,7 +121,7 @@ class OpenAIProvider(LLMProvider):
         if resp.status_code != 200:
             err_text = self._extract_error_message(resp)
             raise LLMProviderError(
-                f"OpenAI API returned status {resp.status_code}: {err_text}",
+                f"Groq API returned status {resp.status_code}: {err_text}",
                 provider=self.name,
                 status_code=resp.status_code,
             )
@@ -129,7 +129,7 @@ class OpenAIProvider(LLMProvider):
         data = resp.json()
         choices = data.get("choices", [])
         if not choices:
-            raise LLMProviderError("No choices returned from OpenAI API", provider=self.name)
+            raise LLMProviderError("No choices returned from Groq API", provider=self.name)
 
         content = choices[0].get("message", {}).get("content", "")
         raw_json = None

@@ -199,6 +199,8 @@ def format_section3_actionable_and_waiting(setups: List[TradeSetup]) -> str:
             if risk:
                 lines.append(f"\n🛑 *Technical Invalidation:*\n{risk.technical_invalidation}")
                 lines.append(f"\n⚠️ *Breakout Failure Condition:*\n{risk.breakout_failure_condition}")
+            if s.ai_provider:
+                lines.append(f"• *AI:* {s.ai_provider}")
 
             lines.append(f"\n*FINAL: QUALIFIED_SETUP*")
             lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
@@ -222,6 +224,8 @@ def format_section3_actionable_and_waiting(setups: List[TradeSetup]) -> str:
                 lines.append(f"*Catalyst Condition:* {wc.catalyst_remaining_valid}")
             elif s.no_trade_reason:
                 lines.append(f"*Why Not Ready:*\n{s.no_trade_reason}")
+            if s.ai_provider:
+                lines.append(f"• *AI:* {s.ai_provider}")
             lines.append(f"*FINAL: WAIT*")
             lines.append("───────────────────────────\n")
 

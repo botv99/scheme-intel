@@ -81,6 +81,22 @@ python -m scheme_intel.ingest             # refresh news, prices, and announceme
 
 ---
 
+## Multi-Provider LLM Architecture (Stage 2)
+
+Scheme-Intel features a **provider-agnostic, failover-based** multi-agent LLM routing layer for adversarial swing setup analysis:
+
+- **Supported Providers**: Google Gemini, Groq, OpenRouter, OpenAI, and deterministic synthesis fallback.
+- **Dynamic Routing & Cooldown**: Per-request routing based on available API keys (`LLM_PROVIDER_ORDER`). Automatically recovers from HTTP 429 quota exhaustion by applying cooldowns (respecting `Retry-After`) and failing over to the next provider seamlessly.
+- **Failover Hierarchy**: Live LLM Provider → Alternate Live LLM Provider → Deterministic Synthesis → Hard Mathematical Risk Engine → Waiting Engine → Telegram.
+- **Configuration**:
+  - `GEMINI_API_KEY`, `GEMINI_MODEL` (default: `gemini-3.8-flash`)
+  - `GROQ_API_KEY`, `GROQ_MODEL` (default: `llama-3.3-70b-versatile`)
+  - `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` (default: `meta-llama/llama-3.3-70b-instruct:free`)
+  - `OPENAI_API_KEY`, `OPENAI_MODEL` (default: `gpt-4o-mini`)
+  - `LLM_PROVIDER_ORDER` (default: `groq,openrouter,gemini,openai`)
+
+---
+
 ## Documentation Suite
 
 Detailed architectural specifications and references are available in [`docs/`](docs/):

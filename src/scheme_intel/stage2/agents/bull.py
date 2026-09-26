@@ -42,6 +42,7 @@ class BullAgent(BaseAgent):
                 schema=BullThesis,
                 system_prompt=BULL_SYSTEM_PROMPT,
                 temperature=0.2,
+                caller="BullAgent",
             )
         except Exception as e:
             logger.warning("BullAgent LLM generation failed, falling back to deterministic synthesis: %s", e)

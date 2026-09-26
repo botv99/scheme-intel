@@ -60,11 +60,16 @@ class DebateOrchestrator:
 
         # 4. Arbitration
         debate_result = self.arbitrator_agent.arbitrate(candidate, evidence, bull_thesis, bear_thesis)
+        prov_summary = getattr(self.provider, "get_summary", lambda: None)()
+        if not prov_summary and hasattr(self.provider, "name"):
+            prov_summary = self.provider.name.capitalize()
+        debate_result.provider = prov_summary or "Deterministic Synthesis"
         logger.info(
-            "Debate adjudicated for %s: Bull %.1f vs Bear %.1f",
+            "Debate adjudicated for %s: Bull %.1f vs Bear %.1f (AI: %s)",
             candidate.stock.symbol,
             debate_result.bull_strength,
             debate_result.bear_strength,
+            debate_result.provider,
         )
 
         return bull_thesis, bear_thesis, debate_result

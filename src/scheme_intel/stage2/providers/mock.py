@@ -14,6 +14,8 @@ class MockProvider(LLMProvider):
     without requiring external API connectivity.
     """
 
+    name: str = "mock"
+
     def __init__(self, fixed_responses: Optional[dict[str, Any]] = None):
         self.fixed_responses = fixed_responses or {}
         self.call_history: list[dict] = []
@@ -24,6 +26,7 @@ class MockProvider(LLMProvider):
         system_prompt: str = "",
         schema: Optional[Type[BaseModel]] = None,
         temperature: float = 0.2,
+        caller: str = "",
     ) -> ProviderResponse:
         self.call_history.append({
             "prompt": prompt,

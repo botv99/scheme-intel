@@ -57,6 +57,7 @@ class BearAgent(BaseAgent):
                 schema=BearThesis,
                 system_prompt=BEAR_SYSTEM_PROMPT,
                 temperature=0.2,
+                caller="BearAgent",
             )
         except Exception as e:
             logger.warning("BearAgent LLM generation failed, falling back to deterministic synthesis: %s", e)

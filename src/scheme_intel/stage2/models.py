@@ -192,6 +192,7 @@ class DebateResult(BaseModel):
     key_catalyst: str = ""
     key_risk: str = ""
     confirmation_needed: str = ""
+    provider: Optional[str] = None
 
 
 class RiskAssessment(BaseModel):
@@ -256,6 +257,7 @@ class TradeSetup(BaseModel):
     risk: Optional[RiskAssessment] = None
     wait_conditions: Optional[WaitCondition] = None
     no_trade_reason: Optional[str] = None
+    ai_provider: Optional[str] = None
     telegram_card: str = ""
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 

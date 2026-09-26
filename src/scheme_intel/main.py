@@ -31,7 +31,7 @@ def run(
     send: bool = False,
     config_path: Optional[Path | str] = None,
     stage: int = 2,
-    provider: str = "gemini",
+    provider: str = "auto",
 ) -> dict:
     """
     Execute full scheme monitor pipeline:
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     parser.add_argument("--send", action="store_true", help="send material alerts when Telegram secrets are configured")
     parser.add_argument("--config", type=str, default=None, help="path to custom watchlist.yaml configuration")
     parser.add_argument("--stage", type=int, default=2, choices=[1, 2], help="pipeline stage to execute (1 or 2, default: 2)")
-    parser.add_argument("--provider", type=str, default="gemini", help="LLM Provider for Stage 2 (gemini, openai, mock)")
+    parser.add_argument("--provider", type=str, default="auto", help="LLM Provider for Stage 2 (auto, gemini, groq, openrouter, openai, mock)")
     args = parser.parse_args()
 
     result = run(send=args.send, config_path=args.config, stage=args.stage, provider=args.provider)

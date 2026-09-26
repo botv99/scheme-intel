@@ -59,10 +59,28 @@ telegram:
 
 ---
 
-## Environment Variables
-
 | Variable | Description | Required | Example |
 |---|---|---|---|
 | `TELEGRAM_BOT_TOKEN` | Telegram Bot API token | For notifications | `123456789:ABCdefGHIjklMNOpqr` |
 | `TELEGRAM_CHAT_ID` | Comma-separated Telegram Chat / Channel IDs | For notifications | `-100123456789,-100987654321` |
+| `GEMINI_API_KEY` | Google Gemini API Key | Optional | `AIzaSy...` |
+| `GEMINI_MODEL` | Gemini Model identifier | Optional (default: `gemini-3.8-flash`) | `gemini-3.8-flash` |
+| `GROQ_API_KEY` | Groq API Key | Optional | `gsk_...` |
+| `GROQ_MODEL` | Groq Model identifier | Optional (default: `llama-3.3-70b-versatile`) | `llama-3.3-70b-versatile` |
+| `OPENROUTER_API_KEY` | OpenRouter Gateway API Key | Optional | `sk-or-v1-...` |
+| `OPENROUTER_MODEL` | OpenRouter Model identifier | Optional (default: `meta-llama/llama-3.3-70b-instruct:free`) | `meta-llama/llama-3.3-70b-instruct:free` |
+| `OPENAI_API_KEY` | OpenAI API Key | Optional | `sk-proj-...` |
+| `OPENAI_MODEL` | OpenAI Model identifier | Optional (default: `gpt-4o-mini`) | `gpt-4o-mini` |
+| `LLM_PROVIDER_ORDER` | Priority router order | Optional (default: `groq,openrouter,gemini,openai`) | `groq,openrouter,gemini,openai` |
 | `PYTHONPATH` | Python import path | Optional (defaults to `src`) | `src` |
+
+---
+
+## Multi-Provider LLM Architecture (Stage 2)
+
+Scheme-Intel uses a provider-agnostic, failover-based LLM architecture:
+- Detects configured API keys dynamically (missing keys are skipped).
+- Routes adversarial debate calls per-request across providers in priority order.
+- Automatically handles 429 quota/rate limits with cooldown and failover to the next provider.
+- Preserves deterministic synthesis as the ultimate safety net if all providers fail.
+

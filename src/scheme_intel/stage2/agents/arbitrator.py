@@ -65,6 +65,7 @@ class ArbitratorAgent(BaseAgent):
                 schema=DebateResult,
                 system_prompt=ARBITRATOR_SYSTEM_PROMPT,
                 temperature=0.1,
+                caller="ArbitratorAgent",
             )
         except Exception as e:
             logger.warning("ArbitratorAgent LLM generation failed, falling back to deterministic synthesis: %s", e)

@@ -31,7 +31,10 @@ from .calendar import get_market_session_info, MarketSessionInfo
 from .providers.base import LLMProvider
 from .providers.mock import MockProvider
 from .providers.gemini import GeminiProvider
+from .providers.groq import GroqProvider
+from .providers.openrouter import OpenRouterProvider
 from .providers.openai import OpenAIProvider
+from .providers.manager import LLMProviderManager
 from .market import MarketDataEngine
 from .news import NewsEngine
 from .impact import evaluate_stock_catalysts
@@ -51,31 +54,18 @@ import time
 logger = get_logger(__name__)
 
 
-def get_llm_provider(name: str = "mock") -> LLMProvider:
-    """Factory for selecting LLM provider."""
-    provider_lower = name.lower()
-    if provider_lower == "gemini":
-        try:
-            p = GeminiProvider()
-            if not p.api_key:
-                logger.warning("GEMINI_API_KEY / GOOGLE_API_KEY not found in environment, falling back to MockProvider for debate reasoning")
-                return MockProvider()
-            return p
-        except Exception as e:
-            logger.warning("Could not initialize GeminiProvider (%s), falling back to MockProvider", e)
-            return MockProvider()
-    elif provider_lower == "openai":
-        try:
-            p = OpenAIProvider()
-            if not p.api_key:
-                logger.warning("OPENAI_API_KEY not found in environment, falling back to MockProvider for debate reasoning")
-                return MockProvider()
-            return p
-        except Exception as e:
-            logger.warning("Could not initialize OpenAIProvider (%s), falling back to MockProvider", e)
-            return MockProvider()
-    else:
+def get_llm_provider(name: str = "auto") -> LLMProvider:
+    """Factory for selecting LLM provider with multi-provider routing and failover."""
+    provider_lower = (name or "auto").lower()
+    if provider_lower == "mock":
         return MockProvider()
+
+    preferred = provider_lower if provider_lower not in ("auto", "router", "manager") else None
+    manager = LLMProviderManager(preferred_provider=preferred, allow_mock_fallback=False)
+    if not manager.active_order:
+        logger.warning("No LLM API keys found in environment; falling back to MockProvider for offline execution")
+        return MockProvider()
+    return manager
 
 
 def load_watchlist_stocks(config_path: Optional[str] = None) -> List[Stock]:
@@ -123,7 +113,7 @@ class Stage2Pipeline:
         mode: str = "production",
     ):
         self.mode = mode
-        self.provider = provider or (MockProvider() if mode == "mock" else get_llm_provider("gemini"))
+        self.provider = provider or (MockProvider() if mode == "mock" else get_llm_provider("auto"))
         self.db = Stage2Database(db_path)
         self.market_engine = market_engine or MarketDataEngine(mode=mode)
         self.news_engine = news_engine or NewsEngine(mode=mode)
@@ -290,6 +280,7 @@ class Stage2Pipeline:
                     risk=risk,
                     wait_conditions=wait_cond,
                     no_trade_reason=no_trade_reason,
+                    ai_provider=debate.provider if debate else None,
                 )
             else:
                 # Not a candidate: Check if WAIT or NO_TRADE
