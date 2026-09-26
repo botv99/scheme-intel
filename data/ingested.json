@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-26T12:20:14.263693+00:00",
+  "generated_at": "2026-09-26T12:54:19.886998+00:00",
   "prices": [
     {
       "company": "TruAlt Bioenergy",
@@ -10678,18 +10678,7 @@
     }
   ],
   "announcements": [],
-  "news": [
-    {
-      "title": "JPMorgan CEO Jamie Dimon warns Trump against punishing India; gives this advice on Russian oil imports",
-      "url": "https://www.livemint.com/market/stock-market-news/jpmorgan-ceo-jamie-dimon-warns-trump-against-punishing-india-gives-this-advice-on-russian-oil-imports-11790326652038.html",
-      "source": "Mint",
-      "published_at": "2026-09-25T09:21:48+00:00",
-      "matched_stocks": [
-        "Indian Oil"
-      ],
-      "summary": "JPMorgan CEO Jamie Dimon emphasized the bank's commitment to India, citing economic growth and strong ties with US. He advocated for dialogue over potential tariffs on Indian oil purchases amidst geopolitical tensions, highlighting the importance of the India-US relationship."
-    }
-  ],
+  "news": [],
   "source_errors": [
     {
       "source": "NSE block deals",
@@ -10712,5 +10701,5 @@
       "error": "Failed to access Financial Express (markets): 403 Client Error: Forbidden for url: https://www.financialexpress.com/market/"
     }
   ],
-  "summary": "7 price snapshots, 237 bulk/block deals, 0 tender/contract announcements, 1 news items"
+  "summary": "7 price snapshots, 237 bulk/block deals, 0 tender/contract announcements, 0 news items"
 }
