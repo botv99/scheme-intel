@@ -31,4 +31,5 @@ jobs:
           git config user.name "scheme-intel[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/ingested.json
-          git diff --cached --quiet || (git commit -m "chore(ingestion): update canonical raw ingestion snapshot [skip ci]" && git pull --rebase origin main && git push)
+          git checkout -- . || true
+          git diff --cached --quiet || (git commit -m "chore(ingestion): update canonical raw ingestion snapshot [skip ci]" && git push)
