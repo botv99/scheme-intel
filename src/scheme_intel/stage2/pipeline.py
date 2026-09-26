@@ -336,6 +336,23 @@ class Stage2Pipeline:
             except Exception as e:
                 logger.warning("Error computing performance analytics: %s", e)
 
+        # 6c. Build Precalculated Intelligence Memory Snapshot (Stage 3)
+        snapshot_path: Optional[str] = None
+        if not dry_run:
+            try:
+                from ..intelligence_memory.builder import IntelligenceSnapshotBuilder
+                builder = IntelligenceSnapshotBuilder(db=self.db)
+                stage2_partial = {
+                    "session_info": session_info,
+                    "setups": trade_setups,
+                    "performance_report": perf_report,
+                }
+                saved_p = builder.build_and_save(stage2_result=stage2_partial)
+                snapshot_path = str(saved_p)
+                logger.info("Saved Stage 3 Intelligence Snapshot to %s", snapshot_path)
+            except Exception as e:
+                logger.warning("Error building intelligence snapshot: %s", e)
+
         # 7. Format 3-Section Telegram Report
         session_title = f"{session_info.analysis_date} — AFTER MARKET (Prep for {session_info.next_trading_session})"
         health_stats = {
@@ -375,6 +392,7 @@ class Stage2Pipeline:
             "performance_report": perf_report,
             "performance_summary": perf_summary,
             "health_stats": health_stats,
+            "intelligence_snapshot": snapshot_path,
         }
 
     def _dispatch_telegram_report(

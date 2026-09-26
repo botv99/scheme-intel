@@ -55,5 +55,6 @@ jobs:
           git add data/ingested.json
           git add -f data/latest.json
           git add -f data/performance/latest.json data/performance/latest.md
+          git add -f data/intelligence/latest.json
           git diff --cached --quiet || git commit -m "chore: update daily ingestion and scheme-monitor snapshots"
           git push
