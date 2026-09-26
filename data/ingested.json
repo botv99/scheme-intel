@@ -1,19 +1,19 @@
 {
-  "generated_at": "2026-09-25T20:22:53.759641+00:00",
+  "generated_at": "2026-09-26T12:20:14.263693+00:00",
   "prices": [
     {
       "company": "TruAlt Bioenergy",
       "symbol": "TRUALT.NS",
       "screener_id": "TRUALT",
       "date": "2026-09-25",
-      "open": NaN,
+      "open": 429.3,
       "close": 441.9,
-      "high": NaN,
-      "low": NaN,
+      "high": 444.2,
+      "low": 421.2,
       "volume": 457107,
       "change_pct": 3.01,
       "rsi14": 55.9,
-      "market_cap": "\u20b9 3,791 Cr.",
+      "market_cap": "\u20b9 3,789 Cr.",
       "high_52w": 550.0,
       "low_52w": 310.0,
       "price_source": "screener.in",
@@ -1046,11 +1046,11 @@
         },
         {
           "date": "2026-09-25",
-          "open": NaN,
-          "high": NaN,
-          "low": NaN,
-          "close": NaN,
-          "volume": 442257
+          "open": 429.3,
+          "high": 444.2,
+          "low": 421.2,
+          "close": 441.9,
+          "volume": 442258
         }
       ]
     },
@@ -1059,14 +1059,14 @@
       "symbol": "WABAG.NS",
       "screener_id": "WABAG",
       "date": "2026-09-25",
-      "open": NaN,
+      "open": 2029.6,
       "close": 2008.4,
-      "high": NaN,
-      "low": NaN,
+      "high": 2049.5,
+      "low": 1991.1,
       "volume": 286639,
       "change_pct": -1.03,
       "rsi14": 46.0,
-      "market_cap": "\u20b9 12,556 Cr.",
+      "market_cap": "\u20b9 12,551 Cr.",
       "high_52w": 2320.0,
       "low_52w": 1033.0,
       "price_source": "screener.in",
@@ -2099,11 +2099,11 @@
         },
         {
           "date": "2026-09-25",
-          "open": NaN,
-          "high": NaN,
-          "low": NaN,
-          "close": NaN,
-          "volume": 272084
+          "open": 2029.6,
+          "high": 2049.5,
+          "low": 1991.1,
+          "close": 2008.4,
+          "volume": 272100
         }
       ]
     },
@@ -2112,14 +2112,14 @@
       "symbol": "PRAJIND.NS",
       "screener_id": "PRAJIND",
       "date": "2026-09-25",
-      "open": NaN,
+      "open": 316.05,
       "close": 315.9,
-      "high": NaN,
-      "low": NaN,
+      "high": 318.85,
+      "low": 311.95,
       "volume": 369087,
       "change_pct": -0.06,
       "rsi14": 40.2,
-      "market_cap": "\u20b9 5,806 Cr.",
+      "market_cap": "\u20b9 5,807 Cr.",
       "high_52w": 428.0,
       "low_52w": 273.0,
       "price_source": "screener.in",
@@ -3152,11 +3152,11 @@
         },
         {
           "date": "2026-09-25",
-          "open": NaN,
-          "high": NaN,
-          "low": NaN,
-          "close": NaN,
-          "volume": 337652
+          "open": 316.05,
+          "high": 318.85,
+          "low": 311.95,
+          "close": 315.9,
+          "volume": 337732
         }
       ]
     },
@@ -3165,10 +3165,10 @@
       "symbol": "ORGANICREC.BO",
       "screener_id": "543997",
       "date": "2026-09-25",
-      "open": NaN,
+      "open": 175.0,
       "close": 197.45,
-      "high": NaN,
-      "low": NaN,
+      "high": 202.95,
+      "low": 175.0,
       "volume": 106200,
       "change_pct": 9.63,
       "rsi14": 71.6,
@@ -4197,10 +4197,10 @@
         },
         {
           "date": "2026-09-25",
-          "open": NaN,
-          "high": NaN,
-          "low": NaN,
-          "close": NaN,
+          "open": 175.0,
+          "high": 202.95,
+          "low": 175.0,
+          "close": 197.45,
           "volume": 106200
         }
       ]
@@ -4210,14 +4210,14 @@
       "symbol": "KIRLPNU.NS",
       "screener_id": "KIRLPNU",
       "date": "2026-09-25",
-      "open": NaN,
+      "open": 699.8,
       "close": 691.95,
-      "high": NaN,
-      "low": NaN,
+      "high": 699.8,
+      "low": 685.5,
       "volume": 79251,
       "change_pct": -0.83,
       "rsi14": 36.7,
-      "market_cap": "\u20b9 8,988 Cr.",
+      "market_cap": "\u20b9 8,990 Cr.",
       "high_52w": 1099.0,
       "low_52w": 478.0,
       "price_source": "screener.in",
@@ -5242,10 +5242,10 @@
         },
         {
           "date": "2026-09-25",
-          "open": NaN,
-          "high": NaN,
-          "low": NaN,
-          "close": NaN,
+          "open": 699.8,
+          "high": 699.8,
+          "low": 685.5,
+          "close": 691.95,
           "volume": 72155
         }
       ]
@@ -5255,14 +5255,14 @@
       "symbol": "GAIL.NS",
       "screener_id": "GAIL",
       "date": "2026-09-25",
-      "open": NaN,
+      "open": 173.9,
       "close": 172.7,
-      "high": NaN,
-      "low": NaN,
+      "high": 173.98,
+      "low": 171.59,
       "volume": 5547977,
       "change_pct": -0.66,
       "rsi14": 48.4,
-      "market_cap": "\u20b9 1,13,650 Cr.",
+      "market_cap": "\u20b9 1,13,552 Cr.",
       "high_52w": 187.0,
       "low_52w": 134.0,
       "price_source": "screener.in",
@@ -6295,11 +6295,11 @@
         },
         {
           "date": "2026-09-25",
-          "open": NaN,
-          "high": NaN,
-          "low": NaN,
-          "close": NaN,
-          "volume": 5454617
+          "open": 173.9,
+          "high": 173.98,
+          "low": 171.59,
+          "close": 172.7,
+          "volume": 5454851
         }
       ]
     },
@@ -6308,14 +6308,14 @@
       "symbol": "IOC.NS",
       "screener_id": "IOC",
       "date": "2026-09-25",
-      "open": NaN,
+      "open": 136.5,
       "close": 135.7,
-      "high": NaN,
-      "low": NaN,
+      "high": 137.06,
+      "low": 135.33,
       "volume": 8112373,
       "change_pct": -0.42,
       "rsi14": 46.4,
-      "market_cap": "\u20b9 1,92,288 Cr.",
+      "market_cap": "\u20b9 1,91,625 Cr.",
       "high_52w": 189.0,
       "low_52w": 130.0,
       "price_source": "screener.in",
@@ -7348,11 +7348,11 @@
         },
         {
           "date": "2026-09-25",
-          "open": NaN,
-          "high": NaN,
-          "low": NaN,
-          "close": NaN,
-          "volume": 7768248
+          "open": 136.5,
+          "high": 137.06,
+          "low": 135.33,
+          "close": 135.7,
+          "volume": 7769991
         }
       ]
     }
