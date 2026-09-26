@@ -90,10 +90,28 @@ Scheme-Intel features a **provider-agnostic, failover-based** multi-agent LLM ro
 - **Failover Hierarchy**: Live LLM Provider → Alternate Live LLM Provider → Deterministic Synthesis → Hard Mathematical Risk Engine → Waiting Engine → Telegram.
 - **Configuration**:
   - `GEMINI_API_KEY`, `GEMINI_MODEL` (default: `gemini-3.8-flash`)
-  - `GROQ_API_KEY`, `GROQ_MODEL` (default: `llama-3.3-70b-versatile`)
-  - `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` (default: `meta-llama/llama-3.3-70b-instruct:free`)
+  - `GROQ_API_KEY`, `GROQ_MODEL` (default: `openai/gpt-oss-safeguard-20b`)
+  - `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` (default: `liquid/lfm-2.5-2.6b:free`)
   - `OPENAI_API_KEY`, `OPENAI_MODEL` (default: `gpt-4o-mini`)
   - `LLM_PROVIDER_ORDER` (default: `groq,openrouter,gemini,openai`)
+
+---
+
+## Forward Performance Analytics & Validation Engine
+
+Scheme-Intel automatically computes forward performance analytics from historical setups and tracked execution outcomes:
+
+- **Zero Lookahead Leakage**: Forward validation strictly respects chronological setup dates, ensuring setups evaluated at $T_1$ never have access to outcomes occurring after $T_1$.
+- **Objective Mathematical Formulas**:
+  - Win rate: $\frac{\text{Wins}}{\text{Completed Trades}}$ (untriggered setups are **never** counted as losses).
+  - Profit Factor: $\frac{\text{Gross Profit}}{\text{|Gross Loss|}}$.
+  - Expectancy: $(\text{Win Rate} \times \text{Avg Win}) + (\text{Loss Rate} \times \text{Avg Loss})$ per triggered trade.
+- **Data-Sufficiency Guards**: Enforces strict sample-size thresholds (`MIN_COMPLETED_TRADES = 30`, `MIN_ARCHETYPE_SAMPLE = 20`, `MIN_STOCK_SAMPLE = 20`). Clearly labels immature performance as `INSUFFICIENT_SAMPLE` or `PRELIMINARY` and prevents misleading statistical claims.
+- **Comprehensive Breakdowns**: Archetype, Symbol, AI Provider (observational), and Candidate Score Bands.
+- **Automated Reporting**:
+  - Machine-readable: `data/performance/latest.json`
+  - Human-readable: `data/performance/latest.md`
+  - Compact Telegram summary (only displays full validated statistics when sample size meets validation thresholds).
 
 ---
 
