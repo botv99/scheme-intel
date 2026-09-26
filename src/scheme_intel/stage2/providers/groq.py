@@ -1,10 +1,10 @@
-"""Groq LLM Provider for Stage 2."""
+"""Groq LLM Provider for Stage 2 with automatic fallback model recovery."""
 from __future__ import annotations
 
 import json
 import os
 import time
-from typing import Optional, Type
+from typing import Optional, Type, List
 import requests
 from pydantic import BaseModel
 
@@ -21,6 +21,15 @@ from .base import (
 from ...logger import get_logger
 
 logger = get_logger(__name__)
+
+DEFAULT_GROQ_FALLBACKS = [
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant",
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-20b",
+    "llama3-70b-8192",
+    "mixtral-8x7b-32768",
+]
 
 
 class GroqProvider(LLMProvider):
@@ -49,6 +58,37 @@ class GroqProvider(LLMProvider):
         if not self.api_key:
             raise LLMProviderError("GROQ_API_KEY is not configured", provider=self.name)
 
+        models_to_try: List[str] = [self.model]
+        for fb in DEFAULT_GROQ_FALLBACKS:
+            if fb not in models_to_try:
+                models_to_try.append(fb)
+
+        last_exc: Optional[Exception] = None
+        for current_model in models_to_try:
+            try:
+                return self._generate_with_model(
+                    current_model, prompt, system_prompt, schema, temperature, caller
+                )
+            except ModelNotFoundError as exc:
+                logger.info("Groq model '%s' not found (404), trying alternate supported model...", current_model)
+                last_exc = exc
+                continue
+            except Exception:
+                raise
+
+        if last_exc:
+            raise last_exc
+        raise ModelNotFoundError(f"All Groq models exhausted ({models_to_try})", provider=self.name)
+
+    def _generate_with_model(
+        self,
+        model_name: str,
+        prompt: str,
+        system_prompt: str = "",
+        schema: Optional[Type[BaseModel]] = None,
+        temperature: float = 0.2,
+        caller: str = "",
+    ) -> ProviderResponse:
         url = "https://api.groq.com/openai/v1/chat/completions"
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -66,7 +106,7 @@ class GroqProvider(LLMProvider):
         messages.append({"role": "user", "content": user_content})
 
         payload: dict = {
-            "model": self.model,
+            "model": model_name,
             "messages": messages,
             "temperature": temperature,
         }
@@ -105,7 +145,7 @@ class GroqProvider(LLMProvider):
         if resp.status_code == 404:
             err_text = self._extract_error_message(resp)
             raise ModelNotFoundError(
-                f"Groq model '{self.model}' not found (404): {err_text}",
+                f"Groq model '{model_name}' not found (404): {err_text}",
                 provider=self.name,
                 status_code=404,
             )
@@ -151,11 +191,12 @@ class GroqProvider(LLMProvider):
 
         tokens = data.get("usage", {}).get("total_tokens", 0)
         latency = round(time.time() - start_t, 2)
+        self.model = model_name  # Update to working model
 
         return ProviderResponse(
             content=content,
             raw_json=raw_json,
-            model=self.model,
+            model=model_name,
             tokens_used=tokens,
             provider=self.name,
             latency_s=latency,

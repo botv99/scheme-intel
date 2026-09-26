@@ -16,7 +16,7 @@ import sys
 import time
 import json
 import re
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 import requests
 from pydantic import BaseModel, Field
@@ -52,34 +52,9 @@ def test_gemini_live() -> Dict[str, Any]:
         return {"configured": False, "status": "SKIPPED", "reason": "No GEMINI_API_KEY"}
 
     print("\n--- [1] Testing Gemini Live API ---")
-    # Discover available models
-    models_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
-    supported_models = []
-    try:
-        r = requests.get(models_url, timeout=15)
-        if r.status_code == 200:
-            supported_models = [
-                m.get("name", "").replace("models/", "")
-                for m in r.json().get("models", [])
-                if "generateContent" in m.get("supportedGenerationMethods", [])
-            ]
-            print(f"Gemini available models count: {len(supported_models)}")
-    except Exception as e:
-        print(f"Gemini ListModels error: {mask_str(str(e))}")
-
-    # Determine model to test: prefer configured GEMINI_MODEL or gemini-2.5-flash / gemini-3.8-flash
-    model = os.getenv("GEMINI_MODEL")
-    if not model:
-        if "gemini-2.5-flash" in supported_models:
-            model = "gemini-2.5-flash"
-        elif "gemini-3.8-flash" in supported_models:
-            model = "gemini-3.8-flash"
-        elif "gemini-2.0-flash" in supported_models:
-            model = "gemini-2.0-flash"
-        else:
-            model = "gemini-2.5-flash"
-
+    model = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
     print(f"Selected Gemini model: {model}")
+
     start_t = time.time()
     try:
         provider = GeminiProvider(api_key=api_key, model=model, timeout=20.0)
@@ -89,11 +64,11 @@ def test_gemini_live() -> Dict[str, Any]:
             caller="LiveTest",
         )
         latency = round(time.time() - start_t, 2)
-        print(f"Gemini Live Test: SUCCESS in {latency}s | Result: {res.status}")
+        print(f"Gemini Live Test: SUCCESS in {latency}s | Model: {provider.model} | Result: {res.status}")
         return {
             "configured": True,
             "status": "PASS",
-            "model": model,
+            "model": provider.model,
             "latency": latency,
             "result": res.model_dump(),
         }
@@ -117,53 +92,55 @@ def test_groq_live() -> Dict[str, Any]:
 
     print("\n--- [2] Testing Groq Live API ---")
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    supported_models = []
+    supported_models: List[str] = []
     try:
         r = requests.get("https://api.groq.com/openai/v1/models", headers=headers, timeout=15)
         if r.status_code == 200:
             supported_models = [m.get("id") for m in r.json().get("data", [])]
-            print(f"Groq available models: {supported_models[:5]}")
+            print(f"All Groq available models ({len(supported_models)}): {supported_models}")
     except Exception as e:
         print(f"Groq ListModels error: {mask_str(str(e))}")
 
-    model = os.getenv("GROQ_MODEL")
-    if not model:
-        if "llama-3.3-70b-versatile" in supported_models:
-            model = "llama-3.3-70b-versatile"
-        elif "llama-3.1-8b-instant" in supported_models:
-            model = "llama-3.1-8b-instant"
-        else:
-            model = "llama-3.3-70b-versatile"
+    # Build candidates to test
+    env_model = os.getenv("GROQ_MODEL")
+    candidates = [env_model] if env_model else []
+    for cand in supported_models:
+        if cand not in candidates:
+            candidates.append(cand)
+    if not candidates:
+        candidates = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
 
-    print(f"Selected Groq model: {model}")
-    start_t = time.time()
-    try:
-        provider = GroqProvider(api_key=api_key, model=model, timeout=20.0)
-        res = provider.generate_structured(
-            prompt="Respond with JSON: {'status': 'LIVE_OK', 'symbol': 'TEST.NS'}",
-            schema=MiniStatusResponse,
-            caller="LiveTest",
-        )
-        latency = round(time.time() - start_t, 2)
-        print(f"Groq Live Test: SUCCESS in {latency}s | Result: {res.status}")
-        return {
-            "configured": True,
-            "status": "PASS",
-            "model": model,
-            "latency": latency,
-            "result": res.model_dump(),
-        }
-    except Exception as exc:
-        latency = round(time.time() - start_t, 2)
-        err_msg = mask_str(str(exc))
-        print(f"Groq Live Test: FAILED in {latency}s | Reason: {err_msg}")
-        return {
-            "configured": True,
-            "status": "FAIL",
-            "model": model,
-            "latency": latency,
-            "reason": err_msg,
-        }
+    last_err = ""
+    for candidate_model in candidates:
+        print(f"Testing Groq model candidate: {candidate_model}")
+        start_t = time.time()
+        try:
+            provider = GroqProvider(api_key=api_key, model=candidate_model, timeout=20.0)
+            res = provider.generate_structured(
+                prompt="Respond with JSON: {'status': 'LIVE_OK', 'symbol': 'TEST.NS'}",
+                schema=MiniStatusResponse,
+                caller="LiveTest",
+            )
+            latency = round(time.time() - start_t, 2)
+            print(f"Groq Live Test: SUCCESS in {latency}s | Model: {candidate_model} | Result: {res.status}")
+            return {
+                "configured": True,
+                "status": "PASS",
+                "model": candidate_model,
+                "latency": latency,
+                "result": res.model_dump(),
+            }
+        except Exception as exc:
+            latency = round(time.time() - start_t, 2)
+            last_err = mask_str(str(exc))
+            print(f"Groq candidate '{candidate_model}' failed in {latency}s: {last_err}")
+
+    return {
+        "configured": True,
+        "status": "FAIL",
+        "model": candidates[0] if candidates else "none",
+        "reason": last_err,
+    }
 
 
 def test_openrouter_live() -> Dict[str, Any]:
@@ -178,66 +155,67 @@ def test_openrouter_live() -> Dict[str, Any]:
         "HTTP-Referer": "https://github.com/scheme-intel",
         "X-Title": "Scheme-Intel",
     }
-    supported_free_models = []
+    supported_free_models: List[str] = []
     try:
         r = requests.get("https://openrouter.ai/api/v1/models", headers=headers, timeout=15)
         if r.status_code == 200:
             all_models = [m.get("id") for m in r.json().get("data", [])]
             supported_free_models = [m for m in all_models if ":free" in m]
             print(f"OpenRouter available free models count: {len(supported_free_models)}")
-            if supported_free_models:
-                print(f"Sample free models: {supported_free_models[:5]}")
+            print(f"Sample free models: {supported_free_models[:10]}")
     except Exception as e:
         print(f"OpenRouter ListModels error: {mask_str(str(e))}")
 
-    model = os.getenv("OPENROUTER_MODEL")
-    if not model:
-        # Pick top active free model
-        preferred_free = [
-            "meta-llama/llama-3.3-70b-instruct:free",
-            "google/gemini-2.0-flash-exp:free",
-            "mistralai/mistral-small-24b-instruct-2501:free",
-            "deepseek/deepseek-chat:free",
-            "qwen/qwen-2.5-coder-32b-instruct:free",
-        ]
-        for pref in preferred_free:
-            if pref in supported_free_models:
-                model = pref
-                break
-        if not model and supported_free_models:
-            model = supported_free_models[0]
-        if not model:
-            model = "meta-llama/llama-3.3-70b-instruct:free"
+    # Build candidates to test
+    env_model = os.getenv("OPENROUTER_MODEL")
+    candidates = [env_model] if env_model else []
+    preferred_free = [
+        "qwen/qwen3.8-27b:free",
+        "google/gemini-2.0-flash-exp:free",
+        "meta-llama/llama-3.3-70b-instruct:free",
+        "mistralai/mistral-small-24b-instruct-2501:free",
+        "deepseek/deepseek-r1:free",
+        "meta-llama/llama-3.2-3b-instruct:free",
+        "liquid/lfm-2.5-2.6b:free",
+    ]
+    for p in preferred_free:
+        if p in supported_free_models and p not in candidates:
+            candidates.append(p)
+    for f in supported_free_models[:5]:
+        if f not in candidates:
+            candidates.append(f)
 
-    print(f"Selected OpenRouter model: {model}")
-    start_t = time.time()
-    try:
-        provider = OpenRouterProvider(api_key=api_key, model=model, timeout=25.0)
-        res = provider.generate_structured(
-            prompt="Respond with valid JSON adhering to the schema: {'status': 'LIVE_OK', 'symbol': 'TEST.NS'}",
-            schema=MiniStatusResponse,
-            caller="LiveTest",
-        )
-        latency = round(time.time() - start_t, 2)
-        print(f"OpenRouter Live Test: SUCCESS in {latency}s | Result: {res.status}")
-        return {
-            "configured": True,
-            "status": "PASS",
-            "model": model,
-            "latency": latency,
-            "result": res.model_dump(),
-        }
-    except Exception as exc:
-        latency = round(time.time() - start_t, 2)
-        err_msg = mask_str(str(exc))
-        print(f"OpenRouter Live Test: FAILED in {latency}s | Reason: {err_msg}")
-        return {
-            "configured": True,
-            "status": "FAIL",
-            "model": model,
-            "latency": latency,
-            "reason": err_msg,
-        }
+    last_err = ""
+    for candidate_model in candidates:
+        print(f"Testing OpenRouter model candidate: {candidate_model}")
+        start_t = time.time()
+        try:
+            provider = OpenRouterProvider(api_key=api_key, model=candidate_model, timeout=25.0)
+            res = provider.generate_structured(
+                prompt="Respond with valid JSON: {'status': 'LIVE_OK', 'symbol': 'TEST.NS'}",
+                schema=MiniStatusResponse,
+                caller="LiveTest",
+            )
+            latency = round(time.time() - start_t, 2)
+            print(f"OpenRouter Live Test: SUCCESS in {latency}s | Model: {candidate_model} | Result: {res.status}")
+            return {
+                "configured": True,
+                "status": "PASS",
+                "model": candidate_model,
+                "latency": latency,
+                "result": res.model_dump(),
+            }
+        except Exception as exc:
+            latency = round(time.time() - start_t, 2)
+            last_err = mask_str(str(exc))
+            print(f"OpenRouter candidate '{candidate_model}' failed in {latency}s: {last_err}")
+
+    return {
+        "configured": True,
+        "status": "FAIL",
+        "model": candidates[0] if candidates else "none",
+        "reason": last_err,
+    }
 
 
 def test_openai_live() -> Dict[str, Any]:

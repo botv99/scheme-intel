@@ -1,10 +1,10 @@
-"""OpenRouter LLM Provider for Stage 2."""
+"""OpenRouter LLM Provider for Stage 2 with fallback model recovery and universal JSON parsing."""
 from __future__ import annotations
 
 import json
 import os
 import time
-from typing import Optional, Type
+from typing import Optional, Type, List
 import requests
 from pydantic import BaseModel
 
@@ -22,6 +22,16 @@ from ...logger import get_logger
 
 logger = get_logger(__name__)
 
+DEFAULT_OPENROUTER_FALLBACKS = [
+    "qwen/qwen3.8-27b:free",
+    "google/gemini-2.0-flash-exp:free",
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "mistralai/mistral-small-24b-instruct-2501:free",
+    "deepseek/deepseek-r1:free",
+    "meta-llama/llama-3.2-3b-instruct:free",
+    "liquid/lfm-2.5-2.6b:free",
+]
+
 
 class OpenRouterProvider(LLMProvider):
     """Provider connecting to OpenRouter multi-model gateway API."""
@@ -35,7 +45,7 @@ class OpenRouterProvider(LLMProvider):
         timeout: float = 30.0,
     ):
         self.api_key = api_key or os.getenv("OPENROUTER_API_KEY")
-        self.model = model or os.getenv("OPENROUTER_MODEL") or "meta-llama/llama-3.3-70b-instruct:free"
+        self.model = model or os.getenv("OPENROUTER_MODEL") or "qwen/qwen3.8-27b:free"
         self.timeout = timeout
 
     def generate(
@@ -49,6 +59,39 @@ class OpenRouterProvider(LLMProvider):
         if not self.api_key:
             raise LLMProviderError("OPENROUTER_API_KEY is not configured", provider=self.name)
 
+        models_to_try: List[str] = [self.model]
+        for fb in DEFAULT_OPENROUTER_FALLBACKS:
+            if fb not in models_to_try:
+                models_to_try.append(fb)
+
+        last_exc: Optional[Exception] = None
+        for current_model in models_to_try:
+            try:
+                return self._generate_with_model(
+                    current_model, prompt, system_prompt, schema, temperature, caller
+                )
+            except (ModelNotFoundError, LLMProviderError) as exc:
+                if isinstance(exc, RateLimitError):
+                    raise
+                logger.info("OpenRouter model '%s' error (%s), trying alternate model...", current_model, exc)
+                last_exc = exc
+                continue
+            except Exception:
+                raise
+
+        if last_exc:
+            raise last_exc
+        raise LLMProviderError(f"All OpenRouter models exhausted ({models_to_try})", provider=self.name)
+
+    def _generate_with_model(
+        self,
+        model_name: str,
+        prompt: str,
+        system_prompt: str = "",
+        schema: Optional[Type[BaseModel]] = None,
+        temperature: float = 0.2,
+        caller: str = "",
+    ) -> ProviderResponse:
         url = "https://openrouter.ai/api/v1/chat/completions"
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -67,13 +110,12 @@ class OpenRouterProvider(LLMProvider):
 
         messages.append({"role": "user", "content": user_content})
 
+        # Do NOT force response_format by default on OpenRouter free tier because many endpoints reject it with HTTP 400
         payload: dict = {
-            "model": self.model,
+            "model": model_name,
             "messages": messages,
             "temperature": temperature,
         }
-        if schema:
-            payload["response_format"] = {"type": "json_object"}
 
         start_t = time.time()
         try:
@@ -107,7 +149,7 @@ class OpenRouterProvider(LLMProvider):
         if resp.status_code == 404:
             err_text = self._extract_error_message(resp)
             raise ModelNotFoundError(
-                f"OpenRouter model '{self.model}' not found (404): {err_text}",
+                f"OpenRouter model '{model_name}' not found (404): {err_text}",
                 provider=self.name,
                 status_code=404,
             )
@@ -153,11 +195,12 @@ class OpenRouterProvider(LLMProvider):
 
         tokens = data.get("usage", {}).get("total_tokens", 0)
         latency = round(time.time() - start_t, 2)
+        self.model = model_name  # Update to working model
 
         return ProviderResponse(
             content=content,
             raw_json=raw_json,
-            model=self.model,
+            model=model_name,
             tokens_used=tokens,
             provider=self.name,
             latency_s=latency,

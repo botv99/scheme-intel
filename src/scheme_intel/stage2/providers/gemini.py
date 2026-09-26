@@ -1,10 +1,10 @@
-"""Google Gemini LLM Provider for Stage 2."""
+"""Google Gemini LLM Provider for Stage 2 with fallback model recovery."""
 from __future__ import annotations
 
 import json
 import os
 import time
-from typing import Optional, Type
+from typing import Optional, Type, List
 import requests
 from pydantic import BaseModel
 
@@ -21,6 +21,12 @@ from .base import (
 from ...logger import get_logger
 
 logger = get_logger(__name__)
+
+DEFAULT_GEMINI_FALLBACKS = [
+    "gemini-3.8-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+]
 
 
 class GeminiProvider(LLMProvider):
@@ -51,11 +57,42 @@ class GeminiProvider(LLMProvider):
         if not self.api_key:
             raise LLMProviderError("GEMINI_API_KEY or GOOGLE_API_KEY is not configured", provider=self.name)
 
-        model_name = self.model
-        if model_name.startswith("models/"):
-            model_name = model_name[7:]
+        models_to_try: List[str] = [self.model]
+        for fb in DEFAULT_GEMINI_FALLBACKS:
+            if fb not in models_to_try:
+                models_to_try.append(fb)
 
-        url = f"https://generativelanguage.googleapis.com/{self.api_version}/models/{model_name}:generateContent?key={self.api_key}"
+        last_exc: Optional[Exception] = None
+        for current_model in models_to_try:
+            try:
+                return self._generate_with_model(
+                    current_model, prompt, system_prompt, schema, temperature, caller
+                )
+            except ModelNotFoundError as exc:
+                logger.info("Gemini model '%s' not found (404), trying alternate supported model...", current_model)
+                last_exc = exc
+                continue
+            except Exception:
+                raise
+
+        if last_exc:
+            raise last_exc
+        raise ModelNotFoundError(f"All Gemini models exhausted ({models_to_try})", provider=self.name)
+
+    def _generate_with_model(
+        self,
+        model_name: str,
+        prompt: str,
+        system_prompt: str = "",
+        schema: Optional[Type[BaseModel]] = None,
+        temperature: float = 0.2,
+        caller: str = "",
+    ) -> ProviderResponse:
+        clean_model = model_name
+        if clean_model.startswith("models/"):
+            clean_model = clean_model[7:]
+
+        url = f"https://generativelanguage.googleapis.com/{self.api_version}/models/{clean_model}:generateContent?key={self.api_key}"
 
         contents = []
         if system_prompt:
@@ -90,9 +127,7 @@ class GeminiProvider(LLMProvider):
             msg = sanitize_secret(f"Gemini API network error: {exc}", self.api_key)
             raise LLMProviderError(msg, provider=self.name) from exc
 
-        # Handle specific status codes
         if resp.status_code == 429:
-            # Rate limit or quota exceeded
             retry_after = None
             ra_hdr = resp.headers.get("Retry-After")
             if ra_hdr:
@@ -114,7 +149,7 @@ class GeminiProvider(LLMProvider):
         if resp.status_code == 404:
             err_text = self._extract_error_message(resp)
             raise ModelNotFoundError(
-                f"Gemini model not found (404) for '{model_name}': {err_text}",
+                f"Gemini model not found (404) for '{clean_model}': {err_text}",
                 provider=self.name,
                 status_code=404,
             )
@@ -164,11 +199,12 @@ class GeminiProvider(LLMProvider):
 
         tokens = data.get("usageMetadata", {}).get("totalTokenCount", 0)
         latency = round(time.time() - start_t, 2)
+        self.model = clean_model
 
         return ProviderResponse(
             content=part_text,
             raw_json=raw_json,
-            model=model_name,
+            model=clean_model,
             tokens_used=tokens,
             provider=self.name,
             latency_s=latency,
