@@ -1082,15 +1082,23 @@ class PerformanceAnalytics:
         completed_data: List[Tuple[TradeSetup, SetupOutcome]],
     ) -> Dict[str, Any]:
         """
-        Compare realized returns against available benchmark data.
-        Explicitly reports 'Benchmark unavailable' if real market benchmark cannot be deduced.
+        Compare realized returns against available Nifty 50 benchmark data.
+        Explicitly reports 'Benchmark comparison: UNAVAILABLE — 0 completed trades'
+        or 'Benchmark: UNAVAILABLE — benchmark data missing' when data cannot be deduced.
         """
-        # We do not fabricate or invent benchmark indices
-        return {
-            "status": "Benchmark unavailable",
-            "reason": "Broader index (Nifty 50 / Equal-Weight Watchlist) historical intraday feed not stored locally in database",
-            "strategy_avg_pnl": _safe_round(statistics.mean([o.realized_pnl_pct for _, o in completed_data if o.realized_pnl_pct is not None])) if completed_data else None,
-        }
+        try:
+            from ..analytics.benchmark import evaluate_benchmark_performance
+            from ..market.benchmark import BenchmarkEngine
+            be = BenchmarkEngine(db_path=self.db.db_path)
+            return evaluate_benchmark_performance(completed_data, benchmark_engine=be)
+        except Exception as e:
+            logger.warning("Error evaluating benchmark performance: %s", e)
+            return {
+                "status": "UNAVAILABLE — benchmark data missing",
+                "available": False,
+                "reason": str(e),
+                "strategy_avg_pnl": _safe_round(statistics.mean([o.realized_pnl_pct for _, o in completed_data if o.realized_pnl_pct is not None])) if completed_data else None,
+            }
 
     def _check_data_integrity(
         self,
@@ -1356,9 +1364,37 @@ class PerformanceAnalytics:
 
         lines.extend([
             "\n---\n",
-            "## 11. Baseline Benchmark Comparison",
+            "## 11. Baseline Benchmark Comparison (NIFTY 50)",
             f"- **Status:** `{report.benchmark_comparison.get('status', 'Benchmark unavailable')}`",
-            f"- **Details:** {report.benchmark_comparison.get('reason', 'N/A')}",
+        ])
+        bc = report.benchmark_comparison
+        avg_strat = f"{bc['average_strategy_return']:+.2f}%" if bc.get("average_strategy_return") is not None else "N/A"
+        avg_bench = f"{bc['average_benchmark_return']:+.2f}%" if bc.get("average_benchmark_return") is not None else "N/A"
+        avg_excess = f"{bc['average_excess_return']:+.2f}%" if bc.get("average_excess_return") is not None else "N/A"
+        med_excess = f"{bc['median_excess_return']:+.2f}%" if bc.get("median_excess_return") is not None else "N/A"
+        cum_excess = f"{bc['cumulative_excess_return']:+.2f}%" if bc.get("cumulative_excess_return") is not None else "N/A"
+        if bc.get("available"):
+            lines.extend([
+                f"- **Trades Evaluated:** {bc.get('trades_evaluated', 0)} / {bc.get('completed_trades', 0)}",
+                f"- **Average Strategy Return:** {avg_strat}",
+                f"- **Average Benchmark Return (Nifty 50):** {avg_bench}",
+                f"- **Average Excess Return (Alpha):** {avg_excess}",
+                f"- **Median Excess Return:** {med_excess}",
+                f"- **Cumulative Excess Return:** {cum_excess}",
+            ])
+            if bc.get("trade_comparisons"):
+                lines.extend([
+                    "\n### Trade-by-Trade Benchmark Comparison",
+                    "| Setup ID | Symbol | Entry Date | Exit Date | Strategy P&L | Nifty Return | Excess Return |",
+                    "| :--- | :--- | :--- | :--- | :--- | :--- | :--- |",
+                ])
+                for tc in bc["trade_comparisons"]:
+                    lines.append(f"| {tc['setup_id']} | {tc['symbol']} | {tc['entry_date']} | {tc['exit_date']} | {tc['strategy_return']:+.2f}% | {tc['benchmark_return']:+.2f}% | {tc['excess_return']:+.2f}% |")
+        else:
+            reason = bc.get("reason") or bc.get("status")
+            lines.append(f"- **Details:** {reason}")
+
+        lines.extend([
             "\n---\n",
             "## 12. Data Integrity Checks",
             f"- **Audit Status:** `{di.status}`",

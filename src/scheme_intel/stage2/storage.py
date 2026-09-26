@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS stage2_setups (
     no_trade_reason         TEXT,
     telegram_card           TEXT,
     created_at              TEXT NOT NULL,
-    ai_provider             TEXT
+    ai_provider             TEXT,
+    scheme_id               TEXT DEFAULT 'gobardhan'
 );
 
 CREATE INDEX IF NOT EXISTS idx_stage2_setups_date ON stage2_setups(analysis_date);
@@ -63,6 +64,20 @@ CREATE TABLE IF NOT EXISTS stage2_outcomes (
     updated_at          TEXT NOT NULL,
     FOREIGN KEY(setup_id) REFERENCES stage2_setups(setup_id)
 );
+
+CREATE TABLE IF NOT EXISTS benchmark_prices (
+    benchmark_id    TEXT NOT NULL,
+    date            TEXT NOT NULL,
+    open            REAL NOT NULL,
+    high            REAL NOT NULL,
+    low             REAL NOT NULL,
+    close           REAL NOT NULL,
+    volume          REAL DEFAULT 0.0,
+    source          TEXT DEFAULT 'yfinance',
+    created_at      TEXT NOT NULL,
+    PRIMARY KEY (benchmark_id, date)
+);
+CREATE INDEX IF NOT EXISTS idx_benchmark_date ON benchmark_prices(benchmark_id, date);
 """
 
 
@@ -94,6 +109,14 @@ class Stage2Database:
                 conn.execute("ALTER TABLE stage2_setups ADD COLUMN ai_provider TEXT;")
             except Exception:
                 pass
+            try:
+                conn.execute("ALTER TABLE stage2_setups ADD COLUMN scheme_id TEXT DEFAULT 'gobardhan';")
+            except Exception:
+                pass
+            try:
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_stage2_setups_scheme ON stage2_setups(scheme_id);")
+            except Exception:
+                pass
             conn.commit()
 
     def save_setup(self, setup: TradeSetup) -> None:
@@ -109,14 +132,15 @@ class Stage2Database:
         score = setup.candidate.score if setup.candidate else None
 
         ai_provider = setup.ai_provider or (setup.debate.provider if setup.debate else None)
+        scheme_id = getattr(setup, "scheme_id", "gobardhan") or "gobardhan"
 
         query = """
         INSERT INTO stage2_setups (
             setup_id, analysis_date, setup_date, next_trading_session, market_close_timestamp,
             symbol, company, status, archetype, score, candidate_json, bull_thesis_json,
             bear_thesis_json, debate_json, risk_json, wait_json, no_trade_reason,
-            telegram_card, created_at, ai_provider
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            telegram_card, created_at, ai_provider, scheme_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(setup_id) DO UPDATE SET
             status = excluded.status,
             archetype = excluded.archetype,
@@ -129,7 +153,8 @@ class Stage2Database:
             wait_json = excluded.wait_json,
             no_trade_reason = excluded.no_trade_reason,
             telegram_card = excluded.telegram_card,
-            ai_provider = excluded.ai_provider;
+            ai_provider = excluded.ai_provider,
+            scheme_id = excluded.scheme_id;
         """
 
         with self._get_connection() as conn:
@@ -154,6 +179,7 @@ class Stage2Database:
                 setup.telegram_card,
                 setup.created_at,
                 ai_provider,
+                scheme_id,
             ))
             conn.commit()
         logger.debug("Saved setup %s (%s - %s)", setup.setup_id, setup.stock.symbol, setup.status)
@@ -300,6 +326,7 @@ class Stage2Database:
         ai_provider = row["ai_provider"] if "ai_provider" in keys else None
         if not ai_provider and debate and isinstance(debate, dict):
             ai_provider = debate.get("provider")
+        scheme_id = row["scheme_id"] if "scheme_id" in keys and row["scheme_id"] else "gobardhan"
 
         return TradeSetup.model_validate({
             "setup_id": row["setup_id"],
@@ -319,4 +346,5 @@ class Stage2Database:
             "ai_provider": ai_provider,
             "telegram_card": row["telegram_card"] or "",
             "created_at": row["created_at"],
+            "scheme_id": scheme_id,
         })

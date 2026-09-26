@@ -5,16 +5,16 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
-from .catalyst import classify
-from .config import load_config
-from .db import SchemeIntelDB
-from .exceptions import ConfigurationError, SourceAccessError, DataParseError, TelegramError
-from .logger import get_logger
-from .models import AnalysisReport, Article, now_utc
-from .notifier import send_telegram, validate_telegram_config
-from .reliability import SourceReliabilityTracker
-from .signals import make_setup
-from .sources import deduplicate_articles, fetch_rss, scan_page
+from ..catalyst import classify
+from ..config import load_config
+from ..db import SchemeIntelDB
+from ..exceptions import ConfigurationError, SourceAccessError, DataParseError, TelegramError
+from ..logger import get_logger
+from ..models import AnalysisReport, Article, now_utc
+from ..notifier import send_telegram, validate_telegram_config
+from ..reliability import SourceReliabilityTracker
+from ..signals import make_setup
+from ..sources import deduplicate_articles, fetch_rss, scan_page
 
 logger = get_logger(__name__)
 
@@ -57,7 +57,7 @@ class Pipeline:
     def __init__(self, config_path: Optional[Path | str] = None, db_path: Optional[Path | str] = None):
         self.config_path = config_path
         self.config: dict | None = None
-        self.root = Path(__file__).resolve().parents[2]
+        self.root = Path(__file__).resolve().parents[3]
         self.db = SchemeIntelDB(db_path)
         self.reliability = SourceReliabilityTracker(db=self.db)
 
@@ -361,3 +361,9 @@ class Pipeline:
             self.send_alert(material_catalysts, setups, self.root)
 
         return report
+
+def __getattr__(name: str):
+    if name == "Stage2Pipeline":
+        from .stage2 import Stage2Pipeline
+        return Stage2Pipeline
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

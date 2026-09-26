@@ -10,8 +10,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
-from .db import SchemeIntelDB
-from .logger import get_logger
+from ..db import SchemeIntelDB
+from ..logger import get_logger
 
 logger = get_logger(__name__)
 

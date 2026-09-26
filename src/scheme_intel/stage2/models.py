@@ -258,6 +258,7 @@ class TradeSetup(BaseModel):
     wait_conditions: Optional[WaitCondition] = None
     no_trade_reason: Optional[str] = None
     ai_provider: Optional[str] = None
+    scheme_id: str = "gobardhan"
     telegram_card: str = ""
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
