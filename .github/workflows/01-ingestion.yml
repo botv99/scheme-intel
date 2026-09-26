@@ -1,0 +1,34 @@
+name: 01 Ingestion Pipeline
+
+on:
+  schedule:
+    # 04:00 AM IST (Mon-Fri) = 22:30 UTC (Sun-Thu)
+    - cron: "30 22 * * 0-4"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ingest:
+    name: Collect External Information
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run market & policy ingestion layer
+        run: python -m scheme_intel.ingest
+        env:
+          PYTHONPATH: src
+      - name: Store canonical raw ingestion snapshot
+        run: |
+          git config user.name "scheme-intel[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/ingested.json
+          git diff --cached --quiet || (git commit -m "chore(ingestion): update canonical raw ingestion snapshot [skip ci]" && git pull --rebase origin main && git push)

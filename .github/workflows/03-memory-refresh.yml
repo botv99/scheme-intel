@@ -1,0 +1,37 @@
+name: 03 Memory Refresh
+
+on:
+  workflow_run:
+    workflows: ["02 Intelligence Engine"]
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  memory:
+    name: Build Fast Intelligence Snapshot
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Build Fast Intelligence Memory Snapshot
+        run: |
+          python -c "from scheme_intel.intelligence_memory.builder import IntelligenceSnapshotBuilder; b = IntelligenceSnapshotBuilder(); path = b.build_and_save(); print(f'🟢 Fast Intelligence Memory Snapshot Ready: {path}')"
+        env:
+          PYTHONPATH: src
+      - name: Store Fast Intelligence Memory Snapshot
+        run: |
+          git config user.name "scheme-intel[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f data/intelligence/latest.json
+          git diff --cached --quiet || (git commit -m "chore(memory): refresh precalculated intelligence snapshot [skip ci]" && git pull --rebase origin main && git push)
