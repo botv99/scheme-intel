@@ -30,12 +30,21 @@ from ..logger import get_logger
 logger = get_logger(__name__)
 
 
-def get_system_health(data_dir: Optional[str] = None) -> Dict[str, Any]:
+_ACTIVE_SERVICE_INSTANCE: Optional["SchemeIntelService"] = None
+
+
+def get_system_health(
+    data_dir: Optional[str] = None,
+    service_instance: Optional["SchemeIntelService"] = None,
+) -> Dict[str, Any]:
     """
     Comprehensive, non-destructive health check of the Scheme-Intel runtime.
-    Inspects credentials, memory snapshot integrity, queue depth, and provider availability.
+    Inspects credentials, memory snapshot integrity, queue depth, provider availability,
+    and real runtime thread states if service is active.
     Does NOT trigger data ingestion, strategy pipeline, or snapshot rebuilding.
     """
+    effective_service = service_instance or _ACTIVE_SERVICE_INSTANCE
+
     # 1. Telegram configuration
     has_bot_token = bool(os.getenv("TELEGRAM_BOT_TOKEN"))
     has_chat_id = bool(os.getenv("TELEGRAM_CHAT_ID"))
@@ -65,6 +74,17 @@ def get_system_health(data_dir: Optional[str] = None) -> Dict[str, Any]:
         "openrouter": bool(os.getenv("OPENROUTER_API_KEY")),
     }
 
+    # 5. Component runtime status
+    component_status = (
+        effective_service.get_component_status()
+        if effective_service
+        else {
+            "telegram": "UNKNOWN",
+            "research_worker": "UNKNOWN",
+            "snapshot_syncer": "UNKNOWN",
+        }
+    )
+
     # Determine overall status
     is_healthy = True
     issues = []
@@ -79,12 +99,19 @@ def get_system_health(data_dir: Optional[str] = None) -> Dict[str, Any]:
     elif snapshot_status == SnapshotHealthStatus.STALE.value:
         issues.append("Intelligence snapshot is stale (> freshness threshold)")
 
+    # Check for crashed service threads
+    for comp, st in component_status.items():
+        if st == "FAILED":
+            is_healthy = False
+            issues.append(f"Component '{comp}' thread has failed/died")
+
     status_str = "healthy" if is_healthy and not issues else ("degraded" if is_healthy else "unhealthy")
 
     return {
         "status": status_str,
         "is_healthy": is_healthy,
         "issues": issues,
+        "components": component_status,
         "telegram": {
             "bot_token_configured": has_bot_token,
             "chat_id_configured": has_chat_id,
@@ -116,7 +143,7 @@ class HealthHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
 
 class SchemeIntelService:
-    """Production runtime service managing Bot and Worker lifecycle."""
+    """Production runtime service managing Bot, Worker, and Syncer lifecycle."""
 
     def __init__(
         self,
@@ -125,18 +152,67 @@ class SchemeIntelService:
         worker_poll_interval: float = 3.0,
         stale_recovery_interval: float = 60.0,
         http_port: Optional[int] = None,
+        sync_snapshot: bool = True,
+        sync_interval: float = 300.0,
     ):
+        global _ACTIVE_SERVICE_INSTANCE
         self.mode = mode
         self.poll_interval = poll_interval
         self.worker_poll_interval = worker_poll_interval
         self.stale_recovery_interval = stale_recovery_interval
         self.http_port = http_port
+        self.sync_snapshot = sync_snapshot
+
+        from ..intelligence_memory.syncer import SnapshotSyncer
 
         self.bot_handler = TelegramConversationHandler()
         self.worker = ResearchWorker()
+        self.syncer = SnapshotSyncer(
+            store=self.bot_handler.router.retriever.store,
+            interval_seconds=sync_interval,
+            enabled=sync_snapshot,
+        )
+
         self.is_running = False
-        self.threads: list[threading.Thread] = []
+        self.bot_thread: Optional[threading.Thread] = None
+        self.worker_thread: Optional[threading.Thread] = None
+        self.syncer_thread: Optional[threading.Thread] = None
         self.http_server: Optional[socketserver.TCPServer] = None
+        _ACTIVE_SERVICE_INSTANCE = self
+
+    def get_component_status(self) -> Dict[str, str]:
+        """Return live health state of managed runtime threads."""
+        status = {}
+
+        if self.mode in ("all", "bot"):
+            if self.bot_thread and self.bot_thread.is_alive() and self.bot_handler.is_running:
+                status["telegram"] = "RUNNING"
+            elif self.bot_handler.is_running and (not self.bot_thread or not self.bot_thread.is_alive()):
+                status["telegram"] = "FAILED"
+            else:
+                status["telegram"] = "STOPPED"
+        else:
+            status["telegram"] = "DISABLED"
+
+        if self.mode in ("all", "worker"):
+            if self.worker_thread and self.worker_thread.is_alive() and self.worker.is_running:
+                status["research_worker"] = "RUNNING"
+            elif self.worker.is_running and (not self.worker_thread or not self.worker_thread.is_alive()):
+                status["research_worker"] = "FAILED"
+            else:
+                status["research_worker"] = "STOPPED"
+        else:
+            status["research_worker"] = "DISABLED"
+
+        if self.sync_snapshot and self.syncer.enabled:
+            if self.syncer_thread and self.syncer_thread.is_alive() and self.syncer.is_running:
+                status["snapshot_syncer"] = "RUNNING"
+            else:
+                status["snapshot_syncer"] = "STOPPED"
+        else:
+            status["snapshot_syncer"] = "DISABLED"
+
+        return status
 
     def start(self) -> None:
         """Start components according to configured mode and block until interrupted."""
@@ -149,9 +225,19 @@ class SchemeIntelService:
         if effective_port:
             self._start_http_server(effective_port)
 
-        # 2. Worker thread
+        # 2. Snapshot syncer thread (Option A: Pull latest snapshot from GitHub repository)
+        if self.sync_snapshot and self.syncer.enabled:
+            self.syncer_thread = threading.Thread(
+                target=self.syncer.run_forever,
+                name="SnapshotSyncerThread",
+                daemon=True,
+            )
+            self.syncer_thread.start()
+            logger.info("Snapshot Syncer thread launched.")
+
+        # 3. Worker thread
         if self.mode in ("all", "worker"):
-            worker_thread = threading.Thread(
+            self.worker_thread = threading.Thread(
                 target=self.worker.run_forever,
                 kwargs={
                     "poll_interval": self.worker_poll_interval,
@@ -161,25 +247,22 @@ class SchemeIntelService:
                 name="ResearchWorkerThread",
                 daemon=True,
             )
-            self.threads.append(worker_thread)
-            worker_thread.start()
+            self.worker_thread.start()
             logger.info("Research Worker thread launched.")
 
-        # 3. Bot handler thread / loop
+        # 4. Bot handler thread / loop
         if self.mode in ("all", "bot"):
             if self.mode == "bot":
-                # Run directly on main thread
                 logger.info("Running Telegram Bot poller directly...")
                 self.bot_handler.run_polling(interval_seconds=int(self.poll_interval))
             else:
-                bot_thread = threading.Thread(
+                self.bot_thread = threading.Thread(
                     target=self.bot_handler.run_polling,
                     kwargs={"interval_seconds": int(self.poll_interval)},
                     name="TelegramBotThread",
                     daemon=True,
                 )
-                self.threads.append(bot_thread)
-                bot_thread.start()
+                self.bot_thread.start()
                 logger.info("Telegram Bot poller thread launched.")
 
                 # Keep main thread alive
@@ -189,7 +272,6 @@ class SchemeIntelService:
                 except KeyboardInterrupt:
                     self.stop()
         elif self.mode == "worker":
-            # Worker only, keep main thread alive
             try:
                 while self.is_running:
                     time.sleep(1.0)
@@ -203,6 +285,7 @@ class SchemeIntelService:
         logger.info("Initiating graceful shutdown of Scheme-Intel Service...")
         self.is_running = False
 
+        self.syncer.stop()
         self.bot_handler.stop()
         self.worker.stop()
 
@@ -213,8 +296,9 @@ class SchemeIntelService:
             except Exception as e:
                 logger.debug("Error shutting down HTTP server: %s", e)
 
-        for th in self.threads:
-            th.join(timeout=2.0)
+        for th in (self.bot_thread, self.worker_thread, self.syncer_thread):
+            if th and th.is_alive():
+                th.join(timeout=2.0)
         logger.info("Scheme-Intel Service stopped cleanly.")
 
     def _start_http_server(self, port: int) -> None:

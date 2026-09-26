@@ -68,7 +68,7 @@ def send_telegram(
         last_exc: Optional[Exception] = None
         for attempt in range(1, max_retries + 1):
             try:
-                logger.debug(f"Sending Telegram message to chat {chat_id} (attempt {attempt}/{max_retries})")
+                logger.debug("Sending Telegram message to chat %s (attempt %d/%d)", chat_id, attempt, max_retries)
 
                 payload = {
                     "chat_id": chat_id,
@@ -84,20 +84,55 @@ def send_telegram(
                     timeout=20,
                 )
 
+                # Check if Telegram returned an entity parse error (HTTP 400)
+                if response.status_code == 400 and parse_mode:
+                    try:
+                        err_data = response.json()
+                        err_desc = err_data.get("description", "")
+                    except Exception:
+                        err_desc = response.text
+                    if "can't parse entities" in err_desc.lower() or "entity" in err_desc.lower():
+                        logger.warning(
+                            "[TELEGRAM] Entity parse error with parse_mode='%s' (%s). Retrying as plain text...",
+                            parse_mode,
+                            err_desc,
+                        )
+                        payload.pop("parse_mode", None)
+                        response = requests.post(
+                            f"https://api.telegram.org/bot{token}/sendMessage",
+                            json=payload,
+                            timeout=20,
+                        )
+
                 response.raise_for_status()
+
+                # Validate response JSON body
+                try:
+                    res_json = response.json()
+                    if not res_json.get("ok", True):
+                        err_msg = res_json.get("description", "Unknown Telegram rejection")
+                        raise TelegramError(f"Telegram API rejected message: {err_msg}")
+                except ValueError:
+                    pass
+
                 success_count += 1
                 sent = True
-                logger.info(f"Successfully sent message to chat {chat_id}")
+                logger.info("[TELEGRAM] Successfully sent message to chat %s (len=%d)", chat_id, len(message))
                 break
 
             except requests.RequestException as e:
                 last_exc = e
-                logger.warning(f"Attempt {attempt} failed sending to {chat_id}: {str(e)[:150]}")
+                logger.warning("Attempt %d failed sending to %s: %s", attempt, chat_id, str(e)[:150])
+                if attempt < max_retries:
+                    time.sleep(0.5 * (2 ** (attempt - 1)))
+            except TelegramError as e:
+                last_exc = e
+                logger.warning("Attempt %d Telegram rejection for %s: %s", attempt, chat_id, e)
                 if attempt < max_retries:
                     time.sleep(0.5 * (2 ** (attempt - 1)))
 
         if not sent:
-            logger.error(f"Failed to send message to chat {chat_id} after {max_retries} attempts")
+            logger.error("[TELEGRAM] Failed to send message to chat %s after %d attempts: %s", chat_id, max_retries, last_exc)
             raise TelegramError(f"Failed to send Telegram message: {str(last_exc)}")
 
     return success_count == len(chat_ids)

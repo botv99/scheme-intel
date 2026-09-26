@@ -102,6 +102,38 @@ class IntentResolver:
         return None
 
     @classmethod
+    def find_stock_in_text(cls, text: str) -> Optional[Tuple[SchemeStock, str]]:
+        """
+        Scan a natural language sentence for any stock symbol, short ticker,
+        full name, or alias in the active scheme watchlists.
+        """
+        if not text:
+            return None
+
+        # Check full company names and multi-word aliases first
+        text_upper = f" {text.upper()} "
+        for scheme in SchemeRegistry.list_schemes():
+            for stock in scheme.watchlist:
+                name_upper = f" {stock.name.upper()} "
+                if name_upper in text_upper:
+                    return stock, scheme.id
+                for alias in stock.aliases:
+                    alias_upper = f" {alias.upper()} "
+                    if alias_upper in text_upper:
+                        return stock, scheme.id
+
+        # Check individual words / tokens
+        for word in text.split():
+            clean_word = re.sub(r"[^\w\.]", "", word)
+            if not clean_word:
+                continue
+            m = cls.resolve_stock(clean_word)
+            if m:
+                return m
+
+        return None
+
+    @classmethod
     def resolve(cls, message: str) -> ResolvedIntent:
         """Parse user Telegram message into a ResolvedIntent."""
         raw = (message or "").strip()
@@ -109,7 +141,8 @@ class IntentResolver:
             return ResolvedIntent(intent_type=IntentType.UNKNOWN, raw_query=raw)
 
         parts = raw.split(maxsplit=1)
-        first_token = parts[0].lower()
+        # Strip bot username tag (e.g. /stock@SchemeIntelBot -> /stock)
+        first_token = parts[0].lower().split("@")[0]
         remainder = parts[1].strip() if len(parts) > 1 else ""
 
         # ----------------------------------------------------
@@ -167,7 +200,7 @@ class IntentResolver:
             return ResolvedIntent(intent_type=IntentType.BENCHMARK_LOOKUP, raw_query=raw)
 
         if first_token in ("/stock", "stock") and remainder:
-            match = cls.resolve_stock(remainder)
+            match = cls.find_stock_in_text(remainder)
             if match:
                 stock, s_id = match
                 return ResolvedIntent(
@@ -185,14 +218,7 @@ class IntentResolver:
             )
 
         if first_token in ("/why", "why") and remainder:
-            match = cls.resolve_stock(remainder)
-            if not match:
-                for w in remainder.split():
-                    clean_w = re.sub(r"[^\w]", "", w)
-                    m = cls.resolve_stock(clean_w)
-                    if m:
-                        match = m
-                        break
+            match = cls.find_stock_in_text(remainder)
             if match:
                 stock, s_id = match
                 return ResolvedIntent(
@@ -210,7 +236,15 @@ class IntentResolver:
             )
 
         if first_token in ("/what", "what") and remainder:
-            # Check if user asks "/what happened with gobardhan"
+            rem_lower = remainder.lower()
+            if "setup" in rem_lower:
+                return ResolvedIntent(intent_type=IntentType.SETUPS_LOOKUP, raw_query=raw)
+            if "waiting" in rem_lower or "wait" in rem_lower:
+                return ResolvedIntent(intent_type=IntentType.WAITING_LOOKUP, raw_query=raw)
+            if "performance" in rem_lower:
+                return ResolvedIntent(intent_type=IntentType.PERFORMANCE_LOOKUP, raw_query=raw)
+            if "benchmark" in rem_lower or "nifty" in rem_lower:
+                return ResolvedIntent(intent_type=IntentType.BENCHMARK_LOOKUP, raw_query=raw)
             scheme = cls.resolve_scheme(remainder)
             if scheme:
                 return ResolvedIntent(
@@ -218,14 +252,7 @@ class IntentResolver:
                     scheme_id=scheme.id,
                     raw_query=raw,
                 )
-            match = cls.resolve_stock(remainder)
-            if not match:
-                for w in remainder.split():
-                    clean_w = re.sub(r"[^\w]", "", w)
-                    m = cls.resolve_stock(clean_w)
-                    if m:
-                        match = m
-                        break
+            match = cls.find_stock_in_text(remainder)
             if match:
                 stock, s_id = match
                 return ResolvedIntent(
@@ -243,14 +270,7 @@ class IntentResolver:
             )
 
         if first_token in ("/when", "when") and remainder:
-            match = cls.resolve_stock(remainder)
-            if not match:
-                for w in remainder.split():
-                    clean_w = re.sub(r"[^\w]", "", w)
-                    m = cls.resolve_stock(clean_w)
-                    if m:
-                        match = m
-                        break
+            match = cls.find_stock_in_text(remainder)
             if match:
                 stock, s_id = match
                 return ResolvedIntent(
@@ -296,76 +316,68 @@ class IntentResolver:
         # ----------------------------------------------------
         lowered = raw.lower()
 
-        # Scheme queries: "what happened with gobardhan", "tell me about gobardhan"
-        if ("what happened" in lowered or "about" in lowered) and "gobardhan" in lowered:
+        # Prioritize aggregate intents over stock queries (e.g. "what are today's setups")
+        if "setup" in lowered:
+            return ResolvedIntent(intent_type=IntentType.SETUPS_LOOKUP, raw_query=raw)
+
+        if "waiting" in lowered or "wait" in lowered:
+            return ResolvedIntent(intent_type=IntentType.WAITING_LOOKUP, raw_query=raw)
+
+        if "performance" in lowered or "win rate" in lowered or "expectancy" in lowered:
+            return ResolvedIntent(intent_type=IntentType.PERFORMANCE_LOOKUP, raw_query=raw)
+
+        if "benchmark" in lowered or "nifty" in lowered:
+            return ResolvedIntent(intent_type=IntentType.BENCHMARK_LOOKUP, raw_query=raw)
+
+        if "schemes" in lowered or "list schemes" in lowered:
+            return ResolvedIntent(intent_type=IntentType.SCHEMES, raw_query=raw)
+
+        # Scheme queries: "what happened with gobardhan", "how is gobardhan doing"
+        if "gobardhan" in lowered:
             return ResolvedIntent(
                 intent_type=IntentType.SCHEME_LOOKUP,
                 scheme_id="gobardhan",
                 raw_query=raw,
             )
 
-        # Why queries: "why is TRUALT relevant", "why PRAJIND"
-        if "why" in lowered:
-            for word in raw.split():
-                clean_word = re.sub(r"[^\w]", "", word)
-                m = cls.resolve_stock(clean_word)
-                if m:
-                    stock, s_id = m
-                    return ResolvedIntent(
-                        intent_type=IntentType.STOCK_WHY,
-                        symbol=stock.symbol,
-                        short_symbol=stock.symbol.split(".")[0],
-                        company_name=stock.name,
-                        scheme_id=s_id,
-                        raw_query=raw,
-                    )
-
-        # What queries: "what is happening with TRUALT", "what happened to TRUALT"
-        if "what" in lowered or "happening" in lowered or "happened" in lowered:
-            for word in raw.split():
-                clean_word = re.sub(r"[^\w]", "", word)
-                m = cls.resolve_stock(clean_word)
-                if m:
-                    stock, s_id = m
-                    return ResolvedIntent(
-                        intent_type=IntentType.STOCK_WHAT,
-                        symbol=stock.symbol,
-                        short_symbol=stock.symbol.split(".")[0],
-                        company_name=stock.name,
-                        scheme_id=s_id,
-                        raw_query=raw,
-                    )
-
-        # When queries: "when to enter TRUALT", "when to watch TRUALT"
-        if "when" in lowered or "trigger" in lowered:
-            for word in raw.split():
-                clean_word = re.sub(r"[^\w]", "", word)
-                m = cls.resolve_stock(clean_word)
-                if m:
-                    stock, s_id = m
-                    return ResolvedIntent(
-                        intent_type=IntentType.STOCK_WHEN,
-                        symbol=stock.symbol,
-                        short_symbol=stock.symbol.split(".")[0],
-                        company_name=stock.name,
-                        scheme_id=s_id,
-                        raw_query=raw,
-                    )
-
-        # Setup queries: "which stocks have setups", "show setups", "current setups"
-        if "setup" in lowered:
-            return ResolvedIntent(intent_type=IntentType.SETUPS_LOOKUP, raw_query=raw)
-
-        # Waiting queries: "which stocks are waiting", "show waiting", "what is waiting"
-        if "waiting" in lowered or "wait" in lowered:
-            return ResolvedIntent(intent_type=IntentType.WAITING_LOOKUP, raw_query=raw)
-
-        # Performance queries: "show performance", "how is the strategy performing"
-        if "performance" in lowered or "win rate" in lowered or "expectancy" in lowered:
-            return ResolvedIntent(intent_type=IntentType.PERFORMANCE_LOOKUP, raw_query=raw)
-
-        # Benchmark queries: "show benchmark", "nifty comparison", "how does it compare to nifty"
-        if "benchmark" in lowered or "nifty" in lowered:
-            return ResolvedIntent(intent_type=IntentType.BENCHMARK_LOOKUP, raw_query=raw)
+        # Search for any stock mentioned in natural language
+        stock_in_sentence = cls.find_stock_in_text(raw)
+        if stock_in_sentence:
+            stock, s_id = stock_in_sentence
+            if "why" in lowered:
+                return ResolvedIntent(
+                    intent_type=IntentType.STOCK_WHY,
+                    symbol=stock.symbol,
+                    short_symbol=stock.symbol.split(".")[0],
+                    company_name=stock.name,
+                    scheme_id=s_id,
+                    raw_query=raw,
+                )
+            if "when" in lowered or "entry" in lowered or "trigger" in lowered:
+                return ResolvedIntent(
+                    intent_type=IntentType.STOCK_WHEN,
+                    symbol=stock.symbol,
+                    short_symbol=stock.symbol.split(".")[0],
+                    company_name=stock.name,
+                    scheme_id=s_id,
+                    raw_query=raw,
+                )
+            if "what" in lowered or "about" in lowered or "happening" in lowered or "news" in lowered:
+                return ResolvedIntent(
+                    intent_type=IntentType.STOCK_WHAT,
+                    symbol=stock.symbol,
+                    short_symbol=stock.symbol.split(".")[0],
+                    company_name=stock.name,
+                    scheme_id=s_id,
+                    raw_query=raw,
+                )
+            return ResolvedIntent(
+                intent_type=IntentType.STOCK_LOOKUP,
+                symbol=stock.symbol,
+                short_symbol=stock.symbol.split(".")[0],
+                company_name=stock.name,
+                scheme_id=s_id,
+                raw_query=raw,
+            )
 
         return ResolvedIntent(intent_type=IntentType.UNKNOWN, raw_query=raw)

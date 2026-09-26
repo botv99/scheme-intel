@@ -72,11 +72,11 @@ class TelegramMessageRouter:
 
     def is_authorized(self, user_id: Optional[str] = None, chat_id: Optional[str] = None) -> bool:
         """Check if incoming user/chat is allowed to query the bot."""
-        if self.allowed_user_ids and user_id:
-            if str(user_id) not in self.allowed_user_ids:
+        if self.allowed_user_ids:
+            if not user_id or str(user_id) not in self.allowed_user_ids:
                 return False
-        if self.allowed_chat_ids and chat_id:
-            if str(chat_id) not in self.allowed_chat_ids:
+        if self.allowed_chat_ids:
+            if not chat_id or str(chat_id) not in self.allowed_chat_ids:
                 return False
         return True
 
@@ -92,8 +92,8 @@ class TelegramMessageRouter:
         """
         # 1. Authorization check
         if not self.is_authorized(user_id=user_id, chat_id=chat_id):
-            logger.warning("Blocked unauthorized Telegram query from user_id=%s, chat_id=%s", user_id, chat_id)
-            return "⛔ *Unauthorized.*\nThis Scheme-Intel terminal is restricted to authorized users."
+            logger.warning("[TELEGRAM] Blocked unauthorized query from user_id=%s, chat_id=%s", user_id, chat_id)
+            return "⛔ This Telegram account/chat is not authorized to use Scheme-Intel. (Unauthorized)"
 
         # 2. Intent Resolution
         intent: ResolvedIntent = IntentResolver.resolve(text)
@@ -138,7 +138,7 @@ class TelegramMessageRouter:
             scheme_id=scheme_id,
         )
 
-        return format_research_acknowledgement(job.job_id)
+        return format_research_acknowledgement(job.job_id, question=question)
 
     def _handle_fast_query(self, intent: ResolvedIntent) -> str:
         """Execute fast, structured memory retrieval from loaded snapshot."""
@@ -210,8 +210,20 @@ class TelegramMessageRouter:
             bench = self.retriever.get_benchmark()
             return render_benchmark_card(bench, is_stale=is_stale)
 
-        # Default fallback for unmapped natural language
+        # Default fallback for unmapped natural language - NEVER echo user input
         return (
-            "I didn't recognize that command or stock.\n\n"
-            "Use `/help` to view available commands or type a watchlist symbol like `TRUALT` or `PRAJIND`."
+            "I couldn't identify the intelligence you're asking for.\n\n"
+            "Try:\n\n"
+            "TRUALT\n"
+            "/stock TRUALT\n"
+            "/why TRUALT\n"
+            "/what TRUALT\n"
+            "/when TRUALT\n"
+            "/setups\n"
+            "/waiting\n"
+            "/schemes\n"
+            "/scheme gobardhan\n"
+            "/performance\n"
+            "/benchmark\n"
+            "/research <question>"
         )

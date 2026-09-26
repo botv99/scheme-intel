@@ -14,6 +14,7 @@ from .store import IntelligenceStore, DEFAULT_SNAPSHOT_PATH
 from .builder import IntelligenceSnapshotBuilder
 from .resolver import IntentResolver, IntentType, ResolvedIntent
 from .retrieval import FastIntelligenceRetriever, IntelligenceRetrieval
+from .syncer import SnapshotSyncer
 from .cards import (
     render_stock_card,
     render_why_card,
@@ -49,6 +50,7 @@ __all__ = [
     "ResolvedIntent",
     "FastIntelligenceRetriever",
     "IntelligenceRetrieval",
+    "SnapshotSyncer",
     "render_stock_card",
     "render_why_card",
     "render_what_card",

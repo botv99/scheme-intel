@@ -7,13 +7,16 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 
-def format_research_acknowledgement(job_id: str) -> str:
+def format_research_acknowledgement(job_id: str, question: str = "") -> str:
     """Immediate acknowledgement returned to Telegram without blocking on research."""
+    q_section = f"\n*Question:*\n{question}\n" if question else ""
     return (
-        "🔎 *Research request received.*\n\n"
-        "I'll investigate this using Scheme-Intel's verified sources and send you the researched intelligence when the analysis is complete.\n\n"
+        "🔎 *Research queued* (Research request received)\n\n"
+        f"• *Request ID:* `{job_id}`\n"
         f"• *Research ID:* `{job_id}`\n"
-        "• *Status:* `QUEUED`"
+        "• *Status:* `QUEUED`\n"
+        f"{q_section}\n"
+        "_I’ll send the research result here when processing is complete._"
     )
 
 

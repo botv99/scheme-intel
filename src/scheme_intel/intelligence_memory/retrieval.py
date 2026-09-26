@@ -35,7 +35,11 @@ class FastIntelligenceRetriever:
         data_dir: Optional[str | Path] = None,
     ):
         if store is None and data_dir is not None:
-            self.store = IntelligenceStore(snapshot_path=Path(data_dir) / "latest.json")
+            p = Path(data_dir)
+            if (p / "intelligence" / "latest.json").exists():
+                self.store = IntelligenceStore(snapshot_path=p / "intelligence" / "latest.json")
+            else:
+                self.store = IntelligenceStore(snapshot_path=p / "latest.json")
         else:
             self.store = store or IntelligenceStore()
         self.builder = builder or IntelligenceSnapshotBuilder(store=self.store)
@@ -71,12 +75,34 @@ class FastIntelligenceRetriever:
         return snapshot
 
     def get_company(self, symbol_or_short: str) -> Optional[CompanyIntelligence]:
-        """Fetch company intelligence by ticker or short symbol."""
+        """Fetch company intelligence by ticker, short symbol, or name."""
         snapshot = self.get_snapshot()
         if not snapshot:
             return None
         key = symbol_or_short.strip().upper()
-        return snapshot.companies.get(key)
+        # 1. Exact dictionary key match
+        if key in snapshot.companies:
+            return snapshot.companies[key]
+
+        # 2. Sans-suffix match (e.g. TRUALT.NS -> TRUALT)
+        base_sym = key.split(".")[0]
+        if base_sym in snapshot.companies:
+            return snapshot.companies[base_sym]
+
+        # 3. Add-suffix match (e.g. TRUALT -> TRUALT.NS or TRUALT.BO)
+        if f"{base_sym}.NS" in snapshot.companies:
+            return snapshot.companies[f"{base_sym}.NS"]
+        if f"{base_sym}.BO" in snapshot.companies:
+            return snapshot.companies[f"{base_sym}.BO"]
+
+        # 4. Search across all stored company records
+        for comp in snapshot.companies.values():
+            if comp.short_symbol.upper() == base_sym or comp.symbol.upper() == key:
+                return comp
+            if comp.name.upper() == key or comp.name.upper().startswith(base_sym):
+                return comp
+
+        return None
 
     def get_scheme(self, scheme_id: str) -> Optional[SchemeIntelligence]:
         """Fetch scheme intelligence by scheme ID."""
