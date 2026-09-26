@@ -8,11 +8,12 @@ from .models import (
     PerformanceIntelligence,
     BenchmarkIntelligence,
     IntelligenceSnapshot,
+    SnapshotHealthStatus,
 )
 from .store import IntelligenceStore, DEFAULT_SNAPSHOT_PATH
 from .builder import IntelligenceSnapshotBuilder
 from .resolver import IntentResolver, IntentType, ResolvedIntent
-from .retrieval import FastIntelligenceRetriever
+from .retrieval import FastIntelligenceRetriever, IntelligenceRetrieval
 from .cards import (
     render_stock_card,
     render_why_card,
@@ -28,6 +29,9 @@ from .cards import (
     render_unknown_stock,
     render_unknown_scheme,
     render_snapshot_unavailable,
+    render_snapshot_missing,
+    render_snapshot_invalid,
+    render_health_card,
 )
 
 __all__ = [
@@ -36,6 +40,7 @@ __all__ = [
     "PerformanceIntelligence",
     "BenchmarkIntelligence",
     "IntelligenceSnapshot",
+    "SnapshotHealthStatus",
     "IntelligenceStore",
     "DEFAULT_SNAPSHOT_PATH",
     "IntelligenceSnapshotBuilder",
@@ -43,6 +48,7 @@ __all__ = [
     "IntentType",
     "ResolvedIntent",
     "FastIntelligenceRetriever",
+    "IntelligenceRetrieval",
     "render_stock_card",
     "render_why_card",
     "render_what_card",
@@ -57,4 +63,7 @@ __all__ = [
     "render_unknown_stock",
     "render_unknown_scheme",
     "render_snapshot_unavailable",
+    "render_snapshot_missing",
+    "render_snapshot_invalid",
+    "render_health_card",
 ]

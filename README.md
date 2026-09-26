@@ -115,6 +115,66 @@ Scheme-Intel automatically computes forward performance analytics from historica
 
 ---
 
+## Stage 3: Telegram Conversational Intelligence & Operational Runtime
+
+Scheme-Intel provides a dual-path conversational terminal inside Telegram:
+
+### Dual-Path Request Architecture
+1. **Path A — Fast Memory Retrieval (< 100ms)**:
+   - Reads directly from prebuilt in-memory `IntelligenceSnapshot` (`data/latest.json`).
+   - **Strict Fast-Path Protection**: `auto_build_if_missing = False`. Telegram queries **never** trigger data ingestion, strategy pipeline recalculation, or LLM debates.
+   - Snapshot health is categorized as `READY`, `STALE` (> 26h), `MISSING`, or `INVALID`.
+2. **Path B — Deep Research Queue & Worker**:
+   - Long-form or deep questions triggered via `/research <question>`.
+   - Persisted to SQLite queue (`research_jobs`).
+   - Asynchronous worker processes jobs, corroborates policy evidence, and pushes Markdown findings back to the user's Telegram chat upon completion.
+   - Built-in crash recovery: abandoned `RUNNING` jobs (> 300s) are automatically reset to `QUEUED`.
+
+### Supported Commands
+- `/start` or `/help`: Overview of available commands and navigation syntax.
+- `/health` or `/status`: Real-time system operational health probe.
+- `/schemes`: List of supported policy schemes (e.g., GOBARdhan).
+- `/scheme <id>`: Scheme overview, policy developments, and active watchlist.
+- `/setups`: Current session's qualified swing setups with trigger, stop loss, and targets.
+- `/waiting`: Setups awaiting trigger confirmation or volume expansion.
+- `/performance`: Forward validation statistics, win rate, and sample maturity.
+- `/benchmark`: Alpha and win rate comparisons against the Nifty 50 benchmark.
+- `<SYMBOL>` or `/stock <SYM>`: Compact technical and fundamental status card.
+- `/why <SYM>`, `/what <SYM>`, `/when <SYM>`: Policy rationale, recent developments, and execution triggers.
+- `/research <question>`: Asynchronous background policy research request.
+
+### Operational Service Deployment
+Run the production runtime coordinating the conversational bot and research worker:
+
+```bash
+# Run both Telegram Poller and Async Research Worker
+python -m scheme_intel.delivery.service --mode all
+
+# Run Bot Poller only
+python -m scheme_intel.delivery.service --mode bot
+
+# Run Research Queue Worker only
+python -m scheme_intel.delivery.service --mode worker
+
+# Run non-destructive system health probe
+python -m scheme_intel.delivery.service --health
+
+# Run with container HTTP health probe port
+python -m scheme_intel.delivery.service --mode all --port 8080
+```
+
+### Docker Deployment
+```bash
+docker build -t scheme-intel:latest .
+docker run -d \
+  -e TELEGRAM_BOT_TOKEN="your-token" \
+  -e TELEGRAM_CHAT_ID="your-chat-id" \
+  -p 8080:8080 \
+  scheme-intel:latest
+```
+
+---
+
 ## Documentation Suite
 
 Detailed architectural specifications and references are available in [`docs/`](docs/):
@@ -126,3 +186,4 @@ Detailed architectural specifications and references are available in [`docs/`](
 - [Testing Guide](docs/TESTING.md)
 - [Troubleshooting & FAQ](docs/TROUBLESHOOTING.md)
 - [Changelog](docs/CHANGELOG.md)
+

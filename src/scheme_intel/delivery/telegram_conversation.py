@@ -24,6 +24,12 @@ class TelegramConversationHandler:
 
     def __init__(self, router: Optional[TelegramMessageRouter] = None):
         self.router = router or TelegramMessageRouter()
+        self.is_running = False
+
+    def stop(self) -> None:
+        """Signal the polling loop to terminate gracefully."""
+        self.is_running = False
+        logger.info("TelegramConversationHandler stop signal received.")
 
     def handle_message(
         self,
@@ -79,16 +85,20 @@ class TelegramConversationHandler:
         url = f"https://api.telegram.org/bot{token}/getUpdates"
         offset = 0
         runs = 0
+        self.is_running = True
         logger.info("Starting Telegram long-polling loop...")
 
-        while True:
+        while self.is_running:
             try:
                 resp = requests.get(url, params={"offset": offset, "timeout": 20}, timeout=25)
                 if resp.status_code == 200:
                     data = resp.json()
                     for update in data.get("result", []):
-                        offset = max(offset, update["update_id"] + 1)
-                        self.process_update(update, send_reply=True)
+                        offset = max(offset, update.get("update_id", 0) + 1)
+                        try:
+                            self.process_update(update, send_reply=True)
+                        except Exception as update_err:
+                            logger.error("Error processing Telegram update: %s", update_err)
                 else:
                     logger.warning("Telegram getUpdates returned HTTP %d", resp.status_code)
             except Exception as e:
@@ -97,7 +107,10 @@ class TelegramConversationHandler:
             runs += 1
             if stop_after_runs and runs >= stop_after_runs:
                 break
-            time.sleep(interval_seconds)
+            if self.is_running:
+                time.sleep(interval_seconds)
+
+        logger.info("Telegram long-polling loop terminated.")
 
 
 if __name__ == "__main__":

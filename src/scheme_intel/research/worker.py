@@ -29,6 +29,52 @@ class ResearchWorker:
     ):
         self.queue = queue or ResearchQueue()
         self.executor = executor or ResearchExecutor()
+        self.is_running = False
+
+    def stop(self) -> None:
+        """Signal the worker loop to terminate gracefully."""
+        self.is_running = False
+        logger.info("ResearchWorker stop signal received.")
+
+    def run_forever(
+        self,
+        poll_interval: float = 3.0,
+        stale_recovery_interval: float = 60.0,
+        stale_timeout_seconds: float = 300.0,
+        send_telegram_alert: bool = True,
+    ) -> None:
+        """
+        Continuously poll and process queued research jobs until stop() is invoked.
+        Periodically recovers stale jobs abandoned by crashed worker instances.
+        """
+        self.is_running = True
+        logger.info(
+            "ResearchWorker started background loop (poll_interval=%.1fs, recovery_interval=%.1fs)",
+            poll_interval,
+            stale_recovery_interval,
+        )
+
+        last_recovery_time = 0.0
+        while self.is_running:
+            now = time.time()
+            if now - last_recovery_time >= stale_recovery_interval:
+                try:
+                    recovered = self.queue.recover_stale_running_jobs(timeout_seconds=stale_timeout_seconds)
+                    if recovered > 0:
+                        logger.info("Recovered %d abandoned research jobs back to QUEUED", recovered)
+                except Exception as e:
+                    logger.warning("Error recovering stale research jobs: %s", e)
+                last_recovery_time = now
+
+            try:
+                job = self.process_next_job(send_telegram_alert=send_telegram_alert)
+                if not job:
+                    time.sleep(poll_interval)
+            except Exception as e:
+                logger.error("Unexpected error in worker loop iteration: %s", e)
+                time.sleep(poll_interval)
+
+        logger.info("ResearchWorker loop terminated gracefully.")
 
     def process_next_job(self, send_telegram_alert: bool = True) -> Optional[ResearchJob]:
         """Claim and process a single queued job."""
@@ -73,11 +119,29 @@ class ResearchWorker:
 
 
 if __name__ == "__main__":
+    import signal
+
     parser = argparse.ArgumentParser(description="Scheme-Intel Research Queue Worker")
-    parser.add_argument("--max-jobs", type=int, default=10, help="Maximum jobs to process")
+    parser.add_argument("--loop", action="store_true", help="Run worker continuously in polling loop")
+    parser.add_argument("--interval", type=float, default=3.0, help="Polling interval in seconds (for --loop)")
+    parser.add_argument("--recovery-interval", type=float, default=60.0, help="Interval to recover stale jobs")
+    parser.add_argument("--max-jobs", type=int, default=10, help="Maximum jobs to process (in batch mode)")
     parser.add_argument("--send", action="store_true", help="Send results via Telegram if chat_id configured")
     args = parser.parse_args()
 
     worker = ResearchWorker()
-    processed = worker.process_all(max_jobs=args.max_jobs, send_telegram_alert=args.send)
-    print(f"Processed {processed} research jobs.")
+
+    if args.loop:
+        def _handle_signal(signum, frame):
+            worker.stop()
+
+        signal.signal(signal.SIGINT, _handle_signal)
+        signal.signal(signal.SIGTERM, _handle_signal)
+        worker.run_forever(
+            poll_interval=args.interval,
+            stale_recovery_interval=args.recovery_interval,
+            send_telegram_alert=args.send,
+        )
+    else:
+        processed = worker.process_all(max_jobs=args.max_jobs, send_telegram_alert=args.send)
+        print(f"Processed {processed} research jobs.")

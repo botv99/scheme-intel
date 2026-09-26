@@ -10,6 +10,7 @@ import time
 from typing import Dict, List, Optional, Set
 from datetime import datetime, timezone
 
+from ..intelligence_memory.models import SnapshotHealthStatus
 from ..intelligence_memory.resolver import IntentResolver, IntentType, ResolvedIntent
 from ..intelligence_memory.retrieval import FastIntelligenceRetriever
 from ..intelligence_memory.cards import (
@@ -27,6 +28,9 @@ from ..intelligence_memory.cards import (
     render_unknown_stock,
     render_unknown_scheme,
     render_snapshot_unavailable,
+    render_snapshot_missing,
+    render_snapshot_invalid,
+    render_health_card,
 )
 from ..research.queue import ResearchQueue
 from ..research.formatter import format_research_acknowledgement
@@ -46,7 +50,7 @@ class TelegramMessageRouter:
         allowed_chat_ids: Optional[Set[str]] = None,
         research_cooldown_seconds: int = 60,
     ):
-        self.retriever = retriever or FastIntelligenceRetriever()
+        self.retriever = retriever or FastIntelligenceRetriever(auto_build_if_missing=False)
         self.research_queue = research_queue or ResearchQueue()
         self.research_cooldown_seconds = research_cooldown_seconds
 
@@ -138,11 +142,27 @@ class TelegramMessageRouter:
 
     def _handle_fast_query(self, intent: ResolvedIntent) -> str:
         """Execute fast, structured memory retrieval from loaded snapshot."""
-        snapshot = self.retriever.get_snapshot()
-        if not snapshot:
-            return render_snapshot_unavailable()
+        status, snapshot, status_msg = self.retriever.get_status()
 
-        is_stale = snapshot.is_stale()
+        if intent.intent_type == IntentType.HEALTH_CHECK:
+            pending_jobs = len(self.research_queue.list_jobs(status="QUEUED"))
+            running_jobs = len(self.research_queue.list_jobs(status="RUNNING"))
+            return render_health_card(
+                telegram_status="OK",
+                snapshot_status=status.value,
+                snapshot_age=snapshot.get_age_display() if snapshot else "N/A",
+                queue_status="OK",
+                worker_status="ACTIVE",
+                active_jobs=pending_jobs + running_jobs,
+            )
+
+        if status == SnapshotHealthStatus.MISSING or not snapshot:
+            return render_snapshot_missing()
+
+        if status == SnapshotHealthStatus.INVALID:
+            return render_snapshot_invalid(status_msg)
+
+        is_stale = (status == SnapshotHealthStatus.STALE)
 
         if intent.intent_type == IntentType.SCHEMES:
             schemes = self.retriever.list_schemes()

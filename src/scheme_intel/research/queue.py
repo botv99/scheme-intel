@@ -8,7 +8,7 @@ import json
 import sqlite3
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from .models import ResearchJob, ResearchStatus
 from ..stage2.storage import DEFAULT_STAGE2_DB_PATH
@@ -48,6 +48,11 @@ class ResearchQueue:
         conn = sqlite3.connect(str(self.db_path))
         conn.row_factory = sqlite3.Row
         return conn
+
+    def _connect(self) -> sqlite3.Connection:
+        """Alias for _get_connection."""
+        return self._get_connection()
+
 
     def _init_schema(self) -> None:
         with self._get_connection() as conn:
@@ -115,21 +120,51 @@ class ResearchQueue:
         """Atomically claim the next QUEUED job and set status to RUNNING."""
         now_utc = datetime.now(timezone.utc).isoformat()
         with self._get_connection() as conn:
+            conn.execute("BEGIN IMMEDIATE;")
             row = conn.execute(
                 "SELECT job_id FROM research_jobs WHERE status = ? ORDER BY created_at ASC LIMIT 1;",
                 (ResearchStatus.QUEUED.value,),
             ).fetchone()
             if not row:
+                conn.commit()
                 return None
 
             job_id = row["job_id"]
-            conn.execute(
+            cursor = conn.execute(
                 "UPDATE research_jobs SET status = ?, started_at = ? WHERE job_id = ? AND status = ?;",
                 (ResearchStatus.RUNNING.value, now_utc, job_id, ResearchStatus.QUEUED.value),
             )
             conn.commit()
 
+            if cursor.rowcount == 0:
+                # Lost race to another worker
+                return None
+
             return self.get_job(job_id)
+
+    def recover_stale_running_jobs(self, timeout_seconds: float = 300.0) -> int:
+        """
+        Recover jobs stuck in RUNNING status for longer than timeout_seconds.
+        Resets their status to QUEUED so another worker can claim and execute them.
+        """
+        cutoff_dt = datetime.now(timezone.utc) - timedelta(seconds=timeout_seconds)
+        cutoff_iso = cutoff_dt.isoformat()
+        query = """
+        UPDATE research_jobs
+        SET status = ?, started_at = NULL
+        WHERE status = ? AND (started_at IS NULL OR started_at < ?);
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(query, (
+                ResearchStatus.QUEUED.value,
+                ResearchStatus.RUNNING.value,
+                cutoff_iso,
+            ))
+            conn.commit()
+            recovered = cursor.rowcount
+            if recovered > 0:
+                logger.warning("Recovered %d abandoned RUNNING research jobs back to QUEUED.", recovered)
+            return recovered
 
     def complete_job(
         self,
@@ -189,3 +224,22 @@ class ResearchQueue:
             evidence=evidence,
             error=row["error"],
         )
+
+    def get_status_counts(self) -> Dict[str, int]:
+        """Return counts of jobs by status."""
+        query = "SELECT status, COUNT(*) as cnt FROM research_jobs GROUP BY status;"
+        counts = {
+            ResearchStatus.QUEUED.value: 0,
+            ResearchStatus.RUNNING.value: 0,
+            ResearchStatus.COMPLETED.value: 0,
+            ResearchStatus.FAILED.value: 0,
+        }
+        try:
+            with self._get_connection() as conn:
+                rows = conn.execute(query).fetchall()
+                for r in rows:
+                    counts[r["status"]] = r["cnt"]
+        except Exception as e:
+            logger.debug("Failed querying queue status counts: %s", e)
+        return counts
+

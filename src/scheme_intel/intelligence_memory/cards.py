@@ -4,6 +4,7 @@ Formats structured intelligence memory into clean, readable, factual Markdown te
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from .models import (
     CompanyIntelligence,
@@ -413,9 +414,42 @@ def render_unknown_scheme(scheme_id: str) -> str:
     )
 
 
-def render_snapshot_unavailable() -> str:
+def render_snapshot_missing() -> str:
     return (
-        "⚠️ *Scheme-Intel intelligence memory is currently unavailable.*\n\n"
-        "The latest intelligence snapshot could not be loaded.\n"
-        "Please try again after the next scheduled pipeline run."
+        "⚠️ *Intelligence memory is currently unavailable.*\n\n"
+        "The latest intelligence refresh has not produced a valid snapshot yet.\n"
+        "Please try again after the next successful refresh."
     )
+
+
+def render_snapshot_invalid(error_msg: str = "") -> str:
+    err_snippet = f"\n_Diagnostic:_ `{error_msg[:120]}`" if error_msg else ""
+    return (
+        "⚠️ *Intelligence memory is currently corrupted or invalid.*\n\n"
+        "The snapshot failed integrity validation checks. Please wait for the next automated refresh."
+        f"{err_snippet}"
+    )
+
+
+def render_snapshot_unavailable() -> str:
+    return render_snapshot_missing()
+
+
+def render_health_card(
+    telegram_status: str = "OK",
+    snapshot_status: str = "READY",
+    snapshot_age: str = "N/A",
+    queue_status: str = "OK",
+    worker_status: str = "RUNNING",
+    active_jobs: int = 0,
+) -> str:
+    return (
+        "🩺 *SCHEME-INTEL OPERATIONAL HEALTH*\n\n"
+        f"• *Telegram Gateway:* `{telegram_status}`\n"
+        f"• *Intelligence Snapshot:* `{snapshot_status}`\n"
+        f"• *Snapshot Age:* `{snapshot_age}`\n"
+        f"• *Research Queue:* `{queue_status}` ({active_jobs} pending/active)\n"
+        f"• *Research Worker:* `{worker_status}`\n\n"
+        f"_Health checked at: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC_"
+    )
+

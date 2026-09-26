@@ -32,6 +32,7 @@ class IntentType(str, Enum):
     PERFORMANCE_LOOKUP = "PERFORMANCE_LOOKUP"
     BENCHMARK_LOOKUP = "BENCHMARK_LOOKUP"
     RESEARCH_REQUEST = "RESEARCH_REQUEST"
+    HEALTH_CHECK = "HEALTH_CHECK"
     UNKNOWN = "UNKNOWN"
 
 
@@ -119,6 +120,9 @@ class IntentResolver:
 
         if first_token in ("/help", "help"):
             return ResolvedIntent(intent_type=IntentType.HELP, raw_query=raw)
+
+        if first_token in ("/health", "health", "/status", "status"):
+            return ResolvedIntent(intent_type=IntentType.HEALTH_CHECK, raw_query=raw)
 
         if first_token in ("/schemes", "schemes"):
             return ResolvedIntent(intent_type=IntentType.SCHEMES, raw_query=raw)

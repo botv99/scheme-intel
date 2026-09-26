@@ -4,7 +4,8 @@ Provides sub-second querying over prebuilt IntelligenceSnapshots without web cal
 """
 from __future__ import annotations
 
-from typing import List, Optional
+import os
+from typing import List, Optional, Tuple
 from pathlib import Path
 
 from .models import (
@@ -13,6 +14,7 @@ from .models import (
     SchemeIntelligence,
     PerformanceIntelligence,
     BenchmarkIntelligence,
+    SnapshotHealthStatus,
 )
 from .store import IntelligenceStore, DEFAULT_SNAPSHOT_PATH
 from .builder import IntelligenceSnapshotBuilder
@@ -28,17 +30,39 @@ class FastIntelligenceRetriever:
         self,
         store: Optional[IntelligenceStore] = None,
         builder: Optional[IntelligenceSnapshotBuilder] = None,
-        auto_build_if_missing: bool = True,
+        auto_build_if_missing: bool = False,
+        freshness_threshold_hours: Optional[float] = None,
+        data_dir: Optional[str | Path] = None,
     ):
-        self.store = store or IntelligenceStore()
+        if store is None and data_dir is not None:
+            self.store = IntelligenceStore(snapshot_path=Path(data_dir) / "latest.json")
+        else:
+            self.store = store or IntelligenceStore()
         self.builder = builder or IntelligenceSnapshotBuilder(store=self.store)
         self.auto_build_if_missing = auto_build_if_missing
+        if freshness_threshold_hours is not None:
+            self.freshness_threshold_hours = freshness_threshold_hours
+        else:
+            try:
+                self.freshness_threshold_hours = float(os.getenv("INTELLIGENCE_FRESHNESS_HOURS", "26.0"))
+            except Exception:
+                self.freshness_threshold_hours = 26.0
+
+    def get_status(self, force_reload: bool = False) -> Tuple[SnapshotHealthStatus, Optional[IntelligenceSnapshot], str]:
+        """Determine health status: READY, STALE, MISSING, or INVALID."""
+        return self.store.load_with_status(
+            force_reload=force_reload,
+            max_age_hours=self.freshness_threshold_hours,
+        )
 
     def get_snapshot(self) -> Optional[IntelligenceSnapshot]:
-        """Fetch current snapshot from in-memory cache or disk. Auto-builds once if missing."""
+        """
+        Fetch current snapshot from in-memory cache or disk.
+        Does NOT build on missing unless auto_build_if_missing is explicitly enabled.
+        """
         snapshot = self.store.load()
         if not snapshot and self.auto_build_if_missing:
-            logger.info("No prebuilt intelligence snapshot found. Building initial snapshot...")
+            logger.info("auto_build_if_missing enabled: Building initial snapshot...")
             try:
                 self.builder.build_and_save()
                 snapshot = self.store.load()
@@ -109,3 +133,8 @@ class FastIntelligenceRetriever:
         if not snapshot:
             return BenchmarkIntelligence()
         return snapshot.benchmark
+
+
+# Alias for backward and architectural compatibility
+IntelligenceRetrieval = FastIntelligenceRetriever
+

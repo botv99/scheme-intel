@@ -5,8 +5,16 @@ Supports fast, lookahead-free, and structured retrieval for conversational termi
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from enum import Enum
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
+
+
+class SnapshotHealthStatus(str, Enum):
+    READY = "READY"
+    STALE = "STALE"
+    MISSING = "MISSING"
+    INVALID = "INVALID"
 
 
 class CompanyIntelligence(BaseModel):
@@ -103,11 +111,31 @@ class IntelligenceSnapshot(BaseModel):
     performance: PerformanceIntelligence = Field(default_factory=PerformanceIntelligence)
     benchmark: BenchmarkIntelligence = Field(default_factory=BenchmarkIntelligence)
 
-    def is_stale(self, max_age_hours: int = 26) -> bool:
-        """Return True if the snapshot is older than max_age_hours."""
+    def get_age_seconds(self) -> float:
+        """Return snapshot age in seconds."""
         try:
             gen_dt = datetime.fromisoformat(self.generated_at.replace("Z", "+00:00"))
-            age = (datetime.now(timezone.utc) - gen_dt).total_seconds() / 3600.0
-            return age > max_age_hours
+            return max(0.0, (datetime.now(timezone.utc) - gen_dt).total_seconds())
         except Exception:
-            return False
+            return 0.0
+
+    def get_age_display(self) -> str:
+        """Return human-readable snapshot age, e.g. '2h 14m'."""
+        sec = int(self.get_age_seconds())
+        hours = sec // 3600
+        minutes = (sec % 3600) // 60
+        if hours > 0:
+            return f"{hours}h {minutes:02d}m"
+        return f"{minutes}m"
+
+    def is_stale(self, max_age_hours: float = 26.0, threshold_hours: Optional[float] = None) -> bool:
+        """Return True if the snapshot is older than max_age_hours."""
+        if threshold_hours is not None:
+            max_age_hours = threshold_hours
+        return (self.get_age_seconds() / 3600.0) > max_age_hours
+
+    def get_health_status(self, max_age_hours: float = 26.0) -> SnapshotHealthStatus:
+        """Determine health status: READY or STALE."""
+        if self.is_stale(max_age_hours=max_age_hours):
+            return SnapshotHealthStatus.STALE
+        return SnapshotHealthStatus.READY
