@@ -182,7 +182,8 @@ def test_missing_api_keys_handling():
         "GROQ_API_KEY": "",
         "OPENROUTER_API_KEY": "",
         "OPENAI_API_KEY": "",
-    }, clear=True):
+        "LLM_PROVIDER_ORDER": "",
+    }):
         manager = LLMProviderManager()
         assert manager.active_order == ["gemini"]
         assert "gemini" in manager.providers

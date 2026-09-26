@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS stage2_setups (
     wait_json               TEXT,
     no_trade_reason         TEXT,
     telegram_card           TEXT,
-    created_at              TEXT NOT NULL
+    created_at              TEXT NOT NULL,
+    ai_provider             TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_stage2_setups_date ON stage2_setups(analysis_date);
@@ -89,6 +90,10 @@ class Stage2Database:
                 conn.execute("ALTER TABLE stage2_outcomes ADD COLUMN expired INTEGER DEFAULT 0;")
             except Exception:
                 pass
+            try:
+                conn.execute("ALTER TABLE stage2_setups ADD COLUMN ai_provider TEXT;")
+            except Exception:
+                pass
             conn.commit()
 
     def save_setup(self, setup: TradeSetup) -> None:
@@ -103,13 +108,15 @@ class Stage2Database:
         archetype = setup.candidate.archetype if setup.candidate else None
         score = setup.candidate.score if setup.candidate else None
 
+        ai_provider = setup.ai_provider or (setup.debate.provider if setup.debate else None)
+
         query = """
         INSERT INTO stage2_setups (
             setup_id, analysis_date, setup_date, next_trading_session, market_close_timestamp,
             symbol, company, status, archetype, score, candidate_json, bull_thesis_json,
             bear_thesis_json, debate_json, risk_json, wait_json, no_trade_reason,
-            telegram_card, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            telegram_card, created_at, ai_provider
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(setup_id) DO UPDATE SET
             status = excluded.status,
             archetype = excluded.archetype,
@@ -121,7 +128,8 @@ class Stage2Database:
             risk_json = excluded.risk_json,
             wait_json = excluded.wait_json,
             no_trade_reason = excluded.no_trade_reason,
-            telegram_card = excluded.telegram_card;
+            telegram_card = excluded.telegram_card,
+            ai_provider = excluded.ai_provider;
         """
 
         with self._get_connection() as conn:
@@ -145,6 +153,7 @@ class Stage2Database:
                 setup.no_trade_reason,
                 setup.telegram_card,
                 setup.created_at,
+                ai_provider,
             ))
             conn.commit()
         logger.debug("Saved setup %s (%s - %s)", setup.setup_id, setup.stock.symbol, setup.status)
@@ -252,6 +261,32 @@ class Stage2Database:
                 holding_period_days=row["holding_period_days"],
             )
 
+    def list_outcomes(self) -> List[SetupOutcome]:
+        """Fetch all outcomes ordered by updated_at."""
+        query = "SELECT * FROM stage2_outcomes ORDER BY updated_at DESC;"
+        with self._get_connection() as conn:
+            rows = conn.execute(query).fetchall()
+            outcomes = []
+            for row in rows:
+                keys = row.keys()
+                outcomes.append(SetupOutcome(
+                    setup_id=row["setup_id"],
+                    symbol=row["symbol"],
+                    entry_triggered=bool(row["entry_triggered"]),
+                    actual_entry_price=row["actual_entry_price"],
+                    entry_date=row["entry_date"],
+                    exit_price=row["exit_price"],
+                    exit_date=row["exit_date"],
+                    mfe_pct=row["mfe_pct"] or 0.0,
+                    mae_pct=row["mae_pct"] or 0.0,
+                    realized_pnl_pct=row["realized_pnl_pct"],
+                    target_hit=bool(row["target_hit"]),
+                    stop_hit=bool(row["stop_hit"]),
+                    expired=bool(row["expired"]) if "expired" in keys else False,
+                    holding_period_days=row["holding_period_days"] or 0,
+                ))
+            return outcomes
+
     def _row_to_setup(self, row: sqlite3.Row) -> TradeSetup:
         stock = Stock(name=row["company"], symbol=row["symbol"])
         candidate = json.loads(row["candidate_json"]) if row["candidate_json"] else None
@@ -260,6 +295,11 @@ class Stage2Database:
         debate = json.loads(row["debate_json"]) if row["debate_json"] else None
         risk = json.loads(row["risk_json"]) if row["risk_json"] else None
         wait = json.loads(row["wait_json"]) if row["wait_json"] else None
+
+        keys = row.keys()
+        ai_provider = row["ai_provider"] if "ai_provider" in keys else None
+        if not ai_provider and debate and isinstance(debate, dict):
+            ai_provider = debate.get("provider")
 
         return TradeSetup.model_validate({
             "setup_id": row["setup_id"],
@@ -276,6 +316,7 @@ class Stage2Database:
             "risk": risk,
             "wait_conditions": wait,
             "no_trade_reason": row["no_trade_reason"],
+            "ai_provider": ai_provider,
             "telegram_card": row["telegram_card"] or "",
             "created_at": row["created_at"],
         })

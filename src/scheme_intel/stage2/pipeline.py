@@ -323,6 +323,19 @@ class Stage2Pipeline:
             data_statuses=data_statuses,
         )
 
+        # 6b. Forward Performance Analytics & Validation Engine
+        perf_report: Optional[Dict[str, Any]] = None
+        perf_summary: Optional[str] = None
+        if not dry_run:
+            try:
+                from .performance import PerformanceAnalytics
+                perf_engine = PerformanceAnalytics(self.db)
+                _, _, rep = perf_engine.generate_reports()
+                perf_report = rep.to_dict()
+                perf_summary = perf_engine.get_telegram_summary(rep)
+            except Exception as e:
+                logger.warning("Error computing performance analytics: %s", e)
+
         # 7. Format 3-Section Telegram Report
         session_title = f"{session_info.analysis_date} — AFTER MARKET (Prep for {session_info.next_trading_session})"
         health_stats = {
@@ -341,7 +354,7 @@ class Stage2Pipeline:
 
         # 8. Dispatch to Telegram if send=True
         if send:
-            self._dispatch_telegram_report(report, outcome_updates)
+            self._dispatch_telegram_report(report, outcome_updates, perf_summary=perf_summary)
 
         logger.info(
             "=== Stage 2 Complete: %d Scanned, %d Qualified, %d Waiting, %d No Trade, %d Data Unavailable ===",
@@ -359,6 +372,8 @@ class Stage2Pipeline:
             "setups": trade_setups,
             "report": report,
             "outcome_updates": outcome_updates,
+            "performance_report": perf_report,
+            "performance_summary": perf_summary,
             "health_stats": health_stats,
         }
 
@@ -366,6 +381,7 @@ class Stage2Pipeline:
         self,
         report: Dict[str, str],
         outcome_updates: Optional[Dict[str, Any]] = None,
+        perf_summary: Optional[str] = None,
     ) -> None:
         """Send complete 3-section report + outcome update to Telegram with character chunking & rate limit handling."""
         logger.info("Dispatching Stage 2 Intelligence Report to Telegram...")
@@ -374,8 +390,15 @@ class Stage2Pipeline:
             ("Section 2: Swing Radar", report.get("section2", "")),
             ("Section 3: Actionable & Waiting Setups", report.get("section3", "")),
         ]
-        if outcome_updates and outcome_updates.get("summary_text"):
-            sections.append(("Active Positions & Outcome Tracker", outcome_updates["summary_text"]))
+        outcome_text = outcome_updates.get("summary_text", "") if outcome_updates else ""
+        if perf_summary:
+            if outcome_text:
+                outcome_text = f"{outcome_text}\n\n{perf_summary}"
+            else:
+                outcome_text = perf_summary
+
+        if outcome_text.strip():
+            sections.append(("Active Positions & Outcome Tracker", outcome_text))
 
         for name, text in sections:
             if not text.strip():
@@ -442,6 +465,8 @@ def main():
         print(result["report"]["full_text"])
         if result.get("outcome_updates") and result["outcome_updates"].get("summary_text"):
             print("\n" + result["outcome_updates"]["summary_text"])
+        if result.get("performance_summary"):
+            print("\n" + result["performance_summary"])
         print("=" * 60 + "\n")
 
 
