@@ -400,6 +400,103 @@ def render_help_card() -> str:
     )
 
 
+def render_start_card() -> str:
+    """Format concise terminal-style start menu."""
+    return (
+        "🤖 *SCHEME-INTEL TERMINAL*\n\n"
+        "📊 *Intelligence Terminal*\n\n"
+        "*Stocks*\n"
+        "• /trualt\n"
+        "• /praj\n"
+        "• /wabag\n"
+        "• /organic\n"
+        "• /kirloskar\n"
+        "• /gail\n"
+        "• /ioc\n\n"
+        "*Intelligence*\n"
+        "• /why\n"
+        "• /what\n"
+        "• /when\n"
+        "• /setups\n"
+        "• /waiting\n"
+        "• /watchlist\n"
+        "• /schemes\n"
+        "• /performance\n"
+        "• /benchmark\n\n"
+        "*Research*\n"
+        "• `/research <question>`"
+    )
+
+
+def render_stock_prompt_card(command: str = "/why") -> str:
+    """Format prompt when /why, /what, /when is called without a stock symbol."""
+    return (
+        "Which stock?\n\n"
+        "Try:\n"
+        "TRUALT\n"
+        "PRAJ\n"
+        "WABAG\n"
+        "ORGANIC\n"
+        "KIRLPNU\n"
+        "GAIL\n"
+        "IOC"
+    )
+
+
+def render_watchlist_card(companies: Dict[str, CompanyIntelligence], is_stale: bool = False) -> str:
+    """Format watchlist overview card."""
+    lines = [
+        "📋 *GOBARDHAN SCHEME WATCHLIST*",
+        "",
+    ]
+    seen = set()
+    for sym, comp in companies.items():
+        base = sym.split(".")[0]
+        if base in seen:
+            continue
+        seen.add(base)
+        price_str = f"₹{comp.price:,.2f}" if comp.price else "N/A"
+        status_str = f"`{comp.status}`" if comp.status else "`WATCH`"
+        lines.append(f"• *{base}* ({comp.name}) — {price_str} | {status_str}")
+
+    lines.extend([
+        "",
+        "Use `/stock <symbol>` or shortcuts like `/trualt`, `/praj` to view full intelligence.",
+    ])
+    return "\n".join(lines)
+
+
+def get_terminal_inline_keyboard() -> Dict[str, Any]:
+    """Generate structured interactive inline keyboard buttons for Telegram."""
+    return {
+        "inline_keyboard": [
+            [
+                {"text": "TRUALT", "callback_data": "/trualt"},
+                {"text": "PRAJ", "callback_data": "/praj"},
+                {"text": "WABAG", "callback_data": "/wabag"},
+            ],
+            [
+                {"text": "ORGANIC", "callback_data": "/organic"},
+                {"text": "KIRLPNU", "callback_data": "/kirloskar"},
+                {"text": "GAIL", "callback_data": "/gail"},
+                {"text": "IOC", "callback_data": "/ioc"},
+            ],
+            [
+                {"text": "SETUPS", "callback_data": "/setups"},
+                {"text": "WAITING", "callback_data": "/waiting"},
+            ],
+            [
+                {"text": "WATCHLIST", "callback_data": "/watchlist"},
+                {"text": "SCHEMES", "callback_data": "/schemes"},
+            ],
+            [
+                {"text": "PERFORMANCE", "callback_data": "/performance"},
+                {"text": "BENCHMARK", "callback_data": "/benchmark"},
+            ],
+        ]
+    }
+
+
 def render_unknown_stock(symbol: str) -> str:
     return (
         f"I don't recognize `{symbol}` in the active Scheme-Intel watchlist.\n\n"
@@ -452,4 +549,5 @@ def render_health_card(
         f"• *Research Worker:* `{worker_status}`\n\n"
         f"_Health checked at: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC_"
     )
+
 

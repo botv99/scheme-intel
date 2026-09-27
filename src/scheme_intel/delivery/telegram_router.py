@@ -1,7 +1,9 @@
 """
-Telegram Message Router and Access Gatekeeper.
-Handles authorization, rate limiting, and routes messages between the fast in-memory
-retrieval path and the asynchronous deep research queue.
+Telegram Message Router and Access Gatekeeper (Stage 3).
+Routes incoming Telegram requests across three distinct paths:
+1. FAST PATH: Instant (<100ms) answers from precalculated IntelligenceSnapshot. Zero GitHub Actions.
+2. WORKFLOW PATH: Complex analytical/comparison queries dispatched to 04-telegram-query.yml.
+3. RESEARCH PATH: Asynchronous deep policy research queued to SQLite ResearchQueue.
 """
 from __future__ import annotations
 
@@ -10,6 +12,8 @@ import time
 from typing import Dict, List, Optional, Set
 from datetime import datetime, timezone
 
+from .github_dispatcher import GitHubWorkflowDispatcher
+from .request_store import RequestStore, RequestStatus, ExecutionPath, TelegramRequest
 from ..intelligence_memory.models import SnapshotHealthStatus
 from ..intelligence_memory.resolver import IntentResolver, IntentType, ResolvedIntent
 from ..intelligence_memory.retrieval import FastIntelligenceRetriever
@@ -24,7 +28,10 @@ from ..intelligence_memory.cards import (
     render_performance_card,
     render_benchmark_card,
     render_schemes_list_card,
+    render_start_card,
     render_help_card,
+    render_watchlist_card,
+    render_stock_prompt_card,
     render_unknown_stock,
     render_unknown_scheme,
     render_snapshot_unavailable,
@@ -40,18 +47,22 @@ logger = get_logger(__name__)
 
 
 class TelegramMessageRouter:
-    """Routes incoming Telegram messages to fast memory cards or async research."""
+    """Routes incoming Telegram messages to fast memory cards, workflow dispatch, or async research."""
 
     def __init__(
         self,
         retriever: Optional[FastIntelligenceRetriever] = None,
         research_queue: Optional[ResearchQueue] = None,
+        request_store: Optional[RequestStore] = None,
+        dispatcher: Optional[GitHubWorkflowDispatcher] = None,
         allowed_user_ids: Optional[Set[str]] = None,
         allowed_chat_ids: Optional[Set[str]] = None,
         research_cooldown_seconds: int = 60,
     ):
         self.retriever = retriever or FastIntelligenceRetriever(auto_build_if_missing=False)
         self.research_queue = research_queue or ResearchQueue()
+        self.request_store = request_store or RequestStore()
+        self.dispatcher = dispatcher or GitHubWorkflowDispatcher()
         self.research_cooldown_seconds = research_cooldown_seconds
 
         # User security filters
@@ -71,7 +82,7 @@ class TelegramMessageRouter:
         self._user_last_research: Dict[str, float] = {}
 
     def is_authorized(self, user_id: Optional[str] = None, chat_id: Optional[str] = None) -> bool:
-        """Check if incoming user/chat is allowed to query the bot."""
+        """Check if incoming user/chat is allowed to query the terminal."""
         if self.allowed_user_ids:
             if not user_id or str(user_id) not in self.allowed_user_ids:
                 return False
@@ -85,34 +96,124 @@ class TelegramMessageRouter:
         text: str,
         user_id: Optional[str] = None,
         chat_id: Optional[str] = None,
+        request_id: Optional[str] = None,
+        username: Optional[str] = None,
+        update_id: Optional[int] = None,
     ) -> str:
         """
         Process incoming user text and return the immediate Telegram reply.
-        Fast queries return prebuilt cards; research requests enqueue and acknowledge immediately.
+        Logs every request before processing.
+        Branches across FAST, WORKFLOW, and RESEARCH execution paths.
         """
+        raw_text = (text or "").strip()
+        effective_req_id = request_id or self.request_store.generate_request_id()
+
         # 1. Authorization check
         if not self.is_authorized(user_id=user_id, chat_id=chat_id):
             logger.warning("[TELEGRAM] Blocked unauthorized query from user_id=%s, chat_id=%s", user_id, chat_id)
+            self.request_store.log_request(
+                raw_query=raw_text,
+                user_id=user_id,
+                chat_id=chat_id,
+                username=username,
+                update_id=update_id,
+                request_id=effective_req_id,
+                resolved_intent="UNAUTHORIZED",
+                execution_path=ExecutionPath.FAST,
+            )
+            self.request_store.mark_failed(effective_req_id, "Unauthorized user/chat")
             return "⛔ This Telegram account/chat is not authorized to use Scheme-Intel. (Unauthorized)"
 
-        # 2. Intent Resolution
-        intent: ResolvedIntent = IntentResolver.resolve(text)
+        # 2. Intent & Execution Path Resolution
+        intent: ResolvedIntent = IntentResolver.resolve(raw_text)
 
-        # 3. Route to Fast Path or Async Research
-        if intent.intent_type == IntentType.START or intent.intent_type == IntentType.HELP:
-            return render_help_card()
+        # 3. Persistent Request Logging BEFORE Processing
+        self.request_store.log_request(
+            raw_query=raw_text,
+            user_id=user_id,
+            chat_id=chat_id,
+            username=username,
+            update_id=update_id,
+            normalized_query=intent.normalized_query,
+            resolved_intent=intent.intent_type.value,
+            execution_path=intent.execution_path,
+            request_id=effective_req_id,
+        )
 
-        if intent.intent_type == IntentType.RESEARCH_REQUEST:
-            return self._handle_research(intent, user_id=user_id, chat_id=chat_id)
+        # 4. Route Message by Execution Path
+        if intent.execution_path == ExecutionPath.RESEARCH or intent.intent_type == IntentType.RESEARCH_REQUEST:
+            return self._handle_research(intent, user_id=user_id, chat_id=chat_id, request_id=effective_req_id)
 
-        # Fast path queries:
-        return self._handle_fast_query(intent)
+        if intent.execution_path == ExecutionPath.WORKFLOW or intent.intent_type == IntentType.COMPLEX_QUERY:
+            return self._handle_workflow_query(intent, user_id=user_id, chat_id=chat_id, request_id=effective_req_id)
+
+        # Default: Path A (FAST)
+        response = self._handle_fast_query(intent)
+        self.request_store.mark_completed(effective_req_id, response)
+        return response
+
+    def _handle_workflow_query(
+        self,
+        intent: ResolvedIntent,
+        user_id: Optional[str] = None,
+        chat_id: Optional[str] = None,
+        request_id: Optional[str] = None,
+    ) -> str:
+        """
+        Handle Path B (Complex / Natural Language query):
+        1. Logs request and marks as ROUTED.
+        2. Dispatches repository_dispatch to trigger 04-telegram-query.yml.
+        3. Returns immediate acknowledgement sent strictly to original chat_id.
+        """
+        req_id = request_id or self.request_store.generate_request_id()
+        target_chat = str(chat_id or user_id or "default")
+
+        logger.info(
+            "[TELEGRAM ROUTER] Routing complex query to GitHub Workflow: request_id=%s, chat_id=%s, query='%s'",
+            req_id,
+            target_chat,
+            intent.raw_query[:50],
+        )
+
+        # Update status to ROUTED
+        self.request_store.update_status(
+            request_id=req_id,
+            status=RequestStatus.ROUTED,
+            resolved_intent=intent.intent_type.value,
+            execution_path=ExecutionPath.WORKFLOW,
+        )
+
+        # Trigger GitHub Actions repository_dispatch
+        dispatch_res = self.dispatcher.dispatch_query(
+            request_id=req_id,
+            chat_id=target_chat,
+            query=intent.raw_query,
+            user_id=user_id,
+            normalized_query=intent.normalized_query,
+            intent=intent.intent_type.value,
+            scheme_id=intent.scheme_id,
+            symbol=intent.symbol,
+        )
+
+        if not dispatch_res.get("success"):
+            logger.warning(
+                "[TELEGRAM ROUTER] Workflow dispatch reported: %s",
+                dispatch_res.get("error", "Unknown dispatch issue"),
+            )
+
+        # Immediate acknowledgement returned ONLY to originating chat
+        return (
+            "🔎 *Request received.*\n\n"
+            f"*Request ID:* `{req_id}`\n\n"
+            "I'm processing this against the latest Scheme-Intel intelligence."
+        )
 
     def _handle_research(
         self,
         intent: ResolvedIntent,
         user_id: Optional[str] = None,
         chat_id: Optional[str] = None,
+        request_id: Optional[str] = None,
     ) -> str:
         """Enqueue asynchronous research task and return immediate acknowledgement."""
         question = intent.parameters.get("question", "").strip()
@@ -138,11 +239,34 @@ class TelegramMessageRouter:
             scheme_id=scheme_id,
         )
 
+        if request_id:
+            self.request_store.update_status(
+                request_id=request_id,
+                status=RequestStatus.ROUTED,
+                resolved_intent=intent.intent_type.value,
+                execution_path=ExecutionPath.RESEARCH,
+            )
+
         return format_research_acknowledgement(job.job_id, question=question)
 
     def _handle_fast_query(self, intent: ResolvedIntent) -> str:
-        """Execute fast, structured memory retrieval from loaded snapshot."""
+        """Execute fast, structured memory retrieval from loaded snapshot (<100ms)."""
         status, snapshot, status_msg = self.retriever.get_status()
+
+        if intent.intent_type == IntentType.START:
+            return render_start_card()
+
+        if intent.intent_type == IntentType.HELP:
+            return render_help_card()
+
+        if intent.intent_type == IntentType.STOCK_WHY_PROMPT:
+            return render_stock_prompt_card("/why")
+
+        if intent.intent_type == IntentType.STOCK_WHAT_PROMPT:
+            return render_stock_prompt_card("/what")
+
+        if intent.intent_type == IntentType.STOCK_WHEN_PROMPT:
+            return render_stock_prompt_card("/when")
 
         if intent.intent_type == IntentType.HEALTH_CHECK:
             pending_jobs = len(self.research_queue.list_jobs(status="QUEUED"))
@@ -163,6 +287,9 @@ class TelegramMessageRouter:
             return render_snapshot_invalid(status_msg)
 
         is_stale = (status == SnapshotHealthStatus.STALE)
+
+        if intent.intent_type == IntentType.WATCHLIST:
+            return render_watchlist_card(snapshot.companies, is_stale=is_stale)
 
         if intent.intent_type == IntentType.SCHEMES:
             schemes = self.retriever.list_schemes()
@@ -198,11 +325,7 @@ class TelegramMessageRouter:
             waiting = self.retriever.get_waiting_setups()
             return render_waiting_card(waiting, is_stale=is_stale)
 
-        if intent.intent_type == IntentType.OUTCOMES_LOOKUP:
-            perf = self.retriever.get_performance()
-            return render_performance_card(perf, is_stale=is_stale)
-
-        if intent.intent_type == IntentType.PERFORMANCE_LOOKUP:
+        if intent.intent_type == IntentType.OUTCOMES_LOOKUP or intent.intent_type == IntentType.PERFORMANCE_LOOKUP:
             perf = self.retriever.get_performance()
             return render_performance_card(perf, is_stale=is_stale)
 
@@ -210,20 +333,5 @@ class TelegramMessageRouter:
             bench = self.retriever.get_benchmark()
             return render_benchmark_card(bench, is_stale=is_stale)
 
-        # Default fallback for unmapped natural language - NEVER echo user input
-        return (
-            "I couldn't identify the intelligence you're asking for.\n\n"
-            "Try:\n\n"
-            "TRUALT\n"
-            "/stock TRUALT\n"
-            "/why TRUALT\n"
-            "/what TRUALT\n"
-            "/when TRUALT\n"
-            "/setups\n"
-            "/waiting\n"
-            "/schemes\n"
-            "/scheme gobardhan\n"
-            "/performance\n"
-            "/benchmark\n"
-            "/research <question>"
-        )
+        # Default fallback for unmapped queries - NEVER echo user input
+        return render_help_card()

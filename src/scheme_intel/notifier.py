@@ -27,6 +27,8 @@ def send_telegram(
     chat_ids: Optional[list[str]] = None,
     max_retries: int = 3,
     parse_mode: str = "HTML",
+    reply_markup: Optional[dict] = None,
+    request_id: Optional[str] = None,
 ) -> bool:
     """
     Send message to one or more Telegram chats with retry capability.
@@ -36,6 +38,8 @@ def send_telegram(
         chat_ids: List of chat IDs (if None, uses TELEGRAM_CHAT_ID env var)
         max_retries: Number of retry attempts on failure
         parse_mode: HTML or Markdown
+        reply_markup: Optional Telegram inline or reply keyboard dictionary
+        request_id: Optional tracking request ID for structured logging
 
     Returns:
         True if sent successfully, False otherwise
@@ -77,6 +81,8 @@ def send_telegram(
                 }
                 if parse_mode:
                     payload["parse_mode"] = parse_mode
+                if reply_markup:
+                    payload["reply_markup"] = reply_markup
 
                 response = requests.post(
                     f"https://api.telegram.org/bot{token}/sendMessage",
@@ -117,7 +123,12 @@ def send_telegram(
 
                 success_count += 1
                 sent = True
-                logger.info("[TELEGRAM] Successfully sent message to chat %s (len=%d)", chat_id, len(message))
+                logger.info(
+                    "[TELEGRAM SEND] request_id=%s chat_id=%s success=true len=%d",
+                    request_id or "NONE",
+                    chat_id,
+                    len(message),
+                )
                 break
 
             except requests.RequestException as e:
@@ -132,7 +143,13 @@ def send_telegram(
                     time.sleep(0.5 * (2 ** (attempt - 1)))
 
         if not sent:
-            logger.error("[TELEGRAM] Failed to send message to chat %s after %d attempts: %s", chat_id, max_retries, last_exc)
+            logger.error(
+                "[TELEGRAM SEND] request_id=%s chat_id=%s success=false after %d attempts: %s",
+                request_id or "NONE",
+                chat_id,
+                max_retries,
+                last_exc,
+            )
             raise TelegramError(f"Failed to send Telegram message: {str(last_exc)}")
 
     return success_count == len(chat_ids)

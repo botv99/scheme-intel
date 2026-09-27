@@ -1,0 +1,57 @@
+name: 04 Telegram Query
+
+on:
+  repository_dispatch:
+    types: [telegram_query]
+  workflow_dispatch:
+    inputs:
+      request_id:
+        description: "Telegram Request ID"
+        required: true
+      chat_id:
+        description: "Target Telegram Chat ID (Strict Isolation)"
+        required: true
+      query:
+        description: "User natural language query"
+        required: true
+      user_id:
+        description: "User ID"
+        required: false
+      scheme_id:
+        description: "Scheme ID"
+        required: false
+        default: "gobardhan"
+
+permissions:
+  contents: read
+
+jobs:
+  process_query:
+    name: Process Telegram Complex Query
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Process Query & Deliver to Chat
+        env:
+          PYTHONPATH: src
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CLIENT_PAYLOAD: ${{ toJson(github.event.client_payload) }}
+          INPUT_REQUEST_ID: ${{ github.event.inputs.request_id }}
+          INPUT_CHAT_ID: ${{ github.event.inputs.chat_id }}
+          INPUT_QUERY: ${{ github.event.inputs.query }}
+          INPUT_USER_ID: ${{ github.event.inputs.user_id }}
+          INPUT_SCHEME_ID: ${{ github.event.inputs.scheme_id }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: |
+          python -m scheme_intel.delivery.workflow_query_runner

@@ -1,7 +1,7 @@
 """
-Deterministic Intent & Entity Resolver for Telegram Terminal Queries.
-Resolves user messages into structured intents and normalizes company / scheme entities
-via SchemeRegistry without relying on external web crawling or non-deterministic LLMs.
+Deterministic Intent & Entity Resolver for Telegram Terminal Queries (Stage 3).
+Resolves user messages into structured intents, execution paths (FAST, WORKFLOW, RESEARCH),
+and normalizes company / scheme entities via SchemeRegistry without relying on non-deterministic LLMs.
 """
 from __future__ import annotations
 
@@ -17,66 +17,134 @@ from ..logger import get_logger
 logger = get_logger(__name__)
 
 
+class ExecutionPath(str, Enum):
+    FAST = "FAST"
+    WORKFLOW = "WORKFLOW"
+    RESEARCH = "RESEARCH"
+
+
 class IntentType(str, Enum):
     START = "START"
     HELP = "HELP"
+    HEALTH_CHECK = "HEALTH_CHECK"
     SCHEMES = "SCHEMES"
     SCHEME_LOOKUP = "SCHEME_LOOKUP"
+    WATCHLIST = "WATCHLIST"
     STOCK_LOOKUP = "STOCK_LOOKUP"
     STOCK_WHY = "STOCK_WHY"
     STOCK_WHAT = "STOCK_WHAT"
     STOCK_WHEN = "STOCK_WHEN"
+    STOCK_WHY_PROMPT = "STOCK_WHY_PROMPT"
+    STOCK_WHAT_PROMPT = "STOCK_WHAT_PROMPT"
+    STOCK_WHEN_PROMPT = "STOCK_WHEN_PROMPT"
     SETUPS_LOOKUP = "SETUPS_LOOKUP"
     WAITING_LOOKUP = "WAITING_LOOKUP"
     OUTCOMES_LOOKUP = "OUTCOMES_LOOKUP"
     PERFORMANCE_LOOKUP = "PERFORMANCE_LOOKUP"
     BENCHMARK_LOOKUP = "BENCHMARK_LOOKUP"
     RESEARCH_REQUEST = "RESEARCH_REQUEST"
-    HEALTH_CHECK = "HEALTH_CHECK"
+    COMPLEX_QUERY = "COMPLEX_QUERY"
     UNKNOWN = "UNKNOWN"
 
 
 class ResolvedIntent(BaseModel):
-    """Normalized intent result with extracted entities."""
+    """Normalized intent result with extracted entities and execution path."""
     intent_type: IntentType
+    execution_path: ExecutionPath = ExecutionPath.FAST
     symbol: Optional[str] = None           # Canonical symbol e.g., "TRUALT.NS"
     short_symbol: Optional[str] = None     # Base ticker e.g., "TRUALT"
     company_name: Optional[str] = None     # Full company name e.g., "TruAlt Bioenergy"
     scheme_id: Optional[str] = None        # Scheme ID e.g., "gobardhan"
     raw_query: str = ""
+    normalized_query: str = ""
     parameters: Dict[str, Any] = Field(default_factory=dict)
 
 
+GLOBAL_STOCK_ALIASES: Dict[str, Dict[str, Any]] = {
+    "TRUALT": {"symbol": "TRUALT.NS", "short": "TRUALT", "name": "TruAlt Bioenergy", "scheme": "gobardhan"},
+    "TRUALT.NS": {"symbol": "TRUALT.NS", "short": "TRUALT", "name": "TruAlt Bioenergy", "scheme": "gobardhan"},
+    "TRUALT BIOENERGY": {"symbol": "TRUALT.NS", "short": "TRUALT", "name": "TruAlt Bioenergy", "scheme": "gobardhan"},
+    "PRAJ": {"symbol": "PRAJIND.NS", "short": "PRAJIND", "name": "Praj Industries", "scheme": "gobardhan"},
+    "PRAJIND": {"symbol": "PRAJIND.NS", "short": "PRAJIND", "name": "Praj Industries", "scheme": "gobardhan"},
+    "PRAJIND.NS": {"symbol": "PRAJIND.NS", "short": "PRAJIND", "name": "Praj Industries", "scheme": "gobardhan"},
+    "PRAJ INDUSTRIES": {"symbol": "PRAJIND.NS", "short": "PRAJIND", "name": "Praj Industries", "scheme": "gobardhan"},
+    "WABAG": {"symbol": "WABAG.NS", "short": "WABAG", "name": "VA Tech Wabag", "scheme": "gobardhan"},
+    "WABAG.NS": {"symbol": "WABAG.NS", "short": "WABAG", "name": "VA Tech Wabag", "scheme": "gobardhan"},
+    "VA TECH WABAG": {"symbol": "WABAG.NS", "short": "WABAG", "name": "VA Tech Wabag", "scheme": "gobardhan"},
+    "ORGANIC": {"symbol": "ORGANICREC.BO", "short": "ORGANICREC", "name": "Organic Recycling Systems", "scheme": "gobardhan"},
+    "ORGANICREC": {"symbol": "ORGANICREC.BO", "short": "ORGANICREC", "name": "Organic Recycling Systems", "scheme": "gobardhan"},
+    "ORGANICREC.BO": {"symbol": "ORGANICREC.BO", "short": "ORGANICREC", "name": "Organic Recycling Systems", "scheme": "gobardhan"},
+    "ORGANIC RECYCLING SYSTEMS": {"symbol": "ORGANICREC.BO", "short": "ORGANICREC", "name": "Organic Recycling Systems", "scheme": "gobardhan"},
+    "KIRLPN": {"symbol": "KIRLPNU.NS", "short": "KIRLPNU", "name": "Kirloskar Pneumatic", "scheme": "gobardhan"},
+    "KIRLPNU": {"symbol": "KIRLPNU.NS", "short": "KIRLPNU", "name": "Kirloskar Pneumatic", "scheme": "gobardhan"},
+    "KIRLPNU.NS": {"symbol": "KIRLPNU.NS", "short": "KIRLPNU", "name": "Kirloskar Pneumatic", "scheme": "gobardhan"},
+    "KIRLOSKAR": {"symbol": "KIRLPNU.NS", "short": "KIRLPNU", "name": "Kirloskar Pneumatic", "scheme": "gobardhan"},
+    "KIRLOSKAR PNEUMATIC": {"symbol": "KIRLPNU.NS", "short": "KIRLPNU", "name": "Kirloskar Pneumatic", "scheme": "gobardhan"},
+    "GAIL": {"symbol": "GAIL.NS", "short": "GAIL", "name": "GAIL (India)", "scheme": "gobardhan"},
+    "GAIL.NS": {"symbol": "GAIL.NS", "short": "GAIL", "name": "GAIL (India)", "scheme": "gobardhan"},
+    "GAIL INDIA": {"symbol": "GAIL.NS", "short": "GAIL", "name": "GAIL (India)", "scheme": "gobardhan"},
+    "IOC": {"symbol": "IOC.NS", "short": "IOC", "name": "Indian Oil Corporation", "scheme": "gobardhan"},
+    "IOCL": {"symbol": "IOC.NS", "short": "IOC", "name": "Indian Oil Corporation", "scheme": "gobardhan"},
+    "IOC.NS": {"symbol": "IOC.NS", "short": "IOC", "name": "Indian Oil Corporation", "scheme": "gobardhan"},
+    "INDIAN OIL": {"symbol": "IOC.NS", "short": "IOC", "name": "Indian Oil Corporation", "scheme": "gobardhan"},
+    "IONEXCHANG": {"symbol": "IONEXCHANG.NS", "short": "IONEXCHANG", "name": "Ion Exchange", "scheme": "gobardhan"},
+    "IONEXCHANG.NS": {"symbol": "IONEXCHANG.NS", "short": "IONEXCHANG", "name": "Ion Exchange", "scheme": "gobardhan"},
+    "ION EXCHANGE": {"symbol": "IONEXCHANG.NS", "short": "IONEXCHANG", "name": "Ion Exchange", "scheme": "gobardhan"},
+}
+
+STOCK_SLASH_SHORTCUTS: Dict[str, str] = {
+    "/trualt": "TRUALT",
+    "/praj": "PRAJ",
+    "/prajind": "PRAJ",
+    "/wabag": "WABAG",
+    "/organic": "ORGANIC",
+    "/organicrec": "ORGANICREC",
+    "/kirloskar": "KIRLOSKAR",
+    "/kirlpn": "KIRLPN",
+    "/kirlpnu": "KIRLPNU",
+    "/gail": "GAIL",
+    "/ioc": "IOC",
+    "/iocl": "IOC",
+    "/ionexchang": "IONEXCHANG",
+}
+
+
 class IntentResolver:
-    """Deterministic parser and entity resolver."""
+    """Deterministic parser, stock alias resolver, and execution path router."""
 
     @classmethod
     def resolve_stock(cls, text: str) -> Optional[Tuple[SchemeStock, str]]:
-        """
-        Resolve a string token to a SchemeStock and its scheme_id via SchemeRegistry.
-        Matches symbol (exact or sans suffix), company name, or aliases.
-        """
-        token = text.strip().upper()
-        if not token:
+        """Resolve a string token to a SchemeStock and its scheme_id."""
+        if not text:
             return None
-
-        # Clean punctuation from token (e.g. TRUALT? -> TRUALT)
+        token = text.strip().upper()
         token_clean = re.sub(r"[^\w\.]", "", token)
 
+        # 1. Direct dictionary match
+        if token_clean in GLOBAL_STOCK_ALIASES:
+            meta = GLOBAL_STOCK_ALIASES[token_clean]
+            stock = SchemeStock(
+                name=meta["name"],
+                symbol=meta["symbol"],
+                aliases=[meta["short"]],
+                screener_id=meta["short"],
+                sectors=["Bio-Energy"],
+                rationale="Watchlist company mapped to scheme.",
+            )
+            return stock, meta["scheme"]
+
+        # 2. SchemeRegistry search
         for scheme in SchemeRegistry.list_schemes():
             for stock in scheme.watchlist:
                 sym_upper = stock.symbol.upper()
                 short_upper = sym_upper.split(".")[0]
 
-                # 1. Exact or short symbol match
                 if token_clean in (sym_upper, short_upper, short_upper.replace("-", "_")):
                     return stock, scheme.id
 
-                # 2. Screener ID match
                 if stock.screener_id and token_clean == stock.screener_id.upper():
                     return stock, scheme.id
 
-                # 3. Name or alias match
                 if token_clean == stock.name.upper():
                     return stock, scheme.id
                 for alias in stock.aliases:
@@ -87,7 +155,7 @@ class IntentResolver:
 
     @classmethod
     def resolve_scheme(cls, text: str) -> Optional[SchemeConfig]:
-        """Resolve scheme name or ID to SchemeConfig."""
+        """Resolve scheme name or ID to SchemeConfig for short tokens (<= 3 words)."""
         token = text.strip().lower()
         if not token:
             return None
@@ -96,288 +164,396 @@ class IntentResolver:
         for scheme in SchemeRegistry.list_schemes():
             if token_clean in (scheme.id.lower(), scheme.name.lower()):
                 return scheme
-            # Partial word match e.g. "gobardhan" inside "GOBARdhan Scheme"
-            if scheme.id.lower() in token_clean or token_clean in scheme.id.lower():
+            # Only match partial for short tokens (<= 3 words)
+            if len(token_clean.split()) <= 3 and (scheme.id.lower() in token_clean or token_clean in scheme.id.lower()):
                 return scheme
         return None
 
     @classmethod
-    def find_stock_in_text(cls, text: str) -> Optional[Tuple[SchemeStock, str]]:
-        """
-        Scan a natural language sentence for any stock symbol, short ticker,
-        full name, or alias in the active scheme watchlists.
-        """
+    def find_all_stocks_in_text(cls, text: str) -> List[Tuple[SchemeStock, str]]:
+        """Find all distinct stocks mentioned in natural language text."""
         if not text:
-            return None
-
-        # Check full company names and multi-word aliases first
+            return []
+        found: Dict[str, Tuple[SchemeStock, str]] = {}
         text_upper = f" {text.upper()} "
-        for scheme in SchemeRegistry.list_schemes():
-            for stock in scheme.watchlist:
-                name_upper = f" {stock.name.upper()} "
-                if name_upper in text_upper:
-                    return stock, scheme.id
-                for alias in stock.aliases:
-                    alias_upper = f" {alias.upper()} "
-                    if alias_upper in text_upper:
-                        return stock, scheme.id
 
-        # Check individual words / tokens
+        # Check multi-word aliases
+        for alias_key in GLOBAL_STOCK_ALIASES.keys():
+            if f" {alias_key} " in text_upper:
+                res = cls.resolve_stock(alias_key)
+                if res:
+                    stock, s_id = res
+                    found[stock.symbol] = (stock, s_id)
+
+        # Check individual words
         for word in text.split():
             clean_word = re.sub(r"[^\w\.]", "", word)
-            if not clean_word:
-                continue
-            m = cls.resolve_stock(clean_word)
-            if m:
-                return m
+            if clean_word:
+                m = cls.resolve_stock(clean_word)
+                if m:
+                    found[m[0].symbol] = m
 
-        return None
+        return list(found.values())
+
+    @classmethod
+    def find_stock_in_text(cls, text: str) -> Optional[Tuple[SchemeStock, str]]:
+        """Scan a natural language sentence for the primary stock."""
+        all_stocks = cls.find_all_stocks_in_text(text)
+        return all_stocks[0] if all_stocks else None
+
+    @classmethod
+    def normalize_query(cls, text: str) -> str:
+        """Create normalized query string for deduplication and logging."""
+        lowered = text.lower().strip()
+        return re.sub(r"\s+", " ", lowered)
+
+    @classmethod
+    def is_complex_query(cls, text: str) -> bool:
+        """
+        Determine if query represents a complex analytical or comparison question
+        requiring the 04-telegram-query GitHub Actions workflow.
+        """
+        lowered = text.lower().strip()
+
+        # Multi-stock comparison questions: "Compare TRUALT and PRAJ"
+        stocks_found = cls.find_all_stocks_in_text(text)
+        if len(stocks_found) >= 2:
+            return True
+
+        complex_phrases = [
+            "compare",
+            "strongest catalyst",
+            "strongest catalysts",
+            "underperforming",
+            "outperforming",
+            "what changed in",
+            "which companies have",
+            "which gobardhan companies",
+            "affected companies",
+            "policy change",
+            "catalyst this week",
+            "catalysts this week",
+            "rank",
+            "ranking",
+            "correlation",
+            "versus",
+            " vs ",
+        ]
+        for phrase in complex_phrases:
+            if phrase in lowered:
+                return True
+
+        # If it specifically mentions exactly 1 stock without complex phrases, it is a fast stock query
+        if len(stocks_found) == 1:
+            return False
+
+        # General questions with >= 5 words that are not simple fast queries
+        words = text.split()
+        if len(words) >= 5 and ("?" in text or any(q in lowered for q in ("which", "why", "how", "what", "who", "where"))):
+            simple_exclusions = [
+                "what are today's setups",
+                "what are the setups",
+                "which stocks are waiting",
+                "how is gobardhan doing",
+                "what about trualt",
+                "tell me about trualt",
+                "what is happening with trualt",
+                "why is trualt interesting",
+                "when to enter trualt",
+            ]
+            if not any(exc in lowered for exc in simple_exclusions):
+                return True
+
+        return False
 
     @classmethod
     def resolve(cls, message: str) -> ResolvedIntent:
-        """Parse user Telegram message into a ResolvedIntent."""
+        """
+        Parse user Telegram message into a ResolvedIntent with execution_path:
+        - FAST: Answered instantly (<100ms) from local snapshot. Zero GitHub Actions.
+        - WORKFLOW: Complex analytical query routed to 04-telegram-query.yml via repository_dispatch.
+        - RESEARCH: Explicit deep research routed to persistent ResearchQueue.
+        """
         raw = (message or "").strip()
+        normalized = cls.normalize_query(raw)
+
         if not raw:
-            return ResolvedIntent(intent_type=IntentType.UNKNOWN, raw_query=raw)
+            return ResolvedIntent(
+                intent_type=IntentType.UNKNOWN,
+                execution_path=ExecutionPath.FAST,
+                raw_query=raw,
+                normalized_query=normalized,
+            )
 
         parts = raw.split(maxsplit=1)
-        # Strip bot username tag (e.g. /stock@SchemeIntelBot -> /stock)
         first_token = parts[0].lower().split("@")[0]
         remainder = parts[1].strip() if len(parts) > 1 else ""
 
-        # ----------------------------------------------------
-        # 1. Explicit Slash Commands
-        # ----------------------------------------------------
-        if first_token in ("/start", "start"):
-            return ResolvedIntent(intent_type=IntentType.START, raw_query=raw)
+        # ====================================================
+        # 1. Explicit Slash Commands (FAST & RESEARCH)
+        # ====================================================
+        if first_token.startswith("/"):
+            # Stock shortcuts: /trualt, /praj, etc.
+            if first_token in STOCK_SLASH_SHORTCUTS:
+                alias_key = STOCK_SLASH_SHORTCUTS[first_token]
+                stock_match = cls.resolve_stock(alias_key)
+                if stock_match:
+                    stock, s_id = stock_match
+                    return ResolvedIntent(
+                        intent_type=IntentType.STOCK_LOOKUP,
+                        execution_path=ExecutionPath.FAST,
+                        symbol=stock.symbol,
+                        short_symbol=stock.symbol.split(".")[0],
+                        company_name=stock.name,
+                        scheme_id=s_id,
+                        raw_query=raw,
+                        normalized_query=normalized,
+                    )
 
-        if first_token in ("/help", "help"):
-            return ResolvedIntent(intent_type=IntentType.HELP, raw_query=raw)
+            if first_token in ("/start",):
+                return ResolvedIntent(intent_type=IntentType.START, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
 
-        if first_token in ("/health", "health", "/status", "status"):
-            return ResolvedIntent(intent_type=IntentType.HEALTH_CHECK, raw_query=raw)
+            if first_token in ("/help",):
+                return ResolvedIntent(intent_type=IntentType.HELP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
 
-        if first_token in ("/schemes", "schemes"):
-            return ResolvedIntent(intent_type=IntentType.SCHEMES, raw_query=raw)
+            if first_token in ("/health", "/status"):
+                return ResolvedIntent(intent_type=IntentType.HEALTH_CHECK, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
 
-        if first_token in ("/scheme", "scheme"):
-            scheme_target = remainder or "gobardhan"
-            scheme = cls.resolve_scheme(scheme_target)
-            return ResolvedIntent(
-                intent_type=IntentType.SCHEME_LOOKUP,
-                scheme_id=scheme.id if scheme else scheme_target,
-                raw_query=raw,
-            )
+            if first_token in ("/schemes",):
+                return ResolvedIntent(intent_type=IntentType.SCHEMES, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
 
-        if first_token in ("/research", "research"):
-            question = remainder
-            # Determine scheme context if mentioned
-            scheme_id = "gobardhan"
-            for s in SchemeRegistry.list_schemes():
-                if s.id.lower() in question.lower() or s.name.lower() in question.lower():
-                    scheme_id = s.id
-                    break
-            return ResolvedIntent(
-                intent_type=IntentType.RESEARCH_REQUEST,
-                scheme_id=scheme_id,
-                raw_query=raw,
-                parameters={"question": question},
-            )
+            if first_token in ("/watchlist",):
+                return ResolvedIntent(intent_type=IntentType.WATCHLIST, execution_path=ExecutionPath.FAST, scheme_id="gobardhan", raw_query=raw, normalized_query=normalized)
 
-        if first_token in ("/setups", "setups"):
-            return ResolvedIntent(intent_type=IntentType.SETUPS_LOOKUP, raw_query=raw)
-
-        if first_token in ("/waiting", "waiting"):
-            return ResolvedIntent(intent_type=IntentType.WAITING_LOOKUP, raw_query=raw)
-
-        if first_token in ("/outcomes", "outcomes"):
-            return ResolvedIntent(intent_type=IntentType.OUTCOMES_LOOKUP, raw_query=raw)
-
-        if first_token in ("/performance", "performance"):
-            return ResolvedIntent(intent_type=IntentType.PERFORMANCE_LOOKUP, raw_query=raw)
-
-        if first_token in ("/benchmark", "benchmark"):
-            return ResolvedIntent(intent_type=IntentType.BENCHMARK_LOOKUP, raw_query=raw)
-
-        if first_token in ("/stock", "stock") and remainder:
-            match = cls.find_stock_in_text(remainder)
-            if match:
-                stock, s_id = match
-                return ResolvedIntent(
-                    intent_type=IntentType.STOCK_LOOKUP,
-                    symbol=stock.symbol,
-                    short_symbol=stock.symbol.split(".")[0],
-                    company_name=stock.name,
-                    scheme_id=s_id,
-                    raw_query=raw,
-                )
-            return ResolvedIntent(
-                intent_type=IntentType.STOCK_LOOKUP,
-                raw_query=raw,
-                parameters={"unresolved_symbol": remainder},
-            )
-
-        if first_token in ("/why", "why") and remainder:
-            match = cls.find_stock_in_text(remainder)
-            if match:
-                stock, s_id = match
-                return ResolvedIntent(
-                    intent_type=IntentType.STOCK_WHY,
-                    symbol=stock.symbol,
-                    short_symbol=stock.symbol.split(".")[0],
-                    company_name=stock.name,
-                    scheme_id=s_id,
-                    raw_query=raw,
-                )
-            return ResolvedIntent(
-                intent_type=IntentType.STOCK_WHY,
-                raw_query=raw,
-                parameters={"unresolved_symbol": remainder},
-            )
-
-        if first_token in ("/what", "what") and remainder:
-            rem_lower = remainder.lower()
-            if "setup" in rem_lower:
-                return ResolvedIntent(intent_type=IntentType.SETUPS_LOOKUP, raw_query=raw)
-            if "waiting" in rem_lower or "wait" in rem_lower:
-                return ResolvedIntent(intent_type=IntentType.WAITING_LOOKUP, raw_query=raw)
-            if "performance" in rem_lower:
-                return ResolvedIntent(intent_type=IntentType.PERFORMANCE_LOOKUP, raw_query=raw)
-            if "benchmark" in rem_lower or "nifty" in rem_lower:
-                return ResolvedIntent(intent_type=IntentType.BENCHMARK_LOOKUP, raw_query=raw)
-            scheme = cls.resolve_scheme(remainder)
-            if scheme:
+            if first_token in ("/scheme",):
+                scheme_target = remainder or "gobardhan"
+                scheme = cls.resolve_scheme(scheme_target)
                 return ResolvedIntent(
                     intent_type=IntentType.SCHEME_LOOKUP,
-                    scheme_id=scheme.id,
+                    execution_path=ExecutionPath.FAST,
+                    scheme_id=scheme.id if scheme else scheme_target,
                     raw_query=raw,
+                    normalized_query=normalized,
                 )
-            match = cls.find_stock_in_text(remainder)
-            if match:
-                stock, s_id = match
+
+            if first_token in ("/setups",):
+                return ResolvedIntent(intent_type=IntentType.SETUPS_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+
+            if first_token in ("/waiting",):
+                return ResolvedIntent(intent_type=IntentType.WAITING_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+
+            if first_token in ("/outcomes",):
+                return ResolvedIntent(intent_type=IntentType.OUTCOMES_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+
+            if first_token in ("/performance",):
+                return ResolvedIntent(intent_type=IntentType.PERFORMANCE_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+
+            if first_token in ("/benchmark",):
+                return ResolvedIntent(intent_type=IntentType.BENCHMARK_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+
+            if first_token in ("/research",):
+                question = remainder
+                scheme_id = "gobardhan"
+                for s in SchemeRegistry.list_schemes():
+                    if s.id.lower() in question.lower() or s.name.lower() in question.lower():
+                        scheme_id = s.id
+                        break
                 return ResolvedIntent(
-                    intent_type=IntentType.STOCK_WHAT,
-                    symbol=stock.symbol,
-                    short_symbol=stock.symbol.split(".")[0],
-                    company_name=stock.name,
-                    scheme_id=s_id,
+                    intent_type=IntentType.RESEARCH_REQUEST,
+                    execution_path=ExecutionPath.RESEARCH,
+                    scheme_id=scheme_id,
                     raw_query=raw,
+                    normalized_query=normalized,
+                    parameters={"question": question},
                 )
+
+            if first_token in ("/why",):
+                if not remainder:
+                    return ResolvedIntent(intent_type=IntentType.STOCK_WHY_PROMPT, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+                match = cls.find_stock_in_text(remainder)
+                if match:
+                    stock, s_id = match
+                    return ResolvedIntent(intent_type=IntentType.STOCK_WHY, execution_path=ExecutionPath.FAST, symbol=stock.symbol, short_symbol=stock.symbol.split(".")[0], company_name=stock.name, scheme_id=s_id, raw_query=raw, normalized_query=normalized)
+                return ResolvedIntent(intent_type=IntentType.STOCK_WHY, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized, parameters={"unresolved_symbol": remainder})
+
+            if first_token in ("/what",):
+                if not remainder:
+                    return ResolvedIntent(intent_type=IntentType.STOCK_WHAT_PROMPT, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+                rem_lower = remainder.lower()
+                if "setup" in rem_lower:
+                    return ResolvedIntent(intent_type=IntentType.SETUPS_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+                if "waiting" in rem_lower or "wait" in rem_lower:
+                    return ResolvedIntent(intent_type=IntentType.WAITING_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+                if "performance" in rem_lower:
+                    return ResolvedIntent(intent_type=IntentType.PERFORMANCE_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+                if "benchmark" in rem_lower or "nifty" in rem_lower:
+                    return ResolvedIntent(intent_type=IntentType.BENCHMARK_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+                match = cls.find_stock_in_text(remainder)
+                if match:
+                    stock, s_id = match
+                    return ResolvedIntent(intent_type=IntentType.STOCK_WHAT, execution_path=ExecutionPath.FAST, symbol=stock.symbol, short_symbol=stock.symbol.split(".")[0], company_name=stock.name, scheme_id=s_id, raw_query=raw, normalized_query=normalized)
+                return ResolvedIntent(intent_type=IntentType.STOCK_WHAT, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized, parameters={"unresolved_symbol": remainder})
+
+            if first_token in ("/when",):
+                if not remainder:
+                    return ResolvedIntent(intent_type=IntentType.STOCK_WHEN_PROMPT, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+                match = cls.find_stock_in_text(remainder)
+                if match:
+                    stock, s_id = match
+                    return ResolvedIntent(intent_type=IntentType.STOCK_WHEN, execution_path=ExecutionPath.FAST, symbol=stock.symbol, short_symbol=stock.symbol.split(".")[0], company_name=stock.name, scheme_id=s_id, raw_query=raw, normalized_query=normalized)
+                return ResolvedIntent(intent_type=IntentType.STOCK_WHEN, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized, parameters={"unresolved_symbol": remainder})
+
+            if first_token in ("/stock",):
+                if remainder:
+                    match = cls.find_stock_in_text(remainder)
+                    if match:
+                        stock, s_id = match
+                        return ResolvedIntent(intent_type=IntentType.STOCK_LOOKUP, execution_path=ExecutionPath.FAST, symbol=stock.symbol, short_symbol=stock.symbol.split(".")[0], company_name=stock.name, scheme_id=s_id, raw_query=raw, normalized_query=normalized)
+                    return ResolvedIntent(intent_type=IntentType.STOCK_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized, parameters={"unresolved_symbol": remainder})
+
+        # ====================================================
+        # 2. Path B: Complex Analytical Query Detection (WORKFLOW)
+        # ====================================================
+        if cls.is_complex_query(raw):
+            stocks = cls.find_all_stocks_in_text(raw)
+            primary_stock = stocks[0][0].symbol if stocks else None
             return ResolvedIntent(
-                intent_type=IntentType.STOCK_WHAT,
+                intent_type=IntentType.COMPLEX_QUERY,
+                execution_path=ExecutionPath.WORKFLOW,
+                symbol=primary_stock,
+                scheme_id="gobardhan",
                 raw_query=raw,
-                parameters={"unresolved_symbol": remainder},
+                normalized_query=normalized,
+                parameters={"stocks_mentioned": [s[0].symbol for s in stocks]},
             )
 
-        if first_token in ("/when", "when") and remainder:
-            match = cls.find_stock_in_text(remainder)
-            if match:
-                stock, s_id = match
-                return ResolvedIntent(
-                    intent_type=IntentType.STOCK_WHEN,
-                    symbol=stock.symbol,
-                    short_symbol=stock.symbol.split(".")[0],
-                    company_name=stock.name,
-                    scheme_id=s_id,
-                    raw_query=raw,
-                )
-            return ResolvedIntent(
-                intent_type=IntentType.STOCK_WHEN,
-                raw_query=raw,
-                parameters={"unresolved_symbol": remainder},
-            )
-
-        # ----------------------------------------------------
-        # 2. Watchlist Shorthand (e.g., "TRUALT", "PRAJIND")
-        # ----------------------------------------------------
+        # ====================================================
+        # 3. Direct Watchlist Shorthand (e.g. "TRUALT", "PRAJIND")
+        # ====================================================
         stock_match = cls.resolve_stock(raw)
         if stock_match:
             stock, s_id = stock_match
             return ResolvedIntent(
                 intent_type=IntentType.STOCK_LOOKUP,
+                execution_path=ExecutionPath.FAST,
                 symbol=stock.symbol,
                 short_symbol=stock.symbol.split(".")[0],
                 company_name=stock.name,
                 scheme_id=s_id,
                 raw_query=raw,
+                normalized_query=normalized,
             )
 
-        # Check if single word matches a scheme name
         scheme_match = cls.resolve_scheme(raw)
         if scheme_match:
             return ResolvedIntent(
                 intent_type=IntentType.SCHEME_LOOKUP,
+                execution_path=ExecutionPath.FAST,
                 scheme_id=scheme_match.id,
                 raw_query=raw,
+                normalized_query=normalized,
             )
 
-        # ----------------------------------------------------
-        # 3. Natural Language Heuristic Matching
-        # ----------------------------------------------------
-        lowered = raw.lower()
+        # ====================================================
+        # 4. Natural Language Fast Lookups
+        # ====================================================
+        lowered = normalized
 
-        # Prioritize aggregate intents over stock queries (e.g. "what are today's setups")
-        if "setup" in lowered:
-            return ResolvedIntent(intent_type=IntentType.SETUPS_LOOKUP, raw_query=raw)
+        # Words without slash
+        if first_token in ("start",):
+            return ResolvedIntent(intent_type=IntentType.START, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+        if first_token in ("help",):
+            return ResolvedIntent(intent_type=IntentType.HELP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+        if first_token in ("why",) and not remainder:
+            return ResolvedIntent(intent_type=IntentType.STOCK_WHY_PROMPT, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+        if first_token in ("what",) and not remainder:
+            return ResolvedIntent(intent_type=IntentType.STOCK_WHAT_PROMPT, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+        if first_token in ("when",) and not remainder:
+            return ResolvedIntent(intent_type=IntentType.STOCK_WHEN_PROMPT, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
 
-        if "waiting" in lowered or "wait" in lowered:
-            return ResolvedIntent(intent_type=IntentType.WAITING_LOOKUP, raw_query=raw)
-
-        if "performance" in lowered or "win rate" in lowered or "expectancy" in lowered:
-            return ResolvedIntent(intent_type=IntentType.PERFORMANCE_LOOKUP, raw_query=raw)
-
-        if "benchmark" in lowered or "nifty" in lowered:
-            return ResolvedIntent(intent_type=IntentType.BENCHMARK_LOOKUP, raw_query=raw)
-
-        if "schemes" in lowered or "list schemes" in lowered:
-            return ResolvedIntent(intent_type=IntentType.SCHEMES, raw_query=raw)
-
-        # Scheme queries: "what happened with gobardhan", "how is gobardhan doing"
-        if "gobardhan" in lowered:
-            return ResolvedIntent(
-                intent_type=IntentType.SCHEME_LOOKUP,
-                scheme_id="gobardhan",
-                raw_query=raw,
-            )
-
-        # Search for any stock mentioned in natural language
+        # Check single stock in natural language first
         stock_in_sentence = cls.find_stock_in_text(raw)
         if stock_in_sentence:
             stock, s_id = stock_in_sentence
             if "why" in lowered:
                 return ResolvedIntent(
                     intent_type=IntentType.STOCK_WHY,
+                    execution_path=ExecutionPath.FAST,
                     symbol=stock.symbol,
                     short_symbol=stock.symbol.split(".")[0],
                     company_name=stock.name,
                     scheme_id=s_id,
                     raw_query=raw,
+                    normalized_query=normalized,
                 )
             if "when" in lowered or "entry" in lowered or "trigger" in lowered:
                 return ResolvedIntent(
                     intent_type=IntentType.STOCK_WHEN,
+                    execution_path=ExecutionPath.FAST,
                     symbol=stock.symbol,
                     short_symbol=stock.symbol.split(".")[0],
                     company_name=stock.name,
                     scheme_id=s_id,
                     raw_query=raw,
+                    normalized_query=normalized,
                 )
-            if "what" in lowered or "about" in lowered or "happening" in lowered or "news" in lowered:
+            if "what" in lowered or "about" in lowered or "happening" in lowered or "happened" in lowered or "news" in lowered:
                 return ResolvedIntent(
                     intent_type=IntentType.STOCK_WHAT,
+                    execution_path=ExecutionPath.FAST,
                     symbol=stock.symbol,
                     short_symbol=stock.symbol.split(".")[0],
                     company_name=stock.name,
                     scheme_id=s_id,
                     raw_query=raw,
+                    normalized_query=normalized,
                 )
             return ResolvedIntent(
                 intent_type=IntentType.STOCK_LOOKUP,
+                execution_path=ExecutionPath.FAST,
                 symbol=stock.symbol,
                 short_symbol=stock.symbol.split(".")[0],
                 company_name=stock.name,
                 scheme_id=s_id,
                 raw_query=raw,
+                normalized_query=normalized,
             )
 
-        return ResolvedIntent(intent_type=IntentType.UNKNOWN, raw_query=raw)
+        if "setup" in lowered:
+            return ResolvedIntent(intent_type=IntentType.SETUPS_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+
+        if "waiting" in lowered or "wait" in lowered:
+            return ResolvedIntent(intent_type=IntentType.WAITING_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+
+        if "performance" in lowered or "win rate" in lowered or "expectancy" in lowered:
+            return ResolvedIntent(intent_type=IntentType.PERFORMANCE_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+
+        if "benchmark" in lowered or "nifty" in lowered:
+            return ResolvedIntent(intent_type=IntentType.BENCHMARK_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+
+        if "schemes" in lowered or "list schemes" in lowered:
+            return ResolvedIntent(intent_type=IntentType.SCHEMES, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+
+        if "watchlist" in lowered:
+            return ResolvedIntent(intent_type=IntentType.WATCHLIST, execution_path=ExecutionPath.FAST, scheme_id="gobardhan", raw_query=raw, normalized_query=normalized)
+
+        if "gobardhan" in lowered:
+            return ResolvedIntent(intent_type=IntentType.SCHEME_LOOKUP, execution_path=ExecutionPath.FAST, scheme_id="gobardhan", raw_query=raw, normalized_query=normalized)
+
+        # Fallback question -> WORKFLOW
+        if "?" in raw or any(q in lowered for q in ("who", "where", "how", "tell me", "explain", "analyze")):
+            return ResolvedIntent(
+                intent_type=IntentType.COMPLEX_QUERY,
+                execution_path=ExecutionPath.WORKFLOW,
+                scheme_id="gobardhan",
+                raw_query=raw,
+                normalized_query=normalized,
+            )
+
+        # Default fallback unknown query
+        return ResolvedIntent(
+            intent_type=IntentType.UNKNOWN,
+            execution_path=ExecutionPath.FAST,
+            raw_query=raw,
+            normalized_query=normalized,
+        )

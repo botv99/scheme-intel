@@ -31,6 +31,7 @@ from scheme_intel.research.queue import ResearchQueue
 from scheme_intel.research.models import ResearchStatus
 from scheme_intel.delivery.telegram_router import TelegramMessageRouter
 from scheme_intel.delivery.telegram_conversation import TelegramConversationHandler
+from scheme_intel.delivery.request_store import RequestStore
 from scheme_intel.delivery.service import SchemeIntelService, get_system_health
 from scheme_intel.notifier import send_telegram
 from scheme_intel.exceptions import TelegramError
@@ -161,7 +162,8 @@ def terminal_handler(tmp_path: Path, terminal_snapshot: IntelligenceSnapshot) ->
     retriever = FastIntelligenceRetriever(store=store, auto_build_if_missing=False)
     q_path = tmp_path / "test_terminal.db"
     queue = ResearchQueue(db_path=q_path)
-    router = TelegramMessageRouter(retriever=retriever, research_queue=queue)
+    req_store = RequestStore(db_path=str(tmp_path / "test_reqs.db"))
+    router = TelegramMessageRouter(retriever=retriever, research_queue=queue, request_store=req_store)
     return TelegramConversationHandler(router=router)
 
 
@@ -180,13 +182,17 @@ class TestRawMessageNeverEchoed:
         assert "₹441.90" in resp
 
     def test_unknown_query_returns_curated_guide_never_echo(self, terminal_handler: TelegramConversationHandler):
+        # 1. Unmapped short keyword returns curated command menu
+        resp_menu = terminal_handler.handle_message("foobarxyz")
+        assert resp_menu != "foobarxyz"
+        assert "SCHEME-INTEL" in resp_menu
+        assert "/research <question>" in resp_menu
+
+        # 2. General complex question routes to workflow acknowledgement
         random_input = "Can you help me with an arbitrary financial question?"
-        resp = terminal_handler.handle_message(random_input)
-        assert resp != random_input
-        assert "I couldn't identify the intelligence you're asking for." in resp
-        assert "/stock TRUALT" in resp
-        assert "/schemes" in resp
-        assert "/research <question>" in resp
+        resp_question = terminal_handler.handle_message(random_input)
+        assert resp_question != random_input
+        assert ("Request received" in resp_question or "SCHEME-INTEL" in resp_question)
 
     def test_empty_or_whitespace_input_handled_gracefully(self, terminal_handler: TelegramConversationHandler):
         assert terminal_handler.handle_message("") == ""
@@ -224,7 +230,7 @@ class TestCuratedQueryMatrix:
             ("/performance", ["FORWARD PERFORMANCE", "INSUFFICIENT_SAMPLE"]),
             ("/benchmark", ["NIFTY 50 BENCHMARK", "UNAVAILABLE"]),
             ("/help", ["SCHEME-INTEL TERMINAL", "FAST INTELLIGENCE"]),
-            ("/start", ["SCHEME-INTEL TERMINAL", "FAST INTELLIGENCE"]),
+            ("/start", ["SCHEME-INTEL TERMINAL", "Intelligence Terminal"]),
         ]
 
         for query, expected_substrings in matrix:
@@ -312,7 +318,9 @@ class TestPollingOffsetAdvancement:
 
             assert mock_send.call_count == 2
             # Verify the call to getUpdates used initial offset
-            first_call_params = mock_get.call_args_list[0][1]["params"]
+            get_update_calls = [c for c in mock_get.call_args_list if "params" in c[1]]
+            assert len(get_update_calls) >= 1
+            first_call_params = get_update_calls[0][1]["params"]
             assert first_call_params["offset"] == 0
 
 

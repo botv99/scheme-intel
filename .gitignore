@@ -6,6 +6,7 @@ data/latest.json
 data/scheme_intel.db
 data/scheme_intel.db-wal
 data/scheme_intel.db-shm
+data/telegram_requests.db*
 
 # Local run artifacts
 logs/

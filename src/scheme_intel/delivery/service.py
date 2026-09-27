@@ -67,7 +67,12 @@ def get_system_health(
     queue = ResearchQueue()
     queue_counts = queue.get_status_counts()
 
-    # 4. LLM provider keys
+    # 4. Request store status
+    from .request_store import RequestStore
+    req_store = RequestStore()
+    recent_requests = len(req_store.list_requests(limit=100))
+
+    # 5. LLM provider keys
     llm_providers = {
         "gemini": bool(os.getenv("GEMINI_API_KEY")),
         "groq": bool(os.getenv("GROQ_API_KEY")),
@@ -218,6 +223,18 @@ class SchemeIntelService:
         """Start components according to configured mode and block until interrupted."""
         self.is_running = True
         logger.info("Initializing Scheme-Intel Service in mode: '%s'", self.mode)
+
+        # Explicit Required Startup Logs
+        logger.info("[TELEGRAM] Gateway started")
+        if self.mode in ("all", "bot"):
+            logger.info("[TELEGRAM] Polling active")
+        if self.mode in ("all", "worker"):
+            logger.info("[TELEGRAM] Worker active")
+
+        retr = IntelligenceRetrieval(auto_build_if_missing=False)
+        _, snap, _ = retr.get_status()
+        if snap:
+            logger.info("[TELEGRAM] Snapshot available")
 
         # 1. Optional HTTP probe server (e.g. for Render/Railway/CloudRun)
         port_env = os.getenv("PORT")
