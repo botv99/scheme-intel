@@ -168,9 +168,11 @@ def main():
     # Priority 1: CLIENT_PAYLOAD environment variable (from repository_dispatch)
     payload = {}
     client_payload_env = os.getenv("CLIENT_PAYLOAD")
-    if client_payload_env and client_payload_env.strip():
+    if client_payload_env and client_payload_env.strip() and client_payload_env.strip() != "null":
         try:
-            payload = json.loads(client_payload_env)
+            parsed = json.loads(client_payload_env)
+            if isinstance(parsed, dict):
+                payload = parsed
         except Exception as e:
             logger.error("Failed parsing CLIENT_PAYLOAD JSON: %s", e)
 
