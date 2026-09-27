@@ -16,6 +16,7 @@ from .request_store import RequestStore
 from ..intelligence_memory.cards import get_terminal_inline_keyboard
 from ..notifier import send_telegram
 from ..logger import get_logger
+from ..core.http import mask_telegram_token
 
 logger = get_logger(__name__)
 
@@ -39,7 +40,7 @@ def check_webhook_conflict(token: str) -> Optional[str]:
                 if webhook_url:
                     return webhook_url
     except Exception as e:
-        logger.warning("[TELEGRAM] Could not verify webhook status: %s", e)
+        logger.warning("[TELEGRAM] Could not verify webhook status: %s", mask_telegram_token(str(e), token))
     return None
 
 
@@ -276,7 +277,7 @@ class TelegramConversationHandler:
             else:
                 logger.warning("[TELEGRAM] Bot authentication check returned HTTP %d: %s", me_resp.status_code, me_resp.text[:100])
         except Exception as auth_err:
-            logger.warning("[TELEGRAM] Error during bot authentication check: %s", auth_err)
+            logger.warning("[TELEGRAM] Error during bot authentication check: %s", mask_telegram_token(str(auth_err), token))
 
         # 3. Register Telegram Menu Commands
         register_bot_commands(token)

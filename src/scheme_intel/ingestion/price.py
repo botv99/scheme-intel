@@ -21,6 +21,7 @@ from bs4 import BeautifulSoup
 
 from ..exceptions import SourceAccessError
 from ..logger import get_logger
+from ..core.http import create_retry_session
 from .models import PriceSnapshot
 
 logger = get_logger(__name__)
@@ -36,7 +37,7 @@ _NUMBER_RE = re.compile(r"-?[0-9.]+")
 
 
 def _session() -> requests.Session:
-    session = requests.Session()
+    session = create_retry_session(retries=3, backoff_factor=0.5)
     session.headers.update({"User-Agent": BROWSER_UA})
     return session
 

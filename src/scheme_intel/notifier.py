@@ -13,6 +13,7 @@ import requests
 from .db import SchemeIntelDB
 from .logger import get_logger
 from .exceptions import TelegramError
+from .core.http import mask_telegram_token
 
 logger = get_logger(__name__)
 
@@ -133,24 +134,27 @@ def send_telegram(
 
             except requests.RequestException as e:
                 last_exc = e
-                logger.warning("Attempt %d failed sending to %s: %s", attempt, chat_id, str(e)[:150])
+                clean_err = mask_telegram_token(str(e), token)[:150]
+                logger.warning("Attempt %d failed sending to %s: %s", attempt, chat_id, clean_err)
                 if attempt < max_retries:
                     time.sleep(0.5 * (2 ** (attempt - 1)))
             except TelegramError as e:
                 last_exc = e
-                logger.warning("Attempt %d Telegram rejection for %s: %s", attempt, chat_id, e)
+                clean_err = mask_telegram_token(str(e), token)
+                logger.warning("Attempt %d Telegram rejection for %s: %s", attempt, chat_id, clean_err)
                 if attempt < max_retries:
                     time.sleep(0.5 * (2 ** (attempt - 1)))
 
         if not sent:
+            clean_last_exc = mask_telegram_token(str(last_exc), token)
             logger.error(
                 "[TELEGRAM SEND] request_id=%s chat_id=%s success=false after %d attempts: %s",
                 request_id or "NONE",
                 chat_id,
                 max_retries,
-                last_exc,
+                clean_last_exc,
             )
-            raise TelegramError(f"Failed to send Telegram message: {str(last_exc)}")
+            raise TelegramError(f"Failed to send Telegram message: {clean_last_exc}")
 
     return success_count == len(chat_ids)
 

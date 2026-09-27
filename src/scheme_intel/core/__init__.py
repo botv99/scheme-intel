@@ -13,6 +13,7 @@ from ..exceptions import (
     AIProviderError,
 )
 from ..config import load_config
+from .http import create_retry_session, mask_telegram_token
 
 __all__ = [
     "get_logger",
@@ -24,4 +25,7 @@ __all__ = [
     "NotificationError",
     "AIProviderError",
     "load_config",
+    "create_retry_session",
+    "mask_telegram_token",
 ]
+

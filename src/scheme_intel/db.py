@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -137,29 +138,51 @@ CREATE INDEX IF NOT EXISTS idx_alert_key        ON alert_history(alert_key);
 
 
 class SchemeIntelDB:
-    """Thin wrapper around SQLite for scheme-intel historical data."""
+    """Thin wrapper around SQLite for scheme-intel historical data.
+
+    Thread-safe: each thread gets its own connection via threading.local().
+    """
 
     def __init__(self, db_path: Optional[Path | str] = None):
         self.db_path = Path(db_path) if db_path else DEFAULT_DB_PATH
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self._local = threading.local()
+        # Keep backward-compatible _conn property for single-threaded callers
         self._conn: Optional[sqlite3.Connection] = None
 
     def connect(self) -> sqlite3.Connection:
-        if self._conn is None:
-            self._conn = sqlite3.connect(str(self.db_path))
-            self._conn.row_factory = sqlite3.Row
-            self._conn.execute("PRAGMA journal_mode=WAL")
-            self._conn.execute("PRAGMA foreign_keys=ON")
+        conn: Optional[sqlite3.Connection] = getattr(self._local, "conn", None)
+        if conn is None:
+            conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
+            conn.row_factory = sqlite3.Row
+            conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute("PRAGMA foreign_keys=ON")
+            self._local.conn = conn
+            self._conn = conn  # backward compat
             self._create_schema()
-        return self._conn
+        return conn
 
     def close(self) -> None:
+        conn: Optional[sqlite3.Connection] = getattr(self._local, "conn", None)
+        if conn:
+            conn.close()
+            self._local.conn = None
         if self._conn:
-            self._conn.close()
+            try:
+                self._conn.close()
+            except Exception:
+                pass
             self._conn = None
 
+    def __enter__(self) -> "SchemeIntelDB":
+        self.connect()
+        return self
+
+    def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> None:
+        self.close()
+
     def _create_schema(self) -> None:
-        conn = self._conn
+        conn: Optional[sqlite3.Connection] = getattr(self._local, "conn", None) or self._conn
         if conn is None:
             return
         try:
@@ -391,35 +414,37 @@ class SchemeIntelDB:
     def save_historical_prices(self, symbol: str, rows: list[dict]) -> int:
         """
         Store historical OHLCV rows for a given symbol into SQLite.
-        Handles duplicates via INSERT OR REPLACE.
+        Handles duplicates via INSERT OR REPLACE. Uses executemany() for performance.
         """
         conn = self.connect()
-        saved = 0
+        batch: list[tuple] = []
+        for r in rows:
+            date_val = r.get("date") or r.get("Date")
+            if not date_val:
+                continue
+            d_str = str(date_val)[:10]
+            batch.append((
+                symbol,
+                d_str,
+                r.get("open") if r.get("open") is not None else r.get("Open"),
+                r.get("high") if r.get("high") is not None else r.get("High"),
+                r.get("low") if r.get("low") is not None else r.get("Low"),
+                r.get("close") if r.get("close") is not None else r.get("Close"),
+                r.get("volume") if r.get("volume") is not None else r.get("Volume"),
+            ))
+        if not batch:
+            return 0
         try:
-            for r in rows:
-                date_val = r.get("date") or r.get("Date")
-                if not date_val:
-                    continue
-                d_str = str(date_val)[:10]
-                conn.execute(
-                    "INSERT INTO historical_prices (symbol, date, open, high, low, close, volume) "
-                    "VALUES (?, ?, ?, ?, ?, ?, ?) "
-                    "ON CONFLICT(symbol, date) DO UPDATE SET "
-                    "open=excluded.open, high=excluded.high, low=excluded.low, "
-                    "close=excluded.close, volume=excluded.volume",
-                    (
-                        symbol,
-                        d_str,
-                        r.get("open") if r.get("open") is not None else r.get("Open"),
-                        r.get("high") if r.get("high") is not None else r.get("High"),
-                        r.get("low") if r.get("low") is not None else r.get("Low"),
-                        r.get("close") if r.get("close") is not None else r.get("Close"),
-                        r.get("volume") if r.get("volume") is not None else r.get("Volume"),
-                    ),
-                )
-                saved += 1
+            conn.executemany(
+                "INSERT INTO historical_prices (symbol, date, open, high, low, close, volume) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?) "
+                "ON CONFLICT(symbol, date) DO UPDATE SET "
+                "open=excluded.open, high=excluded.high, low=excluded.low, "
+                "close=excluded.close, volume=excluded.volume",
+                batch,
+            )
             conn.commit()
-            return saved
+            return len(batch)
         except sqlite3.Error as exc:
             conn.rollback()
             raise DatabaseError(f"Failed to save historical prices for {symbol}: {exc}") from exc

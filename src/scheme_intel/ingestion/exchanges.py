@@ -24,6 +24,7 @@ import requests
 
 from ..exceptions import SourceAccessError
 from ..logger import get_logger
+from ..core.http import create_retry_session
 from .models import Announcement, ExchangeDeal
 
 logger = get_logger(__name__)
@@ -56,8 +57,8 @@ def _browser_headers(referer: str | None = None) -> dict:
 
 
 def _nse_session() -> requests.Session:
-    """Session primed with NSE cookies (homepage visit) for API access."""
-    session = requests.Session()
+    """Session primed with NSE cookies (homepage visit) for API access with retries."""
+    session = create_retry_session(retries=3, backoff_factor=0.5)
     session.headers.update(_browser_headers("https://www.nseindia.com/"))
     session.get("https://www.nseindia.com/", timeout=DEFAULT_TIMEOUT)
     return session
