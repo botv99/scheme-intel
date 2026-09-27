@@ -287,16 +287,19 @@ def test_bot_commands_curated_menu():
     """Verify only 5 core commands are registered in both Cloudflare and Python."""
     telegram_js = (CF_DIR / "src" / "telegram.js").read_text(encoding="utf-8")
     assert "BOT_COMMANDS" in telegram_js
-    # Ensure individual stocks and why/what/when are not advertised
     for banned in ["trualt", "praj", "gail", "wabag", "why", "what", "when", "waiting"]:
         pattern = rf'command:\s*["\']{banned}["\']'
         assert not re.search(pattern, telegram_js), f"Command '{banned}' should not be advertised in BOT_COMMANDS"
 
-    # Python conversation module check
     py_conv = (REPO_ROOT / "src" / "scheme_intel" / "delivery" / "telegram_conversation.py").read_text(encoding="utf-8")
     for banned in ["trualt", "praj", "gail", "wabag", "why", "what", "when", "waiting"]:
         pattern = rf'["\']command["\']:\s*["\']{banned}["\']'
         assert not re.search(pattern, py_conv), f"Command '{banned}' should not be in telegram_conversation.py commands"
+
+    assert "research" in telegram_js
+    assert "stock" in telegram_js
+    assert "research" in py_conv
+    assert "stock" in py_conv
 
 
 def test_stock_command_intent_resolution():

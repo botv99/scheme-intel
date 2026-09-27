@@ -53,6 +53,7 @@ def register_bot_commands(token: str) -> bool:
         {"command": "stock", "description": "Stock intelligence card (/stock <SYM>)"},
         {"command": "setups", "description": "Today's qualified setups"},
         {"command": "watchlist", "description": "Monitored scheme watchlist"},
+        {"command": "research", "description": "Deep policy research (/research <Q>)"},
     ]
     try:
         url = f"https://api.telegram.org/bot{token}/setMyCommands"

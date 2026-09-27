@@ -1,6 +1,6 @@
 """
-Response Formatter for Asynchronous Deep Research Results.
-Formats research evidence, findings, affected companies, and sources into clean Markdown.
+Response Formatter for Scheme-Intel Deep Multi-Agent Research Results (Stage 3).
+Formats verified intelligence, adversarial Bull/Bear analysis, Arbiter verdict, and sources.
 """
 from __future__ import annotations
 
@@ -8,79 +8,124 @@ from typing import Any, Dict, List, Optional
 
 
 def format_research_acknowledgement(job_id: str, question: str = "") -> str:
-    """Immediate acknowledgement returned to Telegram without blocking on research."""
-    q_section = f"\n*Question:*\n{question}\n" if question else ""
+    """Immediate acknowledgement returned to Telegram."""
     return (
-        "🔎 *Research queued* (Research request received)\n\n"
-        f"• *Request ID:* `{job_id}`\n"
-        f"• *Research ID:* `{job_id}`\n"
-        "• *Status:* `QUEUED`\n"
-        f"{q_section}\n"
-        "_I’ll send the research result here when processing is complete._"
+        "🔬 *DEEP RESEARCH STARTED*\n\n"
+        "*Request ID:*\n"
+        f"`{job_id}`\n\n"
+        "Your research is being analyzed by the Scheme-Intel intelligence engine.\n\n"
+        "This may take a little time."
     )
 
 
 def format_research_result(
     job_id: str,
     question: str,
-    findings: str,
-    why_it_matters: str = "",
-    companies_affected: Optional[List[str]] = None,
-    evidence: Optional[List[Dict[str, Any]]] = None,
+    bull_case: List[str],
+    bear_case: List[str],
+    arbiter_verdict: str,
+    arbiter_why: List[str],
+    arbiter_confidence: str,
+    key_risk: str,
+    invalidation: str,
+    technical_score: Optional[float] = None,
+    fundamental_score: Optional[float] = None,
+    setup_status: Optional[str] = None,
+    catalysts: Optional[List[str]] = None,
+    sources: Optional[List[Dict[str, Any]]] = None,
     completed_at: str = "",
 ) -> str:
-    """Format completed research response."""
+    """Format deep multi-agent intelligence research report."""
     lines = [
-        "🔎 *RESEARCH COMPLETE*",
+        "🔬 *SCHEME-INTEL RESEARCH*",
         "",
-        f"*Research ID:* `{job_id}`",
-        f"*Question:* {question}",
+        "*Question:*",
+        question.strip(),
         "",
-        "*FINDINGS*",
-        findings.strip(),
+        "━━━━━━━━━━━━━━",
+        "",
+        "📊 *CURRENT INTELLIGENCE*",
+        "",
+        f"Technical: {technical_score:.1f}/10" if technical_score is not None else "Technical: N/A",
+        f"Fundamental: {fundamental_score:.1f}/10" if fundamental_score is not None else "Fundamental: N/A",
+        f"Trade Setup: `{setup_status or 'WAIT'}`",
     ]
 
-    if why_it_matters.strip():
-        lines.extend([
-            "",
-            "*WHY IT MATTERS*",
-            why_it_matters.strip(),
-        ])
-
-    if companies_affected:
-        lines.extend([
-            "",
-            "*COMPANIES AFFECTED*",
-        ])
-        for c in companies_affected:
+    # Catalysts
+    if catalysts:
+        lines.extend(["", "🔥 *CATALYST*", ""])
+        for c in catalysts[:3]:
             lines.append(f"• {c}")
 
-    if evidence:
-        lines.extend([
-            "",
-            "*EVIDENCE & SOURCES*",
-        ])
-        for ev in evidence[:5]:
-            src = ev.get("source", "Source")
-            title = ev.get("title", "Reference")
-            date = f" — {ev['date']}" if ev.get("date") else ""
-            lines.append(f"• {src}: {title[:80]}{date}")
+    # Bull Case
+    lines.extend(["", "🟢 *BULL CASE*", ""])
+    if bull_case:
+        for b in bull_case:
+            lines.append(f"• {b}")
+    else:
+        lines.append("• No verifiable bullish catalysts in current window.")
 
-    if completed_at:
-        lines.extend([
-            "",
-            f"_Research completed: {completed_at[:16]} UTC_",
-        ])
+    # Bear Case
+    lines.extend(["", "🔴 *BEAR CASE*", ""])
+    if bear_case:
+        for b in bear_case:
+            lines.append(f"• {b}")
+    else:
+        lines.append("• Low structural downside evidence detected.")
+
+    # Arbiter
+    lines.extend([
+        "",
+        "🏛️ *ARBITER*",
+        "",
+        f"*Verdict:* `{arbiter_verdict.upper()}`",
+        "",
+        "*Why:*",
+    ])
+    if arbiter_why:
+        for w in arbiter_why:
+            lines.append(f"• {w}")
+    else:
+        lines.append(f"• Evidence balance currently supports {arbiter_verdict.upper()} stance.")
+
+    lines.extend([
+        "",
+        f"*Confidence:* `{arbiter_confidence.upper()}`",
+        "",
+        "⚠️ *KEY RISK*",
+        key_risk.strip() if key_risk else "Regulatory shift or broader market downside contagion.",
+        "",
+        "🧭 *WHAT WOULD CHANGE THE VIEW*",
+        invalidation.strip() if invalidation else "Material volume-backed price reversal or official policy revision.",
+    ])
+
+    # Sources
+    if sources:
+        lines.extend(["", "📰 *SOURCES*", ""])
+        for s in sources[:4]:
+            name = s.get("source") or "Official Disclosure"
+            title = s.get("title") or s.get("name") or "Filing"
+            date = f" ({s['date']})" if s.get("date") else ""
+            url = f"\n  {s['url']}" if s.get("url") else ""
+            lines.append(f"• {name}: {title[:75]}{date}{url}")
+
+    lines.extend([
+        "",
+        "━━━━━━━━━━━━━━",
+        "",
+        "*Research ID:*",
+        f"`{job_id}`",
+        "",
+        f"*Completed:* {completed_at[:16].replace('T', ' ')} UTC" if completed_at else f"*Completed:* {job_id}",
+    ])
 
     return "\n".join(lines)
 
 
-def format_research_failure(job_id: str, question: str, error: str) -> str:
-    """Format failure report for a research task."""
+def format_research_failure(job_id: str, reason: str = "AI providers unavailable.") -> str:
+    """Format research failure report."""
     return (
-        "⚠️ *RESEARCH INVESTIGATION INCOMPLETE*\n\n"
-        f"• *Research ID:* `{job_id}`\n"
-        f"• *Question:* {question}\n\n"
-        f"Could not complete research: {error}\n\n"
-        "_Please verify the query or try again later._"
+        "⚠️ *Research could not be completed.*\n\n"
+        f"*Reason:*\n{reason}\n\n"
+        f"*Request ID:*\n`{job_id}`"
     )

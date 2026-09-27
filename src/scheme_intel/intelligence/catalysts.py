@@ -3,6 +3,18 @@ Catalyst Extraction & Scoring Module.
 """
 from __future__ import annotations
 
-from ..catalyst import extract_catalysts, score_catalyst
+from typing import List, Optional
+from ..catalyst import classify
+from ..models import Article, Catalyst
 
-__all__ = ["extract_catalysts", "score_catalyst"]
+
+def extract_catalysts(article: Article, companies: list[dict]) -> List[Catalyst]:
+    c = classify(article, companies)
+    return [c] if c else []
+
+
+def score_catalyst(catalyst: Catalyst) -> int:
+    return int(catalyst.score) if catalyst else 0
+
+
+__all__ = ["extract_catalysts", "score_catalyst", "classify"]

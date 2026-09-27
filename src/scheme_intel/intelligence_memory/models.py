@@ -30,6 +30,16 @@ class CompanyIntelligence(BaseModel):
     catalyst: Optional[str] = None
     catalysts: List[str] = Field(default_factory=list)
     fundamental_score: Optional[float] = None
+    fundamental_intelligence_score: Optional[float] = None
+    fundamental_score_components: Dict[str, Any] = Field(default_factory=dict)
+    fundamental_score_version: str = "v1.0"
+    fundamental_score_coverage: Optional[float] = None
+    fundamental_score_data_as_of: Optional[str] = None
+    technical_intelligence_score: Optional[float] = None
+    technical_score_components: Dict[str, Any] = Field(default_factory=dict)
+    technical_score_version: str = "v1.0"
+    technical_score_data_as_of: Optional[str] = None
+    technical_score_coverage: Optional[float] = None
     price: Optional[float] = None
     change_pct: Optional[float] = None
     volume: Optional[int] = None

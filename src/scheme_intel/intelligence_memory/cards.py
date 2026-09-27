@@ -99,18 +99,40 @@ def render_stock_card(comp: CompanyIntelligence, is_stale: bool = False, snapsho
     lines.append(f"Volume Change: {volume_change_str}")
 
     # 4. FUNDAMENTAL SCORE
-    lines.extend([
-        "",
-        "*FUNDAMENTAL SCORE*",
-        f"Fundamental Score: {comp.fundamental_score:.1f}/10" if comp.fundamental_score is not None else "Fundamental Score: N/A\nReason: Fundamental scoring not available in current snapshot.",
-    ])
+    lines.extend(["", "*FUNDAMENTAL SCORE*"])
+    fund_val = comp.fundamental_intelligence_score if comp.fundamental_intelligence_score is not None else comp.fundamental_score
+    if fund_val is not None:
+        cov_str = f" | Coverage: {comp.fundamental_score_coverage:.0f}%" if comp.fundamental_score_coverage is not None else ""
+        as_of = f" | As of: {comp.fundamental_score_data_as_of}" if comp.fundamental_score_data_as_of else ""
+        lines.append(f"Fundamental Score: {fund_val:.1f}/10{cov_str}{as_of}")
+        if comp.fundamental_score_components:
+            breakdown_parts = []
+            for k in ("growth", "profitability", "balance_sheet", "cash_flow"):
+                c_data = comp.fundamental_score_components.get(k)
+                if isinstance(c_data, dict) and c_data.get("score") is not None:
+                    breakdown_parts.append(f"{k.replace('_', ' ').title()}: {c_data['score']:.1f}")
+            if breakdown_parts:
+                lines.append("• " + " | ".join(breakdown_parts))
+    else:
+        lines.append("Fundamental Score: N/A\nReason: Fundamental scoring not available in current snapshot.")
 
     # 5. TECHNICAL / INTELLIGENCE SCORE
-    lines.extend([
-        "",
-        "*TECHNICAL INTELLIGENCE*",
-        f"Technical / Intel Score: {comp.score / 10.0:.1f}/10" if comp.score is not None else "Technical / Intel Score: N/A",
-    ])
+    lines.extend(["", "*TECHNICAL INTELLIGENCE*"])
+    tech_val = comp.technical_intelligence_score if comp.technical_intelligence_score is not None else (comp.score / 10.0 if comp.score is not None else None)
+    if tech_val is not None:
+        cov_str = f" | Coverage: {comp.technical_score_coverage:.0f}%" if comp.technical_score_coverage is not None else ""
+        as_of = f" | As of: {comp.technical_score_data_as_of}" if comp.technical_score_data_as_of else ""
+        lines.append(f"Technical / Intel Score: {tech_val:.1f}/10{cov_str}{as_of}")
+        if comp.technical_score_components:
+            breakdown_parts = []
+            for k in ("trend", "momentum", "structure", "volume"):
+                c_data = comp.technical_score_components.get(k)
+                if isinstance(c_data, dict) and c_data.get("score") is not None:
+                    breakdown_parts.append(f"{k.capitalize()}: {c_data['score']:.1f}")
+            if breakdown_parts:
+                lines.append("• " + " | ".join(breakdown_parts))
+    else:
+        lines.append("Technical / Intel Score: N/A")
 
     # 6. TODAY'S CATALYST
     lines.extend(["", "*TODAY'S CATALYST*"])
