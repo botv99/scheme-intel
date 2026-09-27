@@ -12,7 +12,7 @@ import sys
 from typing import Any, Dict, Optional
 
 from .query_engine import ComplexQueryEngine
-from .request_store import RequestStore, RequestStatus
+from .request_store import RequestStore, RequestStatus, ExecutionPath
 from ..intelligence_memory.retrieval import FastIntelligenceRetriever
 from ..notifier import send_telegram
 from ..logger import get_logger
@@ -45,15 +45,30 @@ def process_workflow_query(
     )
 
     # 1. Strict Validation
-    if not request_id:
-        logger.error("[WORKFLOW RUNNER] Missing 'request_id' in payload.")
+    if not request_id or not str(request_id).strip():
+        logger.error("[WORKFLOW RUNNER] Missing or empty 'request_id' in payload.")
         return False
 
-    if not chat_id or not str(chat_id).strip():
-        logger.error("[WORKFLOW RUNNER] Missing or invalid 'chat_id'. Conversational answers must never be broadcast.")
-        return False
+    raw_chat = str(chat_id).strip() if chat_id is not None else ""
+    if not raw_chat or raw_chat.lower() == "default":
+        fallback_chat = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+        if fallback_chat and fallback_chat.lower() != "default":
+            logger.warning(
+                "[WORKFLOW RUNNER] Received 'default' or empty chat_id; falling back to TELEGRAM_CHAT_ID=%s",
+                fallback_chat,
+            )
+            target_chat_id = fallback_chat
+        else:
+            logger.error(
+                "[WORKFLOW RUNNER] Missing or 'default' chat_id and no valid TELEGRAM_CHAT_ID fallback."
+            )
+            return False
+    else:
+        target_chat_id = raw_chat
 
-    target_chat_id = str(chat_id).strip()
+    if not query or not str(query).strip():
+        logger.error("[WORKFLOW RUNNER] Missing query text in payload for request %s.", request_id)
+        return False
 
     # 2. Idempotency Check
     store = request_store or RequestStore()
@@ -65,6 +80,18 @@ def process_workflow_query(
             existing_req.response_sent_at,
         )
         return True
+
+    if existing_req is None:
+        store.log_request(
+            raw_query=query,
+            user_id=payload.get("user_id"),
+            chat_id=target_chat_id,
+            username=payload.get("username"),
+            normalized_query=payload.get("normalized_query", ""),
+            resolved_intent=payload.get("intent", "COMPLEX_QUERY"),
+            execution_path=ExecutionPath.WORKFLOW,
+            request_id=request_id,
+        )
 
     # Mark as PROCESSING
     store.update_status(
@@ -113,12 +140,25 @@ def process_workflow_query(
             "[WORKFLOW RUNNER] Dispatching personalized response ONLY to chat_id=%s (never broadcast).",
             target_chat_id,
         )
-        success = send_telegram(
-            response_card,
-            chat_ids=[target_chat_id],
-            parse_mode="Markdown",
-            request_id=request_id,
-        )
+        try:
+            success = send_telegram(
+                response_card,
+                chat_ids=[target_chat_id],
+                parse_mode="Markdown",
+                request_id=request_id,
+            )
+        except Exception as send_err:
+            logger.warning("[WORKFLOW RUNNER] Markdown delivery failed (%s). Retrying as plain text...", send_err)
+            try:
+                success = send_telegram(
+                    response_card,
+                    chat_ids=[target_chat_id],
+                    parse_mode=None,
+                    request_id=request_id,
+                )
+            except Exception as retry_err:
+                logger.error("[WORKFLOW RUNNER] Plain-text delivery also failed: %s", retry_err)
+                success = False
 
         if success:
             store.mark_completed(

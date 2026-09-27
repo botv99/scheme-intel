@@ -1,0 +1,23 @@
+{
+  "name": "scheme-intel-telegram-gateway",
+  "version": "1.0.0",
+  "description": "Always-on 24/7 Serverless Telegram Gateway for Scheme-Intel on Cloudflare Workers",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "setup-webhook": "node scripts/setup-webhook.js"
+  },
+  "devDependencies": {
+    "wrangler": "^3.78.0"
+  },
+  "keywords": [
+    "telegram",
+    "cloudflare-workers",
+    "serverless",
+    "scheme-intel"
+  ],
+  "author": "Scheme-Intel Team",
+  "license": "MIT"
+}

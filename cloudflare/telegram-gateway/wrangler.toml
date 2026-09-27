@@ -1,0 +1,19 @@
+name = "scheme-intel-telegram-gateway"
+main = "src/index.js"
+compatibility_date = "2024-09-01"
+
+# Non-sensitive configuration variables
+[vars]
+GITHUB_OWNER = "botv99"
+GITHUB_REPO = "scheme-intel"
+GITHUB_BRANCH = "main"
+SNAPSHOT_PATH = "data/intelligence/latest.json"
+
+# SECRETS (Do NOT put in this file! Set via `npx wrangler secret put <NAME>`):
+# - TELEGRAM_BOT_TOKEN      : Telegram bot token from @BotFather
+# - TELEGRAM_WEBHOOK_SECRET : Secret token for Telegram X-Telegram-Bot-Api-Secret-Token validation
+# - GITHUB_TOKEN            : GitHub Personal Access Token (with repo or Actions:write scope)
+#
+# Optional Access Control Variables:
+# - TELEGRAM_ALLOWED_USER_IDS : Comma-separated user IDs
+# - TELEGRAM_ALLOWED_CHAT_IDS : Comma-separated chat IDs

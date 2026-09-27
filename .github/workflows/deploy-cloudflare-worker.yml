@@ -1,0 +1,38 @@
+name: Deploy Cloudflare Worker
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "cloudflare/telegram-gateway/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy Telegram Gateway Worker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check Cloudflare Credentials
+        id: check_creds
+        run: |
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+            echo "CLOUDFLARE_API_TOKEN is not configured in GitHub Secrets. Skipping automated deploy."
+            echo "skipped=true" >> $GITHUB_OUTPUT
+          else
+            echo "skipped=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy to Cloudflare Workers
+        if: steps.check_creds.outputs.skipped == 'false'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: "cloudflare/telegram-gateway"
