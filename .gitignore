@@ -7,6 +7,9 @@ data/scheme_intel.db
 data/scheme_intel.db-wal
 data/scheme_intel.db-shm
 data/telegram_requests.db*
+.env
+.env.*
+!.env.example
 
 # Local run artifacts
 logs/

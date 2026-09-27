@@ -126,6 +126,10 @@ class TelegramMessageRouter:
 
         # 2. Intent & Execution Path Resolution
         intent: ResolvedIntent = IntentResolver.resolve(raw_text)
+        logger.info("[TELEGRAM] Query resolved: '%s' -> intent=%s, symbol=%s", raw_text, intent.intent_type.value, intent.symbol or "none")
+        logger.info("[TELEGRAM] Execution path: %s", intent.execution_path.value)
+        if intent.symbol:
+            logger.info("[TELEGRAM] Snapshot lookup=%s", intent.symbol)
 
         # 3. Persistent Request Logging BEFORE Processing
         self.request_store.log_request(

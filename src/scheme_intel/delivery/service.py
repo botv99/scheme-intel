@@ -25,8 +25,10 @@ from ..research.worker import ResearchWorker
 from ..research.queue import ResearchQueue
 from ..intelligence_memory.retrieval import IntelligenceRetrieval
 from ..intelligence_memory.models import SnapshotHealthStatus
+from ..config import load_dotenv
 from ..logger import get_logger
 
+load_dotenv()
 logger = get_logger(__name__)
 
 
@@ -282,10 +284,21 @@ class SchemeIntelService:
                 self.bot_thread.start()
                 logger.info("Telegram Bot poller thread launched.")
 
-                # Keep main thread alive
+                # Keep main thread alive and supervise running threads
                 try:
                     while self.is_running:
                         time.sleep(1.0)
+                        if self.is_running and self.bot_thread and not self.bot_thread.is_alive():
+                            token = os.getenv("TELEGRAM_BOT_TOKEN")
+                            if token:
+                                logger.warning("[TELEGRAM] Bot thread terminated unexpectedly. Restarting poller...")
+                                self.bot_thread = threading.Thread(
+                                    target=self.bot_handler.run_polling,
+                                    kwargs={"interval_seconds": int(self.poll_interval)},
+                                    name="TelegramBotThread",
+                                    daemon=True,
+                                )
+                                self.bot_thread.start()
                 except KeyboardInterrupt:
                     self.stop()
         elif self.mode == "worker":

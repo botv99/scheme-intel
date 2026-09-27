@@ -479,3 +479,135 @@ class TestPathCResearchRouting:
 
         # 3. Did NOT trigger 04-telegram-query.yml
         dispatcher.dispatch_query.assert_not_called()
+
+
+# ===========================================================================
+# 7. GATEWAY COMPREHENSIVE VERIFICATION & FAILURE MODES
+# ===========================================================================
+
+class TestGatewayComprehensiveLiveVerification:
+    def test_gateway_startup_and_getme_success(self, test_env):
+        handler: TelegramConversationHandler = test_env["handler"]
+        with patch.dict(os.environ, {"TELEGRAM_BOT_TOKEN": "TEST_TOKEN_123"}):
+            with patch("requests.get") as mock_get, patch("requests.post") as mock_post:
+                mock_get.side_effect = [
+                    # 1. getWebhookInfo
+                    MagicMock(status_code=200, json=lambda: {"ok": True, "result": {"url": ""}}),
+                    # 2. getMe
+                    MagicMock(status_code=200, json=lambda: {"ok": True, "result": {"username": "Scheme_intelbot", "id": 123}}),
+                    # 3. getUpdates
+                    MagicMock(status_code=200, json=lambda: {"ok": True, "result": []}),
+                ]
+                mock_post.return_value = MagicMock(status_code=200, json=lambda: {"ok": True})
+
+                handler.run_polling(stop_after_runs=1)
+                assert mock_get.call_count >= 2
+
+    def test_stale_webhook_removal_with_env_flag(self, test_env):
+        handler: TelegramConversationHandler = test_env["handler"]
+        with patch.dict(os.environ, {"TELEGRAM_BOT_TOKEN": "TEST_TOKEN_123", "TELEGRAM_DELETE_WEBHOOK": "true"}):
+            with patch("requests.get") as mock_get, patch("requests.post") as mock_post:
+                mock_get.side_effect = [
+                    # 1. getWebhookInfo
+                    MagicMock(status_code=200, json=lambda: {"ok": True, "result": {"url": "https://stale-hook.example.com"}}),
+                    # 2. getMe
+                    MagicMock(status_code=200, json=lambda: {"ok": True, "result": {"username": "TestBot"}}),
+                    # 3. getUpdates
+                    MagicMock(status_code=200, json=lambda: {"ok": True, "result": []}),
+                ]
+                mock_post.return_value = MagicMock(status_code=200, json=lambda: {"ok": True})
+
+                handler.run_polling(stop_after_runs=1)
+                # Verify deleteWebhook was called
+                post_urls = [call[0][0] for call in mock_post.call_args_list]
+                assert any("deleteWebhook" in u for u in post_urls)
+
+    def test_specific_commands_and_shortcuts(self, test_env):
+        handler: TelegramConversationHandler = test_env["handler"]
+        dispatcher = test_env["dispatcher"]
+
+        # /gail
+        resp_gail = handler.handle_message("/gail", chat_id="123")
+        assert "GAIL" in resp_gail
+
+        # /praj
+        resp_praj = handler.handle_message("/praj", chat_id="123")
+        assert "PRAJIND" in resp_praj
+
+        # /trualt
+        resp_trualt = handler.handle_message("/trualt", chat_id="123")
+        assert "TRUALT" in resp_trualt
+
+        # /why trualt
+        resp_why = handler.handle_message("/why trualt", chat_id="123")
+        assert "WHY TRUALT" in resp_why
+
+        # Natural language 'Praj'
+        resp_nl_praj = handler.handle_message("Praj", chat_id="123")
+        assert "PRAJIND" in resp_nl_praj
+
+        # None of these trigger GitHub Actions
+        dispatcher.dispatch_query.assert_not_called()
+
+    def test_unauthorized_user_blocked_without_crash(self, test_env):
+        handler: TelegramConversationHandler = test_env["handler"]
+        with patch.dict(os.environ, {"TELEGRAM_ALLOWED_USER_IDS": "ALLOWED_USER_999"}):
+            # Recreate router with new allowed user ids
+            restricted_router = TelegramMessageRouter(
+                retriever=test_env["retriever"],
+                request_store=test_env["req_store"],
+            )
+            handler.router = restricted_router
+
+            resp = handler.handle_message("/gail", user_id="UNAUTHORIZED_USER", chat_id="CHAT_123")
+            assert "not authorized" in resp.lower()
+
+    def test_set_my_commands_failure_does_not_abort_gateway(self, test_env):
+        handler: TelegramConversationHandler = test_env["handler"]
+        with patch.dict(os.environ, {"TELEGRAM_BOT_TOKEN": "TEST_TOKEN_123"}):
+            with patch("requests.get") as mock_get, patch("requests.post") as mock_post:
+                mock_get.side_effect = [
+                    # 1. getWebhookInfo
+                    MagicMock(status_code=200, json=lambda: {"ok": True, "result": {"url": ""}}),
+                    # 2. getMe
+                    MagicMock(status_code=200, json=lambda: {"ok": True, "result": {"username": "TestBot"}}),
+                    # 3. getUpdates
+                    MagicMock(status_code=200, json=lambda: {"ok": True, "result": [{"update_id": 901, "message": {"text": "/gail", "chat": {"id": 111}}}]}),
+                ]
+                # setMyCommands fails with 500
+                mock_post.return_value = MagicMock(status_code=500, text="Internal Server Error")
+
+                with patch("scheme_intel.delivery.telegram_conversation.send_telegram", return_value=True) as mock_send:
+                    handler.run_polling(stop_after_runs=1)
+                    # Verify message was still processed despite command menu failure
+                    assert mock_send.call_count == 1
+                    assert "GAIL" in mock_send.call_args[0][0]
+
+    def test_gateway_retries_after_transient_polling_failure(self, test_env):
+        handler: TelegramConversationHandler = test_env["handler"]
+        with patch.dict(os.environ, {"TELEGRAM_BOT_TOKEN": "TEST_TOKEN_123"}):
+            with patch("requests.get") as mock_get, patch("requests.post") as mock_post, patch("time.sleep"):
+                mock_get.side_effect = [
+                    # 1. getWebhookInfo
+                    MagicMock(status_code=200, json=lambda: {"ok": True, "result": {"url": ""}}),
+                    # 2. getMe
+                    MagicMock(status_code=200, json=lambda: {"ok": True, "result": {"username": "TestBot"}}),
+                    # 3. getUpdates run 1: connection error
+                    requests.exceptions.ConnectionError("Temporary network blip"),
+                    # 4. getUpdates run 2: successful response
+                    MagicMock(status_code=200, json=lambda: {"ok": True, "result": [{"update_id": 902, "message": {"text": "/praj", "chat": {"id": 222}}}]}),
+                ]
+                mock_post.return_value = MagicMock(status_code=200, json=lambda: {"ok": True})
+
+                with patch("scheme_intel.delivery.telegram_conversation.send_telegram", return_value=True) as mock_send:
+                    handler.run_polling(stop_after_runs=2)
+                    assert mock_send.call_count == 1
+                    assert "PRAJIND" in mock_send.call_args[0][0]
+
+    def test_gh_auth_token_fallback_in_dispatcher(self):
+        with patch.dict(os.environ, {}, clear=True):
+            with patch("shutil.which", return_value="gh"), patch("subprocess.run") as mock_run:
+                mock_run.return_value = MagicMock(returncode=0, stdout="gho_mock_token_from_cli\n")
+                disp = GitHubWorkflowDispatcher(repository="botv99/scheme-intel")
+                assert disp.token == "gho_mock_token_from_cli"
+

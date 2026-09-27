@@ -32,6 +32,16 @@ class GitHubWorkflowDispatcher:
             or os.getenv("GH_TOKEN")
             or os.getenv("GITHUB_PAT")
         )
+        if not self.token:
+            try:
+                import shutil
+                import subprocess
+                if shutil.which("gh"):
+                    res = subprocess.run(["gh", "auth", "token"], capture_output=True, text=True, timeout=5)
+                    if res.returncode == 0 and res.stdout.strip():
+                        self.token = res.stdout.strip()
+            except Exception:
+                pass
 
     def dispatch_query(
         self,

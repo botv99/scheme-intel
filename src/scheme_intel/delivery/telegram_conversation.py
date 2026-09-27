@@ -179,9 +179,10 @@ class TelegramConversationHandler:
         if text.lower().startswith("/start"):
             is_start_cmd = True
 
+        request_id = self.router.request_store.generate_request_id()
+        logger.info("[TELEGRAM] Update received: update_id=%s", update_id)
         logger.info(
-            "[TELEGRAM] Update received: update_id=%s, chat_id=%s, user_id=%s, username=%s, text='%s'",
-            update_id,
+            "[TELEGRAM] Message received: chat_id=%s, user_id=%s, username=%s, text='%s'",
             chat_id,
             user_id,
             username,
@@ -195,6 +196,7 @@ class TelegramConversationHandler:
             chat_id=chat_id,
             username=username,
             update_id=update_id,
+            request_id=request_id,
         )
         chunks = chunk_message(raw_response, max_chars=4000)
 
@@ -208,11 +210,13 @@ class TelegramConversationHandler:
                         chat_ids=[chat_id],
                         parse_mode="Markdown",
                         reply_markup=reply_markup if idx == 0 else None,
+                        request_id=request_id,
                     )
                     logger.info(
-                        "[TELEGRAM] Reply dispatched: success=%s, chat_id=%s, chunk=%d/%d, len=%d",
-                        success,
+                        "[TELEGRAM] Response sent: request_id=%s, chat_id=%s, success=%s, chunk=%d/%d, len=%d",
+                        request_id,
                         chat_id,
+                        success,
                         idx + 1,
                         len(chunks),
                         len(ch),
@@ -237,6 +241,8 @@ class TelegramConversationHandler:
             logger.warning("[TELEGRAM] TELEGRAM_BOT_TOKEN not configured; polling cannot start.")
             return
 
+        logger.info("[TELEGRAM] Gateway starting")
+
         # 1. Webhook Conflict Detection
         webhook_conflict = check_webhook_conflict(token)
         if webhook_conflict:
@@ -244,24 +250,29 @@ class TelegramConversationHandler:
             if del_webhook:
                 logger.info("[TELEGRAM] Deleting conflicting webhook per TELEGRAM_DELETE_WEBHOOK=true configuration...")
                 try:
-                    del_resp = requests.post(f"https://api.telegram.org/bot{token}/deleteWebhook", json={"drop_pending_updates": True}, timeout=10)
+                    del_resp = requests.post(f"https://api.telegram.org/bot{token}/deleteWebhook", json={"drop_pending_updates": False}, timeout=10)
                     if del_resp.status_code == 200:
-                        logger.info("[TELEGRAM] Successfully removed active webhook: %s", webhook_conflict)
+                        logger.info("[TELEGRAM] Webhook status: CLEAN (removed '%s')", webhook_conflict)
                 except Exception as del_err:
                     logger.error("[TELEGRAM] Failed removing webhook: %s", del_err)
             else:
-                logger.error(
-                    "[TELEGRAM WEBHOOK CONFLICT]\n"
-                    "An active Telegram webhook is configured: '%s'.\n"
-                    "Telegram getUpdates long-polling cannot receive updates while a webhook is active.\n"
-                    "To remove the webhook manually, call:\n"
-                    "https://api.telegram.org/bot<TOKEN>/deleteWebhook?drop_pending_updates=true\n"
-                    "Or set TELEGRAM_DELETE_WEBHOOK=true in your environment to clear it automatically on startup.",
-                    webhook_conflict,
-                )
+                logger.error("[TELEGRAM] Webhook status: CONFLICT ('%s')", webhook_conflict)
                 return
+        else:
+            logger.info("[TELEGRAM] Webhook status: CLEAN")
 
-        # 2. Register Telegram Menu Commands
+        # 2. Authenticate Bot Identity
+        try:
+            me_resp = requests.get(f"https://api.telegram.org/bot{token}/getMe", timeout=10)
+            if me_resp.status_code == 200 and me_resp.json().get("ok"):
+                username = me_resp.json().get("result", {}).get("username", "unknown")
+                logger.info("[TELEGRAM] Bot authenticated: @%s", username)
+            else:
+                logger.warning("[TELEGRAM] Bot authentication check returned HTTP %d: %s", me_resp.status_code, me_resp.text[:100])
+        except Exception as auth_err:
+            logger.warning("[TELEGRAM] Error during bot authentication check: %s", auth_err)
+
+        # 3. Register Telegram Menu Commands
         register_bot_commands(token)
 
         # 3. Explicit Required Startup Logs
@@ -269,6 +280,7 @@ class TelegramConversationHandler:
         logger.info("[TELEGRAM] Polling active")
         logger.info("[TELEGRAM] Worker active")
         logger.info("[TELEGRAM] Snapshot available")
+        logger.info("[TELEGRAM] Polling started")
 
         url = f"https://api.telegram.org/bot{token}/getUpdates"
         offset = 0
@@ -287,10 +299,12 @@ class TelegramConversationHandler:
 
         logger.info("[TELEGRAM] Starting Telegram long-polling loop (offset=%d)...", offset)
 
+        backoff_seconds = 2
         while self.is_running:
             try:
                 resp = requests.get(url, params={"offset": offset, "timeout": 20}, timeout=25)
                 if resp.status_code == 200:
+                    backoff_seconds = 2
                     data = resp.json()
                     for update in data.get("result", []):
                         offset = max(offset, update.get("update_id", 0) + 1)
@@ -298,12 +312,30 @@ class TelegramConversationHandler:
                             self.process_update(update, send_reply=True)
                         except Exception as update_err:
                             logger.exception("[TELEGRAM] Error processing Telegram update: %s", update_err)
+                elif resp.status_code == 409:
+                    logger.warning("[TELEGRAM] getUpdates returned HTTP 409 (Conflict). Backing off %ds...", backoff_seconds)
+                    time.sleep(backoff_seconds)
+                    backoff_seconds = min(backoff_seconds * 2, 30)
+                elif resp.status_code == 429:
+                    retry_after = 5
+                    try:
+                        retry_after = int(resp.json().get("parameters", {}).get("retry_after", 5))
+                    except Exception:
+                        pass
+                    logger.warning("[TELEGRAM] getUpdates rate-limited (HTTP 429). Sleeping %ds...", retry_after)
+                    time.sleep(retry_after)
                 else:
                     logger.warning("[TELEGRAM] getUpdates returned HTTP %d: %s", resp.status_code, resp.text[:150])
+                    time.sleep(backoff_seconds)
+                    backoff_seconds = min(backoff_seconds * 2, 30)
             except requests.RequestException as req_err:
-                logger.warning("[TELEGRAM] Network error in polling loop: %s", req_err)
+                logger.warning("[TELEGRAM] Network error in polling loop (%s). Retrying in %ds...", req_err, backoff_seconds)
+                time.sleep(backoff_seconds)
+                backoff_seconds = min(backoff_seconds * 2, 30)
             except Exception as e:
-                logger.exception("[TELEGRAM] Polling loop exception: %s", e)
+                logger.exception("[TELEGRAM] Unexpected exception in polling loop: %s", e)
+                time.sleep(backoff_seconds)
+                backoff_seconds = min(backoff_seconds * 2, 30)
 
             runs += 1
             if stop_after_runs and runs >= stop_after_runs:
