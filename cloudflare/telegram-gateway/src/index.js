@@ -23,7 +23,7 @@ import {
   renderStartMenu,
   renderHelpMenu,
 } from "./snapshot.js";
-import { sendMessage, answerCallbackQuery } from "./telegram.js";
+import { sendMessage, answerCallbackQuery, setMyCommands, BOT_COMMANDS } from "./telegram.js";
 import { dispatchWorkflow, getGithubToken } from "./github.js";
 
 const VERSION = "1.0.1";
@@ -54,6 +54,18 @@ export default {
           status: 200,
           headers: { "Content-Type": "application/json" },
         }
+      );
+    }
+
+    if (url.pathname === "/register-commands") {
+      const botToken = env.TELEGRAM_BOT_TOKEN;
+      if (!botToken) {
+        return new Response(JSON.stringify({ error: "Missing TELEGRAM_BOT_TOKEN" }), { status: 500, headers: { "Content-Type": "application/json" } });
+      }
+      const res = await setMyCommands(botToken, BOT_COMMANDS);
+      return new Response(
+        JSON.stringify({ result: res, registered_commands: BOT_COMMANDS }, null, 2),
+        { status: 200, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -205,19 +217,32 @@ export default {
               `• Tracked Stocks: ${Object.keys(snapshot.companies || {}).length}\n` +
               `• Qualified Setups: ${(snapshot.qualified_setups || []).length}`;
             break;
+          case IntentType.STOCK_PROMPT:
+            replyText = "🏷️ *Query Help: /stock*\n\nPlease specify a stock symbol: e.g. `/stock GAIL` or `/stock TRUALT`";
+            break;
           case IntentType.STOCK_LOOKUP: {
+            const sym = (resolved.symbol || "").toUpperCase();
+            const shortSym = (resolved.shortSymbol || "").toUpperCase();
+            const rawTarget = (resolved.rawQuery || "").replace(/^\/stock\s*/i, "").trim().toUpperCase();
+
+            // Match symbol, short_symbol, or company name dynamically from snapshot
             const comp =
-              snapshot.companies[resolved.symbol] ||
-              snapshot.companies[resolved.shortSymbol] ||
+              snapshot.companies[sym] ||
+              snapshot.companies[shortSym] ||
               Object.values(snapshot.companies).find(
-                (c) => c.symbol === resolved.symbol || c.short_symbol === resolved.shortSymbol
+                (c) =>
+                  c.symbol?.toUpperCase() === sym ||
+                  c.short_symbol?.toUpperCase() === shortSym ||
+                  c.name?.toUpperCase() === rawTarget ||
+                  (rawTarget.length >= 3 && c.name?.toUpperCase().includes(rawTarget))
               );
+
             if (comp) {
-              replyText = renderStockCard(comp, isStale);
+              replyText = renderStockCard(comp, snapshot, isStale);
             } else {
               replyText =
                 `🏷️ *Stock Not Found*\n\n` +
-                `Symbol \`${resolved.shortSymbol || resolved.symbol}\` is not in the active scheme watchlist.\n` +
+                `\`${resolved.shortSymbol || resolved.symbol || rawTarget || "Stock"}\` is not currently in the active Scheme-Intel watchlist.\n\n` +
                 `Use /watchlist to see monitored companies.`;
             }
             break;

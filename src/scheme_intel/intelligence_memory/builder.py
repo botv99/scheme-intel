@@ -137,6 +137,24 @@ class IntelligenceSnapshotBuilder:
                 rsi = tech.rsi14 if tech else None
                 trend = tech.trend_status if tech else None
 
+                # Fallback: Query MarketDataEngine if technicals are not in candidate setup
+                if price is None:
+                    try:
+                        from ..market.engine import MarketDataEngine
+                        m_engine = MarketDataEngine()
+                        m_snap, _, _ = m_engine.get_snapshot_with_status(sym)
+                        if m_snap:
+                            price = m_snap.close
+                            change_pct = m_snap.day_change_pct
+                            vol = m_snap.volume
+                            avg_vol = m_snap.volume_20d_avg
+                            support = m_snap.support
+                            resistance = m_snap.resistance
+                            rsi = m_snap.rsi14
+                            trend = m_snap.trend_status
+                    except Exception as e:
+                        logger.debug("Market data fallback failed for %s: %s", sym, e)
+
                 archetype = cand.archetype if cand else None
                 score = cand.score if cand else None
                 trigger_price = wait.trigger_price if wait and wait.trigger_price else (risk.ideal_entry if risk else None)
@@ -160,13 +178,22 @@ class IntelligenceSnapshotBuilder:
                 # Extract latest development / catalyst
                 latest_dev = None
                 catalyst_desc = None
+                catalysts_list: List[str] = []
                 if cand and cand.catalysts:
+                    for cat in cand.catalysts:
+                        c_str = f"{cat.catalyst_name} (Strength: {cat.strength})"
+                        if cat.rationale:
+                            c_str += f": {cat.rationale}"
+                        catalysts_list.append(c_str)
                     cat0 = cand.catalysts[0]
                     catalyst_desc = f"{cat0.catalyst_name} (Strength: {cat0.strength})"
                     latest_dev = cat0.rationale or cat0.catalyst_name
                     key_devs.append(f"{stock.name}: {cat0.catalyst_name}")
                 elif setup and setup.no_trade_reason:
                     latest_dev = setup.no_trade_reason
+
+                if not catalysts_list and catalyst_desc:
+                    catalysts_list.append(catalyst_desc)
 
                 # Evidence from ingested news or setup
                 evidence = ingested_news_by_symbol.get(sym, [])
@@ -181,6 +208,8 @@ class IntelligenceSnapshotBuilder:
                     mapping_rationale=stock.rationale,
                     latest_development=latest_dev,
                     catalyst=catalyst_desc,
+                    catalysts=catalysts_list,
+                    fundamental_score=None,
                     price=price,
                     change_pct=change_pct,
                     volume=vol,
