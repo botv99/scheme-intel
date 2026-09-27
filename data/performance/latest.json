@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-27T12:26:46.542400+00:00",
+  "generated_at": "2026-09-27T17:21:46.266725+00:00",
   "data_period": {
     "start_date": "2026-09-28",
     "end_date": "2026-09-28"
@@ -13,9 +13,9 @@
   "strategy_status": "INSUFFICIENT DATA",
   "setup_metrics": {
     "total_setups": 7,
-    "qualified_setups": 1,
+    "qualified_setups": 2,
     "rejected_setups": 3,
-    "waiting_setups": 3,
+    "waiting_setups": 2,
     "watch_setups": 0,
     "triggered_setups": 0,
     "untriggered_setups": 7,
@@ -118,7 +118,7 @@
     {
       "archetype": "Breakout Anticipation",
       "setups": 2,
-      "qualified": 1,
+      "qualified": 2,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -241,7 +241,7 @@
     {
       "symbol": "TRUALT.NS",
       "setups": 1,
-      "qualified": 0,
+      "qualified": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -308,7 +308,23 @@
     },
     {
       "provider": "Groq \u2192 Openrouter failover",
-      "setups": 2,
+      "setups": 1,
+      "triggered": 0,
+      "completed": 0,
+      "wins": 0,
+      "losses": 0,
+      "expired": 0,
+      "win_rate": null,
+      "average_pnl_pct": null,
+      "expectancy": null,
+      "average_mfe_pct": null,
+      "average_mae_pct": null,
+      "sample_status": "INSUFFICIENT_SAMPLE",
+      "observational_note": "Observational analysis only. Does not establish causation."
+    },
+    {
+      "provider": "Openrouter",
+      "setups": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -394,7 +410,7 @@
     {
       "date": "2026-09-28",
       "setups_generated": 7,
-      "qualified_setups": 1,
+      "qualified_setups": 2,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
