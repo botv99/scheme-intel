@@ -7,12 +7,43 @@ import { safeLog } from "./utils.js";
 const GITHUB_API_BASE = "https://api.github.com";
 
 /**
+ * Resolves a GitHub token safely from various potential environment bindings.
+ * Supports GITHUB_TOKEN, GH_TOKEN, GITHUB_PAT, and global bindings,
+ * handling whitespace, quotes, and newlines safely without leaking secrets.
+ */
+export function getGithubToken(env) {
+  const candidates = [
+    env?.GITHUB_TOKEN,
+    env?.GH_TOKEN,
+    env?.GITHUB_PAT,
+    typeof GITHUB_TOKEN !== "undefined" ? GITHUB_TOKEN : null,
+  ];
+  for (const c of candidates) {
+    if (typeof c === "string") {
+      let t = c.trim();
+      if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'"))) {
+        t = t.slice(1, -1).trim();
+      }
+      if (t.length > 0) {
+        return t;
+      }
+    }
+  }
+  return "";
+}
+
+/**
  * Trigger GitHub repository_dispatch event for 04-telegram-query.yml.
  * Endpoint: POST /repos/{owner}/{repo}/dispatches
  * Expected response: HTTP 204 No Content on success.
  */
 export async function dispatchWorkflow(githubToken, repoOwner, repoName, eventType, clientPayload) {
-  if (!githubToken) {
+  let token = typeof githubToken === "string" ? githubToken.trim() : "";
+  if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith("'") && token.endsWith("'"))) {
+    token = token.slice(1, -1).trim();
+  }
+
+  if (!token) {
     safeLog("error", "github_dispatch_missing_token", {
       repoOwner,
       repoName,

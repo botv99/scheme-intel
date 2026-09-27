@@ -84,7 +84,7 @@ async function main() {
     }
 
     // 3. Register Commands
-    console.log("[*] Registering 19 interactive commands with Telegram setMyCommands...");
+    console.log(`[*] Registering ${BOT_COMMANDS.length} core interactive commands with Telegram setMyCommands...`);
     const cmdRes = await setMyCommands(token, BOT_COMMANDS);
     if (cmdRes.ok) {
       console.log(`✅ Successfully registered ${BOT_COMMANDS.length} bot commands!`);

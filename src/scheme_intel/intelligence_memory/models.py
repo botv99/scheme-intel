@@ -28,9 +28,12 @@ class CompanyIntelligence(BaseModel):
     mapping_rationale: str = ""
     latest_development: Optional[str] = None
     catalyst: Optional[str] = None
+    catalysts: List[str] = Field(default_factory=list)
+    fundamental_score: Optional[float] = None
     price: Optional[float] = None
     change_pct: Optional[float] = None
     volume: Optional[int] = None
+    volume_change_pct: Optional[float] = None
     avg_volume: Optional[int] = None
     trend: Optional[str] = None
     support: Optional[float] = None

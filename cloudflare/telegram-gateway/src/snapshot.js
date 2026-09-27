@@ -78,70 +78,151 @@ function staleBanner(isStale, updatedAt) {
   return "";
 }
 
-export function renderStockCard(comp, isStale = false) {
-  const banner = staleBanner(isStale, comp.updated_at);
-  const priceStr = comp.price != null ? `₹${Number(comp.price).toFixed(2)}` : "N/A";
-  const changeStr = comp.change_pct != null ? `${comp.change_pct >= 0 ? "+" : ""}${Number(comp.change_pct).toFixed(2)}%` : "N/A";
+export function parseDateOnly(dateInput) {
+  if (!dateInput) return null;
+  if (typeof dateInput === "string") {
+    const match = dateInput.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!match) return null;
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const day = parseInt(match[3], 10);
+    const d = new Date(Date.UTC(year, month, day));
+    if (isNaN(d.getTime())) return null;
+    return d;
+  }
+  if (dateInput instanceof Date) {
+    if (isNaN(dateInput.getTime())) return null;
+    return new Date(Date.UTC(dateInput.getUTCFullYear(), dateInput.getUTCMonth(), dateInput.getUTCDate()));
+  }
+  return null;
+}
 
+export function isRecentNews(item, currentDate = new Date()) {
+  if (!item || typeof item !== "object") return false;
+  const rawDate = item.date || item.published_at || item.publishedAt;
+  if (!rawDate || typeof rawDate !== "string") return false;
+
+  const itemDate = parseDateOnly(rawDate);
+  const refDate = parseDateOnly(currentDate);
+
+  if (!itemDate || !refDate) return false;
+
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const diffDays = Math.round((refDate.getTime() - itemDate.getTime()) / msPerDay);
+
+  // Allowed: today (0) or yesterday (1).
+  // Rejected: future (diffDays < 0), older than yesterday (diffDays > 1).
+  return diffDays === 0 || diffDays === 1;
+}
+
+export function renderStockCard(comp, snapshot = null, isStale = false) {
+  // Support both (comp, snapshot, isStale) and legacy (comp, isStale)
+  if (typeof snapshot === "boolean") {
+    isStale = snapshot;
+    snapshot = null;
+  }
+
+  const banner = staleBanner(isStale, comp.updated_at || snapshot?.generated_at);
+  const snapshotDate = snapshot?.generated_at || comp.updated_at || new Date().toISOString();
+
+  // 1. STOCK IDENTITY
   const lines = [
-    `${banner}🏷️ *${comp.short_symbol || comp.symbol}*`,
+    `${banner}🏷️ *${comp.symbol || comp.short_symbol}*`,
     `_${comp.name}_`,
     "",
     `*Scheme:* ${comp.scheme_name || comp.scheme_id || "GOBARdhan"}`,
     `*Relevance:* ${comp.relevance || "High"}`,
     "",
+    // 2. PRICE
     "*PRICE*",
-    `${priceStr} (${changeStr})`,
+    `Current Price: ${comp.price != null ? `₹${Number(comp.price).toFixed(2)}` : "N/A"}`,
+    `Today's Change: ${comp.change_pct != null ? `${comp.change_pct >= 0 ? "+" : ""}${Number(comp.change_pct).toFixed(2)}%` : "N/A"}`,
+    "",
+    // 3. VOLUME
+    "*VOLUME*",
+    `Volume: ${comp.volume != null ? Number(comp.volume).toLocaleString("en-IN") : "N/A"}`,
   ];
 
-  if (comp.trend || comp.support || comp.resistance || comp.rsi) {
-    lines.push(
-      "",
-      "*TECHNICAL STATE*",
-      `• Trend: ${comp.trend || "N/A"}`,
-      comp.support ? `• Support: ₹${Number(comp.support).toFixed(2)}` : "• Support: N/A",
-      comp.resistance ? `• Resistance: ₹${Number(comp.resistance).toFixed(2)}` : "• Resistance: N/A",
-      comp.rsi ? `• RSI (14): ${Number(comp.rsi).toFixed(1)}` : "• RSI (14): N/A"
-    );
+  let volumeChangeStr = "N/A";
+  if (comp.volume != null && comp.avg_volume != null && comp.avg_volume > 0) {
+    const vChange = ((comp.volume - comp.avg_volume) / comp.avg_volume) * 100;
+    volumeChangeStr = `${vChange >= 0 ? "+" : ""}${vChange.toFixed(1)}% vs 20D avg`;
   }
+  lines.push(`Volume Change: ${volumeChangeStr}`);
 
-  lines.push("", `*CURRENT STATUS:* \`${comp.status || "NO_TRADE"}\``);
+  // 4. FUNDAMENTAL SCORE
+  lines.push(
+    "",
+    "*FUNDAMENTAL SCORE*",
+    comp.fundamental_score != null
+      ? `Fundamental Score: ${Number(comp.fundamental_score).toFixed(1)}/10`
+      : "Fundamental Score: N/A\nReason: Fundamental scoring not available in current snapshot."
+  );
 
-  if (comp.archetype) {
-    lines.push(
-      "",
-      "*SETUP*",
-      `• Archetype: ${comp.archetype}`,
-      `• Score: ${comp.score != null ? comp.score : "N/A"}/100`,
-      comp.trigger_price ? `• Trigger: ₹${Number(comp.trigger_price).toFixed(2)}` : "• Trigger: N/A",
-      comp.stop_loss ? `• Stop Loss: ₹${Number(comp.stop_loss).toFixed(2)}` : "• Stop Loss: N/A",
-      comp.target ? `• Target 1: ₹${Number(comp.target).toFixed(2)}` : "• Target 1: N/A"
-    );
-  }
+  // 5. TECHNICAL / INTELLIGENCE SCORE
+  lines.push(
+    "",
+    "*TECHNICAL INTELLIGENCE*",
+    comp.score != null
+      ? `Technical / Intel Score: ${(comp.score / 10).toFixed(1)}/10`
+      : "Technical / Intel Score: N/A"
+  );
 
-  if (comp.bull_thesis || comp.bear_thesis) {
-    lines.push(
-      "",
-      "*AI VIEW*",
-      `• Bull: ${comp.bull_thesis ? (comp.bull_thesis.length > 140 ? comp.bull_thesis.slice(0, 140) + "..." : comp.bull_thesis) : "N/A"}`,
-      `• Bear: ${comp.bear_thesis ? (comp.bear_thesis.length > 140 ? comp.bear_thesis.slice(0, 140) + "..." : comp.bear_thesis) : "N/A"}`
-    );
-  }
-
-  if (comp.risk_summary) {
-    lines.push("", `*RISK:* ${comp.risk_summary}`);
-  }
-
-  if (comp.waiting_conditions && comp.waiting_conditions.length > 0) {
-    lines.push("", "*WAITING CONDITIONS*");
-    for (const wc of comp.waiting_conditions.slice(0, 3)) {
-      lines.push(`• ${wc}`);
+  // 6. TODAY'S CATALYST
+  lines.push("", "*TODAY'S CATALYST*");
+  let catalystRendered = false;
+  if (comp.catalysts && Array.isArray(comp.catalysts) && comp.catalysts.length > 0) {
+    for (const c of comp.catalysts) {
+      lines.push(`• ${typeof c === "string" ? c : c.catalyst_name || c.headline || ""}`);
     }
+    catalystRendered = true;
+  } else if (comp.catalyst) {
+    lines.push(`• ${comp.catalyst}`);
+    catalystRendered = true;
+  } else if (comp.latest_development && comp.status !== "NO_TRADE") {
+    lines.push(`• ${comp.latest_development}`);
+    catalystRendered = true;
+  }
+  if (!catalystRendered) {
+    lines.push("No major catalyst detected in the latest scan.");
   }
 
-  if (comp.updated_at) {
-    lines.push("", `_Updated: ${comp.updated_at.slice(0, 16)} UTC_`);
+  // 7. NEWS
+  lines.push("", "*NEWS*");
+  const allNews = comp.evidence || comp.news || [];
+  const recentNews = allNews.filter((item) => isRecentNews(item, snapshotDate)).slice(0, 5);
+  if (recentNews.length > 0) {
+    for (const n of recentNews) {
+      const headline = n.title || n.headline || "News Update";
+      const source = n.source ? ` — _${n.source}_` : "";
+      const link = n.url ? `\n  ${n.url}` : "";
+      lines.push(`• ${headline}${source}${link}`);
+    }
+  } else {
+    lines.push("No relevant news from today/yesterday.");
   }
+
+  // 8. TRADE SETUP STATUS
+  lines.push("", "*TRADE SETUP*", `Status: \`${comp.status || "NO_TRADE"}\``);
+  if (comp.status === "QUALIFIED_SETUP" || comp.status === "WAIT") {
+    if (comp.archetype) lines.push(`• Archetype: ${comp.archetype}`);
+    if (comp.score != null) lines.push(`• Score: ${comp.score}/100`);
+    if (comp.trigger_price != null) lines.push(`• Trigger: ₹${Number(comp.trigger_price).toFixed(2)}`);
+    if (comp.stop_loss != null) lines.push(`• Stop Loss: ₹${Number(comp.stop_loss).toFixed(2)}`);
+    if (comp.target != null) lines.push(`• Target: ₹${Number(comp.target).toFixed(2)}`);
+  }
+
+  // 9. DATA TIMESTAMP
+  const updatedStr = comp.updated_at ? comp.updated_at.slice(0, 16).replace("T", " ") + " UTC" : "N/A";
+  const snapId = snapshot?.snapshot_id || comp.snapshot_id || "N/A";
+  const statusStr = isStale ? "⚠️ STALE (>26h)" : "🟢 FRESH";
+  lines.push(
+    "",
+    "---",
+    `• Updated: ${updatedStr}`,
+    `• Snapshot: \`${snapId}\``,
+    `• Data Status: ${statusStr}`
+  );
 
   return lines.join("\n");
 }
@@ -301,7 +382,7 @@ export function renderWatchlistCard(snapshot, isStale = false) {
     lines.push(`• *${c.short_symbol || c.symbol}* — ${c.name}: ${priceStr} (${statusStr})`);
   }
 
-  lines.push("", "_Type symbol (e.g. /gail or GAIL) for detailed analysis._");
+  lines.push("", "_Use /stock <symbol> (e.g. /stock GAIL) to view the stock intelligence card._");
   return lines.join("\n");
 }
 
@@ -359,39 +440,25 @@ export function renderBenchmarkCard(snapshot, isStale = false) {
 
 export function renderStartMenu() {
   return (
-    `🚀 *Scheme-Intel Terminal Gateway*\n\n` +
-    `Welcome! Instant conversational intelligence on Government Scheme beneficiaries.\n\n` +
+    `🚀 *Scheme-Intel Terminal*\n\n` +
     `*Quick Commands:*\n` +
-    `• /setups — Today's qualified swing trade setups\n` +
-    `• /waiting — Setups waiting for trigger level\n` +
-    `• /watchlist — Monitored GOBARdhan companies\n` +
-    `• /schemes — Supported government schemes\n` +
-    `• /performance — Forward analytics & win rate\n` +
-    `• /benchmark — Nifty 50 benchmark comparison\n\n` +
-    `*Stock Cards:*\n` +
-    `Type symbol directly: \`GAIL\`, \`Praj\`, \`TRUALT\`\n` +
-    `Or slash shortcut: \`/gail\`, \`/praj\`, \`/trualt\`, \`/why trualt\``
+    `• /stock <symbol> — Full stock intelligence card\n` +
+    `• /setups — Today's qualified setups\n` +
+    `• /watchlist — Monitored stocks\n` +
+    `• /help — Command guide`
   );
 }
 
 export function renderHelpMenu() {
   return (
     `📖 *Scheme-Intel Terminal Commands*\n\n` +
-    `*Stock Analysis:*\n` +
-    `• \`/gail\` or \`GAIL\` — Full intelligence card\n` +
-    `• \`/why trualt\` — Policy relevance rationale\n` +
-    `• \`/what praj\` — Current catalysts & technical state\n` +
-    `• \`/when wabag\` — Actionable levels & trigger conditions\n\n` +
-    `*System Views:*\n` +
-    `• \`/setups\` — Today's qualified trade setups\n` +
-    `• \`/waiting\` — Setups waiting for trigger\n` +
-    `• \`/watchlist\` — All scheme stocks & prices\n` +
-    `• \`/schemes\` — Supported policy frameworks\n` +
-    `• \`/performance\` — Forward trade analytics\n\n` +
-    `*Deep Complex Queries:*\n` +
-    `Ask any comparative or multi-company question:\n` +
-    `• _Compare TRUALT and PRAJ_\n` +
-    `• _Which Gobardhan companies have the strongest catalysts?_\n` +
-    `• \`/research <question>\` for asynchronous deep research.`
+    `*Quick Commands:*\n` +
+    `• \`/stock <symbol>\` — Full stock intelligence card (e.g. \`/stock GAIL\`, \`/stock TRUALT\`)\n` +
+    `• \`/setups\` — Today's qualified swing trade setups\n` +
+    `• \`/watchlist\` — Monitored scheme watchlist stocks\n` +
+    `• \`/help\` — Command guide\n\n` +
+    `*Deep Research & Analysis:*\n` +
+    `• \`/research <question>\` — Asynchronous deep policy research\n` +
+    `• Natural language questions (e.g. _Compare TRUALT and PRAJ_)`
   );
 }

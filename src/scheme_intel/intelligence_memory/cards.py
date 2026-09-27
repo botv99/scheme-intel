@@ -4,6 +4,7 @@ Formats structured intelligence memory into clean, readable, factual Markdown te
 """
 from __future__ import annotations
 
+import re
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from .models import (
@@ -20,76 +21,152 @@ def _stale_banner(is_stale: bool, updated_at: str) -> str:
     return ""
 
 
-def render_stock_card(comp: CompanyIntelligence, is_stale: bool = False) -> str:
-    """Format compact stock intelligence card."""
-    banner = _stale_banner(is_stale, comp.updated_at)
-    price_str = f"₹{comp.price:,.2f}" if comp.price is not None else "N/A"
-    change_str = f"{comp.change_pct:+.2f}%" if comp.change_pct is not None else "N/A"
+def is_recent_news(item: Dict[str, Any], current_date: Optional[str | datetime] = None) -> bool:
+    """
+    Deterministic news date filter.
+    Allowed: current day (diff=0), previous day (diff=1).
+    Rejected: older than previous day (diff>1), future date (diff<0), missing/invalid publication date.
+    """
+    if not item or not isinstance(item, dict):
+        return False
 
+    raw_date = (
+        item.get("date")
+        or item.get("published_at")
+        or item.get("published")
+        or item.get("publishedAt")
+        or item.get("timestamp")
+        or item.get("datetime")
+    )
+    if not raw_date or not isinstance(raw_date, str):
+        return False
+
+    match = re.search(r"(\d{4})-(\d{2})-(\d{2})", raw_date.strip())
+    if not match:
+        return False
+
+    try:
+        item_dt = datetime(int(match.group(1)), int(match.group(2)), int(match.group(3)), tzinfo=timezone.utc).date()
+    except (ValueError, OverflowError):
+        return False
+
+    if current_date is None:
+        ref_dt = datetime.now(timezone.utc).date()
+    elif isinstance(current_date, datetime):
+        ref_dt = current_date.date()
+    elif isinstance(current_date, str):
+        ref_match = re.search(r"(\d{4})-(\d{2})-(\d{2})", current_date.strip())
+        if not ref_match:
+            return False
+        try:
+            ref_dt = datetime(int(ref_match.group(1)), int(ref_match.group(2)), int(ref_match.group(3)), tzinfo=timezone.utc).date()
+        except (ValueError, OverflowError):
+            return False
+    else:
+        return False
+
+    diff_days = (ref_dt - item_dt).days
+    return diff_days in (0, 1)
+
+
+def render_stock_card(comp: CompanyIntelligence, is_stale: bool = False, snapshot_id: Optional[str] = None) -> str:
+    """Format concise Scheme-Intel Stock Intelligence Card with exact 9-section order."""
+    banner = _stale_banner(is_stale, comp.updated_at)
+    snapshot_date = comp.updated_at or datetime.now(timezone.utc).isoformat()
+
+    # 1. STOCK IDENTITY
     lines = [
-        f"{banner}🏷️ *{comp.short_symbol}*",
+        f"{banner}🏷️ *{comp.symbol or comp.short_symbol}*",
         f"_{comp.name}_",
         "",
-        f"*Scheme:* {comp.scheme_name}",
-        f"*Relevance:* {comp.relevance}",
+        f"*Scheme:* {comp.scheme_name or comp.scheme_id or 'GOBARdhan'}",
+        f"*Relevance:* {comp.relevance or 'High'}",
         "",
+        # 2. PRICE
         "*PRICE*",
-        f"{price_str} ({change_str})",
+        f"Current Price: {f'₹{comp.price:,.2f}' if comp.price is not None else 'N/A'}",
+        f"Today's Change: {f'{comp.change_pct:+.2f}%' if comp.change_pct is not None else 'N/A'}",
+        "",
+        # 3. VOLUME
+        "*VOLUME*",
+        f"Volume: {f'{comp.volume:,}' if comp.volume is not None else 'N/A'}",
     ]
 
-    if comp.trend or comp.support or comp.resistance:
-        lines.extend([
-            "",
-            "*TECHNICAL STATE*",
-            f"• Trend: {comp.trend or 'N/A'}",
-            f"• Support: ₹{comp.support:.2f}" if comp.support else "• Support: N/A",
-            f"• Resistance: ₹{comp.resistance:.2f}" if comp.resistance else "• Resistance: N/A",
-            f"• RSI (14): {comp.rsi:.1f}" if comp.rsi else "• RSI (14): N/A",
-        ])
+    volume_change_str = "N/A"
+    if comp.volume is not None and comp.avg_volume is not None and comp.avg_volume > 0:
+        v_change = ((comp.volume - comp.avg_volume) / comp.avg_volume) * 100
+        volume_change_str = f"{v_change:+.1f}% vs 20D avg"
+    lines.append(f"Volume Change: {volume_change_str}")
 
+    # 4. FUNDAMENTAL SCORE
     lines.extend([
         "",
-        f"*CURRENT STATUS:* `{comp.status}`",
+        "*FUNDAMENTAL SCORE*",
+        f"Fundamental Score: {comp.fundamental_score:.1f}/10" if comp.fundamental_score is not None else "Fundamental Score: N/A\nReason: Fundamental scoring not available in current snapshot.",
     ])
 
-    if comp.archetype:
-        lines.extend([
-            "",
-            "*SETUP*",
-            f"• Archetype: {comp.archetype}",
-            f"• Score: {comp.score or 'N/A'}/100",
-            f"• Trigger: ₹{comp.trigger_price:.2f}" if comp.trigger_price else "• Trigger: N/A",
-            f"• Stop Loss: ₹{comp.stop_loss:.2f}" if comp.stop_loss else "• Stop Loss: N/A",
-            f"• Target 1: ₹{comp.target:.2f}" if comp.target else "• Target 1: N/A",
-        ])
+    # 5. TECHNICAL / INTELLIGENCE SCORE
+    lines.extend([
+        "",
+        "*TECHNICAL INTELLIGENCE*",
+        f"Technical / Intel Score: {comp.score / 10.0:.1f}/10" if comp.score is not None else "Technical / Intel Score: N/A",
+    ])
 
-    if comp.bull_thesis or comp.bear_thesis:
-        lines.extend([
-            "",
-            "*AI VIEW*",
-            f"• Bull: {comp.bull_thesis[:140]}..." if comp.bull_thesis and len(comp.bull_thesis) > 140 else f"• Bull: {comp.bull_thesis or 'N/A'}",
-            f"• Bear: {comp.bear_thesis[:140]}..." if comp.bear_thesis and len(comp.bear_thesis) > 140 else f"• Bear: {comp.bear_thesis or 'N/A'}",
-        ])
+    # 6. TODAY'S CATALYST
+    lines.extend(["", "*TODAY'S CATALYST*"])
+    catalyst_rendered = False
+    if comp.catalysts:
+        for c in comp.catalysts:
+            lines.append(f"• {c}")
+        catalyst_rendered = True
+    elif comp.catalyst:
+        lines.append(f"• {comp.catalyst}")
+        catalyst_rendered = True
+    elif comp.latest_development and comp.status != "NO_TRADE":
+        lines.append(f"• {comp.latest_development}")
+        catalyst_rendered = True
 
-    if comp.risk_summary:
-        lines.extend([
-            "",
-            f"*RISK:* {comp.risk_summary}",
-        ])
+    if not catalyst_rendered:
+        lines.append("No major catalyst detected in the latest scan.")
 
-    if comp.waiting_conditions:
-        lines.extend([
-            "",
-            "*WAITING CONDITIONS*",
-        ])
-        for wc in comp.waiting_conditions[:3]:
-            lines.append(f"• {wc}")
+    # 7. NEWS
+    lines.extend(["", "*NEWS*"])
+    all_news = comp.evidence or []
+    recent_news = [item for item in all_news if is_recent_news(item, snapshot_date)][:5]
+    if recent_news:
+        for n in recent_news:
+            headline = n.get("title") or n.get("headline") or "News Update"
+            source = f" — _{n['source']}_" if n.get("source") else ""
+            link = f"\n  {n['url']}" if n.get("url") else ""
+            lines.append(f"• {headline}{source}{link}")
+    else:
+        lines.append("No relevant news from today/yesterday.")
 
-    if comp.updated_at:
-        lines.extend([
-            "",
-            f"_Updated: {comp.updated_at[:16]} UTC_",
-        ])
+    # 8. TRADE SETUP STATUS
+    lines.extend(["", "*TRADE SETUP*", f"Status: `{comp.status or 'NO_TRADE'}`"])
+    if comp.status in ("QUALIFIED_SETUP", "WAIT"):
+        if comp.archetype:
+            lines.append(f"• Archetype: {comp.archetype}")
+        if comp.score is not None:
+            lines.append(f"• Score: {comp.score}/100")
+        if comp.trigger_price is not None:
+            lines.append(f"• Trigger: ₹{comp.trigger_price:,.2f}")
+        if comp.stop_loss is not None:
+            lines.append(f"• Stop Loss: ₹{comp.stop_loss:,.2f}")
+        if comp.target is not None:
+            lines.append(f"• Target: ₹{comp.target:,.2f}")
+
+    # 9. DATA TIMESTAMP
+    updated_str = comp.updated_at[:16].replace("T", " ") + " UTC" if comp.updated_at else "N/A"
+    snap_id = snapshot_id or "N/A"
+    status_str = "⚠️ STALE (>26h)" if is_stale else "🟢 FRESH"
+    lines.extend([
+        "",
+        "---",
+        f"• Updated: {updated_str}",
+        f"• Snapshot: `{snap_id}`",
+        f"• Data Status: {status_str}",
+    ])
 
     return "\n".join(lines)
 
@@ -383,17 +460,10 @@ def render_help_card() -> str:
     return (
         "🤖 *SCHEME-INTEL TERMINAL*\n\n"
         "*FAST INTELLIGENCE*\n"
-        "• `TRUALT` (or any watchlist symbol)\n"
-        "• `/stock <symbol>` — Full intelligence card\n"
-        "• `/why <symbol>` — Why stock is relevant to scheme\n"
-        "• `/what <symbol>` — What is happening with company\n"
-        "• `/when <symbol>` — Triggers & surveillance conditions\n"
-        "• `/schemes` — List covered schemes\n"
-        "• `/scheme <id>` — Scheme overview & developments\n"
+        "• `/stock <symbol>` — Full intelligence card (e.g. `/stock GAIL`)\n"
         "• `/setups` — Current qualified setups\n"
-        "• `/waiting` — Current waiting setups\n"
-        "• `/performance` — Forward validation metrics\n"
-        "• `/benchmark` — NIFTY 50 comparative analytics\n\n"
+        "• `/watchlist` — Monitored scheme watchlist\n"
+        "• `/help` — Command guide\n\n"
         "*DEEP ASYNC RESEARCH*\n"
         "• `/research <question>` — Queue deep investigation\n\n"
         "_Fast commands retrieve precalculated memory. Research runs asynchronously._"
@@ -405,41 +475,28 @@ def render_start_card() -> str:
     return (
         "🤖 *SCHEME-INTEL TERMINAL*\n\n"
         "📊 *Intelligence Terminal*\n\n"
-        "*Stocks*\n"
-        "• /trualt\n"
-        "• /praj\n"
-        "• /wabag\n"
-        "• /organic\n"
-        "• /kirloskar\n"
-        "• /gail\n"
-        "• /ioc\n\n"
-        "*Intelligence*\n"
-        "• /why\n"
-        "• /what\n"
-        "• /when\n"
-        "• /setups\n"
-        "• /waiting\n"
-        "• /watchlist\n"
-        "• /schemes\n"
-        "• /performance\n"
-        "• /benchmark\n\n"
-        "*Research*\n"
-        "• `/research <question>`"
+        "*Quick Commands:*\n"
+        "• `/stock <symbol>` — Full stock intelligence card\n"
+        "• `/setups` — Current qualified setups\n"
+        "• `/watchlist` — Monitored companies\n"
+        "• `/help` — Command guide\n\n"
+        "*Deep Research:*\n"
+        "• `/research <question>` — Deep async investigation"
     )
 
 
-def render_stock_prompt_card(command: str = "/why") -> str:
-    """Format prompt when /why, /what, /when is called without a stock symbol."""
+def render_stock_prompt_card(command: str = "/stock") -> str:
+    """Format prompt when /stock or shortcut is called without a stock symbol."""
     return (
         "Which stock?\n\n"
+        "Usage: `/stock <symbol>`\n"
         "Try:\n"
         "TRUALT\n"
         "PRAJ\n"
         "WABAG\n"
-        "ORGANIC\n"
-        "KIRLPNU\n"
         "GAIL\n"
-        "IOC"
+        "IOC\n\n"
+        "Use /watchlist to see monitored companies."
     )
 
 
@@ -461,7 +518,7 @@ def render_watchlist_card(companies: Dict[str, CompanyIntelligence], is_stale: b
 
     lines.extend([
         "",
-        "Use `/stock <symbol>` or shortcuts like `/trualt`, `/praj` to view full intelligence.",
+        "Use `/stock <symbol>` (e.g. `/stock GAIL`) to view full intelligence.",
     ])
     return "\n".join(lines)
 
@@ -471,27 +528,22 @@ def get_terminal_inline_keyboard() -> Dict[str, Any]:
     return {
         "inline_keyboard": [
             [
-                {"text": "TRUALT", "callback_data": "/trualt"},
-                {"text": "PRAJ", "callback_data": "/praj"},
-                {"text": "WABAG", "callback_data": "/wabag"},
+                {"text": "TRUALT", "callback_data": "/stock TRUALT"},
+                {"text": "PRAJ", "callback_data": "/stock PRAJ"},
+                {"text": "WABAG", "callback_data": "/stock WABAG"},
             ],
             [
-                {"text": "ORGANIC", "callback_data": "/organic"},
-                {"text": "KIRLPNU", "callback_data": "/kirloskar"},
-                {"text": "GAIL", "callback_data": "/gail"},
-                {"text": "IOC", "callback_data": "/ioc"},
+                {"text": "IONEXCHANG", "callback_data": "/stock IONEXCHANG"},
+                {"text": "KIRLPNU", "callback_data": "/stock KIRLPNU"},
+                {"text": "GAIL", "callback_data": "/stock GAIL"},
+                {"text": "IOC", "callback_data": "/stock IOC"},
             ],
             [
                 {"text": "SETUPS", "callback_data": "/setups"},
-                {"text": "WAITING", "callback_data": "/waiting"},
-            ],
-            [
                 {"text": "WATCHLIST", "callback_data": "/watchlist"},
-                {"text": "SCHEMES", "callback_data": "/schemes"},
             ],
             [
-                {"text": "PERFORMANCE", "callback_data": "/performance"},
-                {"text": "BENCHMARK", "callback_data": "/benchmark"},
+                {"text": "HELP", "callback_data": "/help"},
             ],
         ]
     }
@@ -499,8 +551,10 @@ def get_terminal_inline_keyboard() -> Dict[str, Any]:
 
 def render_unknown_stock(symbol: str) -> str:
     return (
-        f"I don't recognize `{symbol}` in the active Scheme-Intel watchlist.\n\n"
-        "Use `/schemes` or `/help` to view covered schemes and stocks."
+        "🏷️ *Stock Not Found*\n\n"
+        f"I don't recognize `{symbol.upper()}` in the active Scheme-Intel watchlist.\n\n"
+        f"`{symbol.upper()}` is not currently in the active Scheme-Intel watchlist.\n\n"
+        "Use /watchlist or /schemes to see monitored companies."
     )
 
 

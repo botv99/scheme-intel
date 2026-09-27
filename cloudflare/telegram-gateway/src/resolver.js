@@ -29,6 +29,8 @@ export const IntentType = {
   BENCHMARK_LOOKUP: "BENCHMARK_LOOKUP",
   RESEARCH_REQUEST: "RESEARCH_REQUEST",
   COMPLEX_QUERY: "COMPLEX_QUERY",
+  STOCK_PROMPT: "STOCK_PROMPT",
+  STOCK_UNKNOWN: "STOCK_UNKNOWN",
   UNKNOWN: "UNKNOWN",
 };
 
@@ -82,8 +84,32 @@ const STOCK_SLASH_SHORTCUTS = {
 
 export function resolveStock(text) {
   if (!text) return null;
-  const tokenClean = text.trim().toUpperCase().replace(/[^\w.]/g, "");
-  return GLOBAL_STOCK_ALIASES[tokenClean] || null;
+  const raw = text.trim().toUpperCase();
+  const normalizedSpaces = raw.replace(/\s+/g, " ");
+
+  // Direct alias match (e.g. "TRUALT", "PRAJ INDUSTRIES")
+  if (GLOBAL_STOCK_ALIASES[normalizedSpaces]) {
+    return GLOBAL_STOCK_ALIASES[normalizedSpaces];
+  }
+
+  // Without punctuation / special chars
+  const tokenClean = raw.replace(/[^\w.]/g, "");
+  if (GLOBAL_STOCK_ALIASES[tokenClean]) {
+    return GLOBAL_STOCK_ALIASES[tokenClean];
+  }
+
+  // Match by full company name, symbol, or ticker
+  for (const meta of Object.values(GLOBAL_STOCK_ALIASES)) {
+    if (
+      meta.name.toUpperCase() === normalizedSpaces ||
+      meta.symbol.toUpperCase() === tokenClean ||
+      meta.short.toUpperCase() === tokenClean
+    ) {
+      return meta;
+    }
+  }
+
+  return null;
 }
 
 export function findAllStocksInText(text) {
@@ -233,6 +259,40 @@ export function resolveIntent(message) {
           normalizedQuery: normalized,
           schemeId: "gobardhan",
         };
+      case "/stock": {
+        if (!remainder) {
+          return {
+            intentType: IntentType.STOCK_PROMPT,
+            executionPath: ExecutionPath.FAST,
+            rawQuery: raw,
+            normalizedQuery: normalized,
+            schemeId: "gobardhan",
+          };
+        }
+        const stock = resolveStock(remainder);
+        if (stock) {
+          return {
+            intentType: IntentType.STOCK_LOOKUP,
+            executionPath: ExecutionPath.FAST,
+            symbol: stock.symbol,
+            shortSymbol: stock.short,
+            companyName: stock.name,
+            schemeId: stock.scheme,
+            rawQuery: raw,
+            normalizedQuery: normalized,
+          };
+        }
+        // Unknown stock - still FAST path!
+        return {
+          intentType: IntentType.STOCK_LOOKUP,
+          executionPath: ExecutionPath.FAST,
+          symbol: remainder.trim().toUpperCase(),
+          shortSymbol: remainder.trim().toUpperCase(),
+          rawQuery: raw,
+          normalizedQuery: normalized,
+          isUnknownCandidate: true,
+        };
+      }
       case "/setups":
         return {
           intentType: IntentType.SETUPS_LOOKUP,

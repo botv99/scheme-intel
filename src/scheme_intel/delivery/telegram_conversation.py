@@ -51,23 +51,9 @@ def register_bot_commands(token: str) -> bool:
     commands = [
         {"command": "start", "description": "Terminal main menu & shortcuts"},
         {"command": "help", "description": "Command guide & query examples"},
+        {"command": "stock", "description": "Stock intelligence card (/stock <SYM>)"},
         {"command": "setups", "description": "Today's qualified setups"},
-        {"command": "waiting", "description": "Setups waiting for trigger"},
-        {"command": "watchlist", "description": "GOBARdhan scheme watchlist"},
-        {"command": "schemes", "description": "Supported policy schemes"},
-        {"command": "performance", "description": "Forward performance analytics"},
-        {"command": "benchmark", "description": "Nifty 50 benchmark comparison"},
-        {"command": "trualt", "description": "TruAlt Bioenergy thesis & card"},
-        {"command": "praj", "description": "Praj Industries thesis & card"},
-        {"command": "wabag", "description": "VA Tech Wabag thesis & card"},
-        {"command": "organic", "description": "Organic Recycling Systems card"},
-        {"command": "kirloskar", "description": "Kirloskar Pneumatic card"},
-        {"command": "gail", "description": "GAIL India thesis & card"},
-        {"command": "ioc", "description": "Indian Oil Corporation card"},
-        {"command": "why", "description": "Why a stock is in scheme (/why <SYM>)"},
-        {"command": "what", "description": "What is happening with company (/what <SYM>)"},
-        {"command": "when", "description": "When to watch / enter (/when <SYM>)"},
-        {"command": "research", "description": "Deep policy research (/research <Q>)"},
+        {"command": "watchlist", "description": "Monitored scheme watchlist"},
     ]
     try:
         url = f"https://api.telegram.org/bot{token}/setMyCommands"

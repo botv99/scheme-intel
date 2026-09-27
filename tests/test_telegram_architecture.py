@@ -225,7 +225,7 @@ class TestWebhookConflictDetection:
             assert success is True
             assert mock_post.called
             payload = mock_post.call_args[1]["json"]
-            assert any(c["command"] == "trualt" for c in payload["commands"])
+            assert any(c["command"] == "stock" for c in payload["commands"])
             assert any(c["command"] == "setups" for c in payload["commands"])
 
 
@@ -291,9 +291,8 @@ class TestPathAFastQueries:
 
         resp = handler.handle_message("/start")
         assert "SCHEME-INTEL" in resp
-        assert "• /trualt" in resp
-        assert "• /praj" in resp
-        assert "• /setups" in resp
+        assert "stock" in resp.lower()
+        assert "setups" in resp.lower()
         dispatcher.dispatch_query.assert_not_called()
 
     def test_why_without_symbol_prompts_user_without_workflow(self, test_env):

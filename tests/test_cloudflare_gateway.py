@@ -238,3 +238,206 @@ def test_cloudflare_snapshot_rendering_logic():
     assert "DATA NOTE: Snapshot is >26h old" in snapshot_js
     assert "GOBARdhan" in snapshot_js
 
+
+def test_cloudflare_token_resolution_contract():
+    """Verify GitHub token fallback and sanitization contract in github.js."""
+    github_js = (CF_DIR / "src" / "github.js").read_text(encoding="utf-8")
+    assert "export function getGithubToken" in github_js
+    assert "GITHUB_TOKEN" in github_js
+    assert "GH_TOKEN" in github_js
+    assert "GITHUB_PAT" in github_js
+
+    # Mirror contract test
+    def resolve_token(env_dict):
+        candidates = [
+            env_dict.get("GITHUB_TOKEN"),
+            env_dict.get("GH_TOKEN"),
+            env_dict.get("GITHUB_PAT"),
+        ]
+        for c in candidates:
+            if isinstance(c, str):
+                t = c.strip()
+                if (t.startswith('"') and t.endswith('"')) or (t.startswith("'") and t.endswith("'")):
+                    t = t[1:-1].strip()
+                if len(t) > 0:
+                    return t
+        return ""
+
+    assert resolve_token({}) == ""
+    assert resolve_token({"GITHUB_TOKEN": ""}) == ""
+    assert resolve_token({"GITHUB_TOKEN": "   "}) == ""
+    assert resolve_token({"GITHUB_TOKEN": '"ghp_test123"'}) == "ghp_test123"
+    assert resolve_token({"GITHUB_TOKEN": "'ghp_test456'"}) == "ghp_test456"
+    assert resolve_token({"GH_TOKEN": "ghp_fallback"}) == "ghp_fallback"
+    assert resolve_token({"GITHUB_PAT": "github_pat_789"}) == "github_pat_789"
+
+
+def test_cloudflare_health_diagnostics_contract():
+    """Verify index.js health check returns safe diagnostics without token values."""
+    index_js = (CF_DIR / "src" / "index.js").read_text(encoding="utf-8")
+    assert "/health" in index_js
+    assert "diagnostics" in index_js
+    assert "github_token_configured" in index_js
+    assert "telegram_bot_token_configured" in index_js
+    assert "telegram_webhook_secret_configured" in index_js
+    assert "env_keys" in index_js
+
+
+def test_bot_commands_curated_menu():
+    """Verify only 5 core commands are registered in both Cloudflare and Python."""
+    telegram_js = (CF_DIR / "src" / "telegram.js").read_text(encoding="utf-8")
+    assert "BOT_COMMANDS" in telegram_js
+    # Ensure individual stocks and why/what/when are not advertised
+    for banned in ["trualt", "praj", "gail", "wabag", "why", "what", "when", "waiting"]:
+        pattern = rf'command:\s*["\']{banned}["\']'
+        assert not re.search(pattern, telegram_js), f"Command '{banned}' should not be advertised in BOT_COMMANDS"
+
+    # Python conversation module check
+    py_conv = (REPO_ROOT / "src" / "scheme_intel" / "delivery" / "telegram_conversation.py").read_text(encoding="utf-8")
+    for banned in ["trualt", "praj", "gail", "wabag", "why", "what", "when", "waiting"]:
+        pattern = rf'["\']command["\']:\s*["\']{banned}["\']'
+        assert not re.search(pattern, py_conv), f"Command '{banned}' should not be in telegram_conversation.py commands"
+
+
+def test_stock_command_intent_resolution():
+    """Verify /stock command resolution for symbols, names, aliases, and prompts."""
+    # Direct symbol
+    res = IntentResolver.resolve("/stock GAIL")
+    assert res.intent_type == IntentType.STOCK_LOOKUP
+    assert res.symbol == "GAIL.NS"
+
+    # Multi-word alias / company name
+    res2 = IntentResolver.resolve("/stock Praj Industries")
+    assert res2.intent_type == IntentType.STOCK_LOOKUP
+    assert res2.symbol == "PRAJIND.NS"
+
+    # Standalone /stock without argument returns STOCK_PROMPT
+    res3 = IntentResolver.resolve("/stock")
+    assert res3.intent_type == IntentType.STOCK_PROMPT
+    assert res3.execution_path == ExecutionPath.FAST
+
+    # Unknown stock via /stock produces STOCK_LOOKUP with unresolved_symbol for fast card
+    res4 = IntentResolver.resolve("/stock NONEXISTENT")
+    assert res4.intent_type == IntentType.STOCK_LOOKUP
+    assert res4.execution_path == ExecutionPath.FAST
+    assert res4.unresolved_symbol == "NONEXISTENT"
+
+
+def test_unknown_stock_fast_card():
+    """Verify unknown stock returns clear, clean FAST card with /watchlist reference."""
+    from scheme_intel.intelligence_memory.cards import render_unknown_stock
+    card = render_unknown_stock("ABCXYZ")
+    assert "Stock Not Found" in card
+    assert "ABCXYZ" in card
+    assert "/watchlist" in card
+
+
+def test_is_recent_news_filtering():
+    """Verify news is strictly filtered to today and yesterday only."""
+    from scheme_intel.intelligence_memory.cards import is_recent_news
+
+    ref_date = "2026-09-27"
+
+    # Today -> included
+    assert is_recent_news({"published": "2026-09-27T10:00:00Z"}, ref_date) is True
+    assert is_recent_news({"date": "2026-09-27"}, ref_date) is True
+
+    # Yesterday -> included
+    assert is_recent_news({"published": "2026-09-26T18:00:00Z"}, ref_date) is True
+    assert is_recent_news({"date": "2026-09-26"}, ref_date) is True
+
+    # 2 days ago -> excluded
+    assert is_recent_news({"published": "2026-09-25T23:59:59Z"}, ref_date) is False
+    assert is_recent_news({"date": "2026-09-25"}, ref_date) is False
+
+    # 7 days ago -> excluded
+    assert is_recent_news({"published": "2026-09-20T12:00:00Z"}, ref_date) is False
+
+    # Future date -> excluded
+    assert is_recent_news({"published": "2026-09-28T09:00:00Z"}, ref_date) is False
+
+    # Invalid / missing -> excluded
+    assert is_recent_news({}, ref_date) is False
+    assert is_recent_news({"published": "invalid-date-string"}, ref_date) is False
+
+
+def test_stock_card_9_sections_exact_order():
+    """Verify stock card produces all 9 sections in exact specified order."""
+    from scheme_intel.intelligence_memory.models import CompanyIntelligence
+    from scheme_intel.intelligence_memory.cards import render_stock_card
+
+    comp = CompanyIntelligence(
+        symbol="GAIL.NS",
+        name="GAIL (India) Limited",
+        short_symbol="GAIL",
+        scheme_id="gobardhan",
+        scheme_name="GOBARdhan",
+        price=172.70,
+        change_pct=1.45,
+        volume=12450000,
+        volume_change_pct=24.5,
+        score=78.0,
+        status="QUALIFIED_SETUP",
+        archetype="Policy Breakout",
+        trigger_price=175.0,
+        stop_loss=168.0,
+        target=185.0,
+        catalysts=["CBG pipeline synchronization mandate"],
+        evidence=[
+            {"title": "GAIL expands CBG infrastructure", "source": "Economic Times", "url": "https://example.com/gail", "published": "2026-09-27T08:00:00Z"}
+        ],
+        updated_at="2026-09-27T10:00:00Z"
+    )
+
+    card = render_stock_card(comp, is_stale=False, snapshot_id="snap-20260927-1000")
+
+    # Check presence of all 9 sections
+    assert "GAIL (India) Limited" in card
+    assert "Current Price: ₹172.70" in card
+    assert "Volume: 12,450,000" in card
+    assert "FUNDAMENTAL SCORE" in card
+    assert "Fundamental scoring not available in current snapshot" in card
+    assert "TECHNICAL INTELLIGENCE" in card
+    assert "Technical / Intel Score: 7.8/10" in card
+    assert "TODAY'S CATALYST" in card
+    assert "CBG pipeline synchronization mandate" in card
+    assert "NEWS" in card
+    assert "GAIL expands CBG infrastructure" in card
+    assert "TRADE SETUP" in card
+    assert "Status: `QUALIFIED_SETUP`" in card
+    assert "Updated:" in card
+    assert "Snapshot: `snap-20260927-1000`" in card
+    assert "Data Status: 🟢 FRESH" in card
+
+    # Check exact section order
+    idx_identity = card.index("GAIL (India) Limited")
+    idx_price = card.index("Current Price:")
+    idx_volume = card.index("Volume:")
+    idx_fund = card.index("FUNDAMENTAL SCORE")
+    idx_tech = card.index("TECHNICAL INTELLIGENCE")
+    idx_catalyst = card.index("TODAY'S CATALYST")
+    idx_news = card.index("NEWS")
+    idx_setup = card.index("TRADE SETUP")
+    idx_timestamp = card.index("Snapshot:")
+
+    assert idx_identity < idx_price < idx_volume < idx_fund < idx_tech < idx_catalyst < idx_news < idx_setup < idx_timestamp
+
+
+def test_latest_snapshot_has_real_prices_and_volumes():
+    """Verify that latest.json snapshot contains real prices and volumes for all monitored companies."""
+    snap_path = REPO_ROOT / "data" / "intelligence" / "latest.json"
+    assert snap_path.exists(), "latest.json must exist"
+    with open(snap_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    companies = data.get("companies", {})
+    assert len(companies) >= 7, "Must contain at least 7 monitored companies"
+
+    for sym, comp in companies.items():
+        assert comp.get("price") is not None, f"Price for {sym} must not be null"
+        assert comp.get("price") > 0, f"Price for {sym} must be positive"
+        assert comp.get("volume") is not None, f"Volume for {sym} must not be null"
+        assert comp.get("volume") > 0, f"Volume for {sym} must be positive"
+
+
+

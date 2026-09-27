@@ -44,6 +44,8 @@ class IntentType(str, Enum):
     BENCHMARK_LOOKUP = "BENCHMARK_LOOKUP"
     RESEARCH_REQUEST = "RESEARCH_REQUEST"
     COMPLEX_QUERY = "COMPLEX_QUERY"
+    STOCK_PROMPT = "STOCK_PROMPT"
+    STOCK_UNKNOWN = "STOCK_UNKNOWN"
     UNKNOWN = "UNKNOWN"
 
 
@@ -55,6 +57,7 @@ class ResolvedIntent(BaseModel):
     short_symbol: Optional[str] = None     # Base ticker e.g., "TRUALT"
     company_name: Optional[str] = None     # Full company name e.g., "TruAlt Bioenergy"
     scheme_id: Optional[str] = None        # Scheme ID e.g., "gobardhan"
+    unresolved_symbol: Optional[str] = None # When user requests an unrecognized stock
     raw_query: str = ""
     normalized_query: str = ""
     parameters: Dict[str, Any] = Field(default_factory=dict)
@@ -118,9 +121,22 @@ class IntentResolver:
         if not text:
             return None
         token = text.strip().upper()
+        token_norm = re.sub(r"\s+", " ", token)
         token_clean = re.sub(r"[^\w\.]", "", token)
 
         # 1. Direct dictionary match
+        if token_norm in GLOBAL_STOCK_ALIASES:
+            meta = GLOBAL_STOCK_ALIASES[token_norm]
+            stock = SchemeStock(
+                name=meta["name"],
+                symbol=meta["symbol"],
+                aliases=[meta["short"]],
+                screener_id=meta["short"],
+                sectors=["Bio-Energy"],
+                rationale="Watchlist company mapped to scheme.",
+            )
+            return stock, meta["scheme"]
+
         if token_clean in GLOBAL_STOCK_ALIASES:
             meta = GLOBAL_STOCK_ALIASES[token_clean]
             stock = SchemeStock(
@@ -145,10 +161,10 @@ class IntentResolver:
                 if stock.screener_id and token_clean == stock.screener_id.upper():
                     return stock, scheme.id
 
-                if token_clean == stock.name.upper():
+                if token_norm == stock.name.upper() or token_clean == re.sub(r"[^\w\.]", "", stock.name.upper()):
                     return stock, scheme.id
                 for alias in stock.aliases:
-                    if token_clean == alias.upper():
+                    if token_norm == alias.upper() or token_clean == re.sub(r"[^\w\.]", "", alias.upper()):
                         return stock, scheme.id
 
         return None
@@ -404,12 +420,31 @@ class IntentResolver:
                 return ResolvedIntent(intent_type=IntentType.STOCK_WHEN, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized, parameters={"unresolved_symbol": remainder})
 
             if first_token in ("/stock",):
-                if remainder:
-                    match = cls.find_stock_in_text(remainder)
-                    if match:
-                        stock, s_id = match
-                        return ResolvedIntent(intent_type=IntentType.STOCK_LOOKUP, execution_path=ExecutionPath.FAST, symbol=stock.symbol, short_symbol=stock.symbol.split(".")[0], company_name=stock.name, scheme_id=s_id, raw_query=raw, normalized_query=normalized)
-                    return ResolvedIntent(intent_type=IntentType.STOCK_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized, parameters={"unresolved_symbol": remainder})
+                if not remainder:
+                    return ResolvedIntent(intent_type=IntentType.STOCK_PROMPT, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+                match = cls.resolve_stock(remainder) or cls.find_stock_in_text(remainder)
+                if match:
+                    stock, s_id = match
+                    return ResolvedIntent(
+                        intent_type=IntentType.STOCK_LOOKUP,
+                        execution_path=ExecutionPath.FAST,
+                        symbol=stock.symbol,
+                        short_symbol=stock.symbol.split(".")[0],
+                        company_name=stock.name,
+                        scheme_id=s_id,
+                        raw_query=raw,
+                        normalized_query=normalized,
+                    )
+                return ResolvedIntent(
+                    intent_type=IntentType.STOCK_LOOKUP,
+                    execution_path=ExecutionPath.FAST,
+                    symbol=remainder.strip().upper(),
+                    short_symbol=remainder.strip().upper(),
+                    unresolved_symbol=remainder.strip().upper(),
+                    raw_query=raw,
+                    normalized_query=normalized,
+                    parameters={"unresolved_symbol": remainder.strip().upper()},
+                )
 
         # ====================================================
         # 2. Path B: Complex Analytical Query Detection (WORKFLOW)
