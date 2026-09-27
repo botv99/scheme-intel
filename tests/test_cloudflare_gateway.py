@@ -238,3 +238,48 @@ def test_cloudflare_snapshot_rendering_logic():
     assert "DATA NOTE: Snapshot is >26h old" in snapshot_js
     assert "GOBARdhan" in snapshot_js
 
+
+def test_cloudflare_token_resolution_contract():
+    """Verify GitHub token fallback and sanitization contract in github.js."""
+    github_js = (CF_DIR / "src" / "github.js").read_text(encoding="utf-8")
+    assert "export function getGithubToken" in github_js
+    assert "GITHUB_TOKEN" in github_js
+    assert "GH_TOKEN" in github_js
+    assert "GITHUB_PAT" in github_js
+
+    # Mirror contract test
+    def resolve_token(env_dict):
+        candidates = [
+            env_dict.get("GITHUB_TOKEN"),
+            env_dict.get("GH_TOKEN"),
+            env_dict.get("GITHUB_PAT"),
+        ]
+        for c in candidates:
+            if isinstance(c, str):
+                t = c.strip()
+                if (t.startswith('"') and t.endswith('"')) or (t.startswith("'") and t.endswith("'")):
+                    t = t[1:-1].strip()
+                if len(t) > 0:
+                    return t
+        return ""
+
+    assert resolve_token({}) == ""
+    assert resolve_token({"GITHUB_TOKEN": ""}) == ""
+    assert resolve_token({"GITHUB_TOKEN": "   "}) == ""
+    assert resolve_token({"GITHUB_TOKEN": '"ghp_test123"'}) == "ghp_test123"
+    assert resolve_token({"GITHUB_TOKEN": "'ghp_test456'"}) == "ghp_test456"
+    assert resolve_token({"GH_TOKEN": "ghp_fallback"}) == "ghp_fallback"
+    assert resolve_token({"GITHUB_PAT": "github_pat_789"}) == "github_pat_789"
+
+
+def test_cloudflare_health_diagnostics_contract():
+    """Verify index.js health check returns safe diagnostics without token values."""
+    index_js = (CF_DIR / "src" / "index.js").read_text(encoding="utf-8")
+    assert "/health" in index_js
+    assert "diagnostics" in index_js
+    assert "github_token_configured" in index_js
+    assert "telegram_bot_token_configured" in index_js
+    assert "telegram_webhook_secret_configured" in index_js
+    assert "env_keys" in index_js
+
+

@@ -24,9 +24,9 @@ import {
   renderHelpMenu,
 } from "./snapshot.js";
 import { sendMessage, answerCallbackQuery } from "./telegram.js";
-import { dispatchWorkflow } from "./github.js";
+import { dispatchWorkflow, getGithubToken } from "./github.js";
 
-const VERSION = "1.0.0";
+const VERSION = "1.0.1";
 
 export default {
   async fetch(request, env, ctx) {
@@ -35,12 +35,20 @@ export default {
 
     // 1. Health check endpoints
     if (url.pathname === "/health") {
+      const resolvedGithubToken = getGithubToken(env);
+      const isGithubConfigured = resolvedGithubToken.length > 0;
       return new Response(
         JSON.stringify({
           status: "ok",
           service: "scheme-intel-telegram-gateway",
           version: VERSION,
           timestamp: new Date().toISOString(),
+          diagnostics: {
+            github_token_configured: isGithubConfigured,
+            telegram_bot_token_configured: Boolean(env?.TELEGRAM_BOT_TOKEN),
+            telegram_webhook_secret_configured: Boolean(env?.TELEGRAM_WEBHOOK_SECRET),
+            env_keys: Object.keys(env || {}).sort(),
+          },
         }, null, 2),
         {
           status: 200,
@@ -314,8 +322,9 @@ export default {
 
       ctx.waitUntil(
         (async () => {
+          const githubToken = getGithubToken(env);
           const dispatchRes = await dispatchWorkflow(
-            env.GITHUB_TOKEN,
+            githubToken,
             owner,
             repo,
             "telegram_query",
@@ -369,8 +378,9 @@ export default {
 
       ctx.waitUntil(
         (async () => {
+          const githubToken = getGithubToken(env);
           const dispatchRes = await dispatchWorkflow(
-            env.GITHUB_TOKEN,
+            githubToken,
             owner,
             repo,
             "telegram_query",
