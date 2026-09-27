@@ -1,0 +1,38 @@
+[project]
+name = "scheme-intel"
+version = "2.0.0"
+description = "Evidence-led monitor, intelligence pipeline, and quantitative swing analytics for India's renewable energy and bio-energy ecosystem"
+requires-python = ">=3.11"
+readme = "README.md"
+
+dependencies = [
+    "requests>=2.31,<3.0",
+    "feedparser>=6.0,<7.0",
+    "beautifulsoup4>=4.12,<5.0",
+    "PyYAML>=6.0,<7.0",
+    "yfinance>=1.7,<2.0",
+    "pandas>=2.0,<4.0",
+    "pydantic>=2.0,<3.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=9.0,<10.0",
+    "pytest-cov>=7.0,<8.0",
+    "pytest-xdist>=3.0,<4.0",
+    "pytest-html>=4.0,<5.0",
+    "pytest-mock>=3.10,<4.0",
+]
+
+[tool.pyright]
+include = ["src", "tests"]
+extraPaths = ["src", "."]
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "basic"
+reportMissingImports = false
+reportMissingTypeStubs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "src"]

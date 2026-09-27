@@ -6,19 +6,19 @@ from ..stage2.providers import (
     LLMProvider,
     ProviderResponse,
     LLMProviderManager,
-    get_llm_provider,
     GeminiProvider,
     GroqProvider,
     OpenRouterProvider,
     OpenAIProvider,
     MockProvider,
 )
+from ..stage2.pipeline import get_llm_provider
 from ..stage2.agents import (
-    DebateAgent,
     BullAgent,
     BearAgent,
     ArbitratorAgent,
 )
+from ..stage2.agents.base import BaseAgent
 from .debate import DebateOrchestrator
 
 __all__ = [
@@ -31,7 +31,7 @@ __all__ = [
     "OpenRouterProvider",
     "OpenAIProvider",
     "MockProvider",
-    "DebateAgent",
+    "BaseAgent",
     "BullAgent",
     "BearAgent",
     "ArbitratorAgent",

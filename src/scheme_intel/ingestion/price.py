@@ -21,6 +21,7 @@ from bs4 import BeautifulSoup
 
 from ..exceptions import SourceAccessError
 from ..logger import get_logger
+from ..core.http import create_retry_session
 from .models import PriceSnapshot
 
 logger = get_logger(__name__)
@@ -36,7 +37,7 @@ _NUMBER_RE = re.compile(r"-?[0-9.]+")
 
 
 def _session() -> requests.Session:
-    session = requests.Session()
+    session = create_retry_session(retries=3, backoff_factor=0.5)
     session.headers.update({"User-Agent": BROWSER_UA})
     return session
 
@@ -44,7 +45,7 @@ def _session() -> requests.Session:
 def _to_float(value: Optional[str]) -> Optional[float]:
     if value is None:
         return None
-    match = _NUMBER_RE.search(str(value).replace(",", ""))
+    match = _NUMBER_RE.search(value.replace(",", ""))
     return float(match.group()) if match else None
 
 
@@ -60,7 +61,7 @@ def default_screener_id(symbol: str) -> str:
     return symbol.split(".")[0].upper()
 
 
-def _yfinance_history(symbol: str) -> tuple[list[dict], Optional[float], Optional[float], Optional[float]]:
+def _yfinance_history(symbol: Optional[str]) -> tuple[list[dict], Optional[float], Optional[float], Optional[float]]:
     """Fetch a 6-month OHLC history from Yahoo Finance for a symbol.
 
     Returns:
@@ -227,10 +228,10 @@ def fetch_screener_snapshot(stock: dict, screener_id: Optional[str], days: int =
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
 
-        company_id = None
+        company_id: Optional[str] = None
         info = soup.select_one("#company-info")
-        if info:
-            company_id = info.get("data-company-id")
+        if info and info.get("data-company-id"):
+            company_id = str(info.get("data-company-id")).strip()
 
         price, change_pct, date_header = _parse_top_header(soup)
         ratios = _parse_ratios(soup)

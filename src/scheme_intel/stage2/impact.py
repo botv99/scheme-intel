@@ -165,7 +165,7 @@ def score_catalyst_impact(
         f"(Source: {news.source} - Tier {news.source_tier}, Certainty: {certainty}, "
         f"Strength: {strength}/100, Duration: {duration})."
     )
-    if already_priced_in:
+    if already_priced_in and snapshot is not None:
         rationale += f" Caution: Recent run-up ({snapshot.performance_20d:.1f}% 20d) suggests news may be partially priced in."
 
     return CatalystImpact(

@@ -5,26 +5,13 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from .config import load_config as _load_config
+from .config import load_config
+from .logger import get_logger
 from .pipeline import Pipeline
 
-ROOT = Path(__file__).resolve().parents[2]
+logger = get_logger(__name__)
 
-
-def load_config(config_path: Optional[Path | str] = None) -> dict:
-    """
-    Load and validate watchlist configuration from YAML.
-
-    Args:
-        config_path: Optional path to config file (defaults to config/watchlist.yaml)
-
-    Returns:
-        Dictionary containing configuration
-
-    Raises:
-        ConfigurationError: If configuration file is missing or invalid
-    """
-    return _load_config(config_path)
+__all__ = ["run", "load_config"]
 
 
 def run(
@@ -69,6 +56,7 @@ def run(
             stage2_result = stage2_pipeline.run(send=send)
             report["stage2"] = stage2_result
         except Exception as e:
+            logger.exception("[MAIN] Error executing Stage 2 intelligence pipeline: %s", e)
             # Fallback gracefully so pipeline never hard crashes on stage 2 errors
             report["stage2_error"] = str(e)
 

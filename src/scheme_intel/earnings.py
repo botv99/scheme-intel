@@ -232,7 +232,7 @@ def fetch_screener_announcements(screener_id: str, symbol: str, company_name: st
             link = row.find("a", href=True)
             if link:
                 title = link.get_text(strip=True)
-                href = link["href"]
+                href = str(link["href"])
                 if not href.startswith("http"):
                     href = f"https://www.screener.in{href}"
                 date_span = row.find("span", class_="date") or row.find("time")
@@ -288,11 +288,13 @@ def _google_news_rss(query: str, max_results: int = 5) -> list[dict]:
         feed = feedparser.parse(url)
         items = []
         for entry in feed.entries[:max_results]:
+            src_obj = entry.get("source")
+            src_title = str(src_obj.get("title") or "Google News") if isinstance(src_obj, dict) else "Google News"
             items.append({
-                "title": entry.get("title", ""),
-                "url": entry.get("link", ""),
-                "published": entry.get("published", ""),
-                "source": entry.get("source", {}).get("title", "Google News"),
+                "title": str(entry.get("title") or ""),
+                "url": str(entry.get("link") or ""),
+                "published": str(entry.get("published") or ""),
+                "source": src_title,
             })
         return items
     except Exception as exc:

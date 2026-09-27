@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 DEFAULT_WATCH_WORDS = ["tender", "contract", "order", "award", "LOA"]
 
 
-def _watch_terms(config: dict) -> tuple[list[str], list[str]]:
+def _watch_terms(config: dict) -> list[str]:
     """Return (aliases, sector keywords) used to match news for this watchlist."""
     aliases = list(config.get("scheme", {}).get("aliases", []))
     for stock in config.get("stocks", []):

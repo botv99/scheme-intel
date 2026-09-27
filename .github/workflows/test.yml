@@ -6,9 +6,34 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  PYTHONPATH: src
+
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Type check with Pyright
+        run: |
+          pip install pyright
+          pyright src tests
+
   test:
     runs-on: ubuntu-latest
+    needs: lint
+    timeout-minutes: 10
     strategy:
       matrix:
         python-version: ['3.11', '3.12']
@@ -18,6 +43,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: 'pip'
       
       - name: Install dependencies
         run: |
@@ -29,7 +55,8 @@ jobs:
           python -m pytest tests/ -v --cov=src/scheme_intel --cov-report=xml --cov-report=term-missing
       
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        if: matrix.python-version == '3.12'
+        uses: codecov/codecov-action@v4
         with:
           files: ./coverage.xml
           fail_ci_if_error: false

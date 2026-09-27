@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -25,7 +25,7 @@ INGESTED_MAX_AGE_HOURS = 26
 IST = timezone(timedelta(hours=5, minutes=30))
 
 
-def today_ist() -> datetime.date:
+def today_ist() -> date:
     """Return today's date in IST."""
     return datetime.now(IST).date()
 
@@ -210,7 +210,7 @@ class Pipeline:
 
     # ---------------------------------------------------------------- catalysts
 
-    def detect_catalysts(self, articles: list, config: dict) -> tuple[list, list]:
+    def detect_catalysts(self, articles: list, config: dict) -> tuple[list, list, list]:
         """Detect catalysts, filter material ones, and score confidence."""
         catalysts = [item for article in articles if (item := classify(article, config["stocks"]))]
         min_score = config.get("settings", {}).get("minimum_catalyst_score", 60)

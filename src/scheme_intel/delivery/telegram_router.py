@@ -84,10 +84,10 @@ class TelegramMessageRouter:
     def is_authorized(self, user_id: Optional[str] = None, chat_id: Optional[str] = None) -> bool:
         """Check if incoming user/chat is allowed to query the terminal."""
         if self.allowed_user_ids:
-            if not user_id or str(user_id) not in self.allowed_user_ids:
+            if not user_id or user_id not in self.allowed_user_ids:
                 return False
         if self.allowed_chat_ids:
-            if not chat_id or str(chat_id) not in self.allowed_chat_ids:
+            if not chat_id or chat_id not in self.allowed_chat_ids:
                 return False
         return True
 
@@ -170,7 +170,7 @@ class TelegramMessageRouter:
         3. Returns immediate acknowledgement sent strictly to original chat_id.
         """
         req_id = request_id or self.request_store.generate_request_id()
-        target_chat = str(chat_id or user_id or "default")
+        target_chat = chat_id or user_id or "default"
 
         logger.info(
             "[TELEGRAM ROUTER] Routing complex query to GitHub Workflow: request_id=%s, chat_id=%s, query='%s'",
@@ -225,7 +225,7 @@ class TelegramMessageRouter:
             return "⚠️ Please provide a research question.\nExample: `/research What changed in Gobardhan policy this month?`"
 
         # Rate limit check for research requests
-        uid = str(user_id or chat_id or "default")
+        uid = user_id or chat_id or "default"
         now = time.time()
         last_req = self._user_last_research.get(uid, 0.0)
         if (now - last_req) < self.research_cooldown_seconds:
@@ -238,8 +238,8 @@ class TelegramMessageRouter:
         scheme_id = intent.scheme_id or "gobardhan"
         job = self.research_queue.enqueue_job(
             question=question,
-            user_id=str(user_id) if user_id else None,
-            chat_id=str(chat_id) if chat_id else None,
+            user_id=user_id if user_id else None,
+            chat_id=chat_id if chat_id else None,
             scheme_id=scheme_id,
         )
 

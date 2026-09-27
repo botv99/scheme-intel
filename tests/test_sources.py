@@ -1,9 +1,17 @@
 """
 Unit tests for sources module.
 """
-import pytest
-from unittest.mock import Mock, patch, MagicMock
+import sys
+from pathlib import Path
+from unittest.mock import Mock, patch
 from requests.exceptions import Timeout, ConnectionError
+
+import pytest
+
+# Ensure 'src' is discoverable by editor language server and pytest
+_SRC = str(Path(__file__).resolve().parents[1] / "src")
+if _SRC not in sys.path:
+    sys.path.insert(0, _SRC)
 
 from scheme_intel.sources import (
     fetch_rss, scan_page, deduplicate_articles, _date
@@ -80,6 +88,28 @@ class TestScanPage:
             assert len(articles) == 2
             assert any("GOBARdhan" in a.title for a in articles)
             assert any("CBG" in a.title for a in articles)
+
+    def test_scan_page_word_boundary_isolation(self):
+        """Test that short aliases like 'ORS' do not match substrings like 'directors'."""
+        with patch('scheme_intel.sources.requests.get') as mock_get:
+            mock_response = Mock()
+            mock_response.text = '''
+                <html>
+                    <a href="/news/1">Board of directors meeting scheduled</a>
+                    <a href="/news/2">ORS bags new circular bioenergy contract</a>
+                </html>
+            '''
+            mock_get.return_value = mock_response
+
+            articles = scan_page(
+                "Test Source",
+                "https://example.com",
+                ["ORS"]
+            )
+
+            assert len(articles) == 1
+            assert "directors" not in articles[0].title
+            assert "ORS bags" in articles[0].title
     
     def test_scan_page_connection_error(self):
         """Test handling of connection error."""
@@ -144,3 +174,11 @@ class TestDateParsing:
         """Test that invalid date returns None."""
         result = _date("invalid-date-string")
         assert result is None
+
+    def test_parse_iso8601_with_z(self):
+        """Test parsing ISO 8601 date with Z suffix."""
+        result = _date("2026-09-25T12:00:00Z")
+        assert result is not None
+        assert result.year == 2026
+        assert result.month == 9
+        assert result.day == 25

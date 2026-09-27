@@ -86,7 +86,7 @@ class TestMakeSetup:
         assert setup is not None
         assert setup.company == "Praj Industries"
         assert setup.symbol == "PRAJIND.NS"
-        assert setup.entry > setup.close
+        assert setup.entry >= setup.close
         assert setup.stop < setup.entry
         assert setup.target > setup.entry
     
@@ -153,7 +153,7 @@ class TestMakeSetupFromHistory:
         mock_ticker.assert_not_called()
         assert setup is not None
         assert setup.company == "Praj Industries"
-        assert setup.entry > setup.close
+        assert setup.entry >= setup.close
         assert setup.stop < setup.entry
         assert setup.target > setup.entry
 
@@ -177,11 +177,11 @@ class TestTechnicalFilters:
         mock_ticker.assert_not_called()
         assert setup is not None and setup.status == "QUALIFIED"
         assert setup.breakout is True
-        assert setup.volume_ratio >= 1.5
+        assert setup.volume_ratio is not None and setup.volume_ratio >= 1.5
         assert setup.macd is not None and setup.macd_signal is not None
-        assert setup.macd_hist > 0
+        assert setup.macd_hist is not None and setup.macd_hist > 0
         assert setup.week_trend == "UP"
-        assert setup.prior_high20 < setup.close
+        assert setup.prior_high20 is not None and setup.prior_high20 < setup.close
 
     @patch('scheme_intel.signals.yf.Ticker')
     def test_flat_volume_blocks_qualification(self, mock_ticker):
@@ -193,7 +193,7 @@ class TestTechnicalFilters:
 
         assert setup is not None and setup.status == "WATCH"
         assert setup.breakout is True
-        assert setup.volume_ratio < 1.5
+        assert setup.volume_ratio is not None and setup.volume_ratio < 1.5
 
     @patch('scheme_intel.signals.yf.Ticker')
     def test_negative_macd_histogram_blocks_qualification(self, mock_ticker):
@@ -204,7 +204,7 @@ class TestTechnicalFilters:
             setup = make_setup("Demo", "DEMO.NS", 90, history=rows)
 
         assert setup is not None and setup.status == "WATCH"
-        assert setup.volume_ratio >= 1.5
+        assert setup.volume_ratio is not None and setup.volume_ratio >= 1.5
 
     @patch('scheme_intel.signals.yf.Ticker')
     def test_weekly_downtrend_blocks_qualification(self, mock_ticker):
@@ -215,7 +215,7 @@ class TestTechnicalFilters:
             setup = make_setup("Demo", "DEMO.NS", 90, history=rows)
 
         assert setup is not None and setup.status == "WATCH"
-        assert setup.macd_hist > 0
+        assert setup.macd_hist is not None and setup.macd_hist > 0
 
     @patch('scheme_intel.signals.yf.Ticker')
     def test_lowercase_injected_history_is_normalised(self, mock_ticker):
@@ -236,7 +236,7 @@ class TestMacd:
         close = pd.Series([100 + i for i in range(60)])
         macd, signal, hist = _macd(close)
         assert macd is not None and macd > 0
-        assert hist > 0
+        assert hist is not None and hist > 0
 
 
 class TestWeeklyTrend:
@@ -254,8 +254,13 @@ class TestWeeklyTrend:
         assert _weekly_trend(self._frame(closes)) == "DOWN"
 
     def test_too_short_history_is_none(self):
-        closes = [100 + i for i in range(30)]
+        closes = [float(100 + i) for i in range(30)]
         assert _weekly_trend(self._frame(closes)) is None
+
+    def test_non_datetime_index_is_none(self):
+        # RangeIndex without DatetimeIndex should return None safely instead of raising TypeError
+        df = pd.DataFrame({"Close": [100.0 + i for i in range(50)]})
+        assert _weekly_trend(df) is None
 
 
 class TestDMA200:

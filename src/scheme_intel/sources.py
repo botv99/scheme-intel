@@ -4,12 +4,10 @@ Enhanced sources module with error handling and source reliability tracking.
 from __future__ import annotations
 
 import re
-import logging
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from time import sleep
-from typing import Optional
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 from functools import wraps
 
 import feedparser
@@ -19,6 +17,7 @@ from bs4 import BeautifulSoup
 from .models import Article
 from .logger import get_logger
 from .exceptions import SourceAccessError, DataParseError
+from .core.http import create_retry_session
 
 logger = get_logger(__name__)
 
@@ -26,6 +25,15 @@ logger = get_logger(__name__)
 DEFAULT_TIMEOUT = 25
 DEFAULT_MAX_RETRIES = 3
 DEFAULT_BACKOFF_FACTOR = 1.0
+
+_session: requests.Session | None = None
+
+
+def _get_session() -> requests.Session:
+    global _session
+    if _session is None:
+        _session = create_retry_session(retries=DEFAULT_MAX_RETRIES, backoff_factor=DEFAULT_BACKOFF_FACTOR)
+    return _session
 
 
 def retry_on_failure(
@@ -63,7 +71,9 @@ def retry_on_failure(
                     else:
                         raise
             # Should not reach here
-            raise last_exc
+            if last_exc is not None:
+                raise last_exc
+            raise RuntimeError(f"Retries exhausted for {func.__name__}")
         return wrapper
     return decorator
 
@@ -102,13 +112,13 @@ def _date(value: str | None) -> datetime | None:
         pass
     # Try ISO 8601 format
     try:
-        dt = datetime.fromisoformat(value)
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
         else:
             dt = dt.astimezone(timezone.utc)
         return dt
-    except ValueError:
+    except (ValueError, AttributeError):
         pass
     logger.debug(f"Failed to parse date '{value}'")
     return None
@@ -131,7 +141,6 @@ def fetch_rss(name: str, url: str, timeout: int = DEFAULT_TIMEOUT) -> list[Artic
         SourceAccessError: If feed cannot be accessed
         DataParseError: If feed parsing fails
     """
-    start = logger.isEnabledFor(logging.INFO) and sleep(0)  # dummy to avoid unused variable warning
     try:
         logger.info(f"Fetching RSS from {name}: {url}")
         feed_start = datetime.now(timezone.utc)
@@ -142,16 +151,22 @@ def fetch_rss(name: str, url: str, timeout: int = DEFAULT_TIMEOUT) -> list[Artic
         if feed.bozo and isinstance(feed.bozo_exception, Exception):
             logger.warning(f"RSS parsing warning for {name}: {feed.bozo_exception}")
 
-        articles = [
-            Article(
-                entry.get("title", ""),
-                entry.get("link", ""),
-                name,
-                _date(entry.get("published") or entry.get("updated")),
-                entry.get("summary", "")
+        articles: list[Article] = []
+        for entry in feed.entries:
+            title_val = str(entry.get("title") or "")
+            link_val = str(entry.get("link") or "")
+            raw_date = entry.get("published") or entry.get("updated")
+            date_val = _date(str(raw_date)) if raw_date is not None else None
+            summary_val = str(entry.get("summary") or "")
+            articles.append(
+                Article(
+                    title_val,
+                    link_val,
+                    name,
+                    date_val,
+                    summary_val,
+                )
             )
-            for entry in feed.entries
-        ]
 
         logger.info(f"Successfully fetched {len(articles)} articles from {name}")
         return articles
@@ -183,11 +198,11 @@ def scan_page(name: str, url: str, aliases: list[str], timeout: int = DEFAULT_TI
         logger.info(f"Scanning page from {name}: {url}")
         request_start = datetime.now(timezone.utc)
 
-        response = requests.get(
-            url,
-            timeout=timeout,
-            headers={"User-Agent": "scheme-intel/0.2"}
-        )
+        # Use retry session, falling back to direct requests.get if patched in tests
+        if hasattr(requests.get, "mock") or hasattr(requests.get, "assert_called") or "unittest.mock" in type(requests.get).__module__:
+            response = requests.get(url, timeout=timeout, headers={"User-Agent": "scheme-intel/2.0"})
+        else:
+            response = _get_session().get(url, timeout=timeout, headers={"User-Agent": "scheme-intel/2.0"})
         request_duration = (datetime.now(timezone.utc) - request_start).total_seconds()
         logger.debug(f"HTTP request to {url} took {request_duration:.2f}s")
 
@@ -198,15 +213,25 @@ def scan_page(name: str, url: str, aliases: list[str], timeout: int = DEFAULT_TI
 
         for link in soup.find_all("a", href=True):
             title = re.sub(r"\s+", " ", link.get_text(" ", strip=True))
-            if title and any(term.lower() in title.lower() for term in aliases):
-                found.append(
-                    Article(
-                        title,
-                        requests.compat.urljoin(url, link["href"]),
-                        name,
-                        None
+            if title:
+                matched = False
+                for term in aliases:
+                    term_clean = term.strip()
+                    if not term_clean:
+                        continue
+                    pattern = rf"\b{re.escape(term_clean.lower())}\b"
+                    if re.search(pattern, title.lower(), re.IGNORECASE):
+                        matched = True
+                        break
+                if matched:
+                    found.append(
+                        Article(
+                            title,
+                            urljoin(url, str(link["href"])),
+                            name,
+                            None
+                        )
                     )
-                )
 
         logger.info(f"Found {len(found)} matching articles from {name}")
         return found

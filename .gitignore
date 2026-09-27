@@ -1,12 +1,16 @@
 __pycache__/
 *.py[cod]
 
-# Ignore generated cache/snapshots
-data/latest.json
-data/scheme_intel.db
-data/scheme_intel.db-wal
-data/scheme_intel.db-shm
-data/telegram_requests.db*
+# Ignore runtime data — keep only the directory structure
+data/*
+!data/.gitkeep
+!data/intelligence/
+data/intelligence/*
+!data/intelligence/.gitkeep
+!data/performance/
+data/performance/*
+!data/performance/.gitkeep
+
 .env
 .env.*
 !.env.example
@@ -18,8 +22,12 @@ logs/
 coverage.xml
 htmlcov/
 
-# Keep watchlist files tracked by Git
-!data/watchlist.json
+# Virtual environment
+.venv/
+
+# IDE
+.vscode/
+.idea/
 
 # Aider files
 *.aider*

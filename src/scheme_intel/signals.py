@@ -16,6 +16,8 @@ WEEKLY_TREND_BARS = 10
 
 
 def _rsi(close: pd.Series, period: int = 14) -> float:
+    if len(close) < period + 1:
+        return 50.0
     delta = close.diff()
     up = delta.clip(lower=0).rolling(period).mean()
     down = -delta.clip(upper=0).rolling(period).mean()
@@ -54,6 +56,8 @@ def _roc(close: pd.Series, period: int = 10) -> float | None:
 
 def _weekly_trend(frame: pd.DataFrame, bars: int = WEEKLY_TREND_BARS) -> str | None:
     """Higher-timeframe trend: last weekly close vs its (bars)-week SMA."""
+    if not isinstance(frame.index, pd.DatetimeIndex):
+        return None
     weekly = frame["Close"].resample("W-FRI").last().dropna()
     if len(weekly) < bars:
         return None
@@ -181,14 +185,18 @@ def make_setup(
         for col in ("Open", "High", "Low", "Close", "Volume"):
             if col in frame.columns:
                 frame[col] = pd.to_numeric(frame[col], errors="coerce")
-        if "date" in frame.columns:
-            frame.index = pd.to_datetime(frame["date"], errors="coerce")
-            frame = frame.drop(columns=["date"])
-        frame = frame[frame.index.notna()].dropna(subset=["Close"]).sort_index()
+        date_col = "date" if "date" in frame.columns else ("Date" if "Date" in frame.columns else None)
+        if date_col:
+            frame.index = pd.to_datetime(frame[date_col], errors="coerce")
+            frame = frame.drop(columns=[date_col])
+        if "Close" in frame.columns:
+            frame = frame[frame.index.notna() & frame["Close"].notna()].sort_index()
+        else:
+            frame = frame[frame.index.notna()].sort_index()
     else:
         frame = yf.Ticker(symbol).history(period="1y", interval="1d", auto_adjust=True)
 
-    if len(frame) < 60:
+    if not isinstance(frame, pd.DataFrame) or len(frame) < 60:
         return None
 
     close = frame["Close"]
@@ -224,13 +232,14 @@ def make_setup(
     support, resistance, swing_low, swing_high = _price_structure(frame, window=20)
 
     # Relative strength
-    bm_close = None
+    bm_close: pd.Series | None = None
     if benchmark_history:
         bm_df = pd.DataFrame(benchmark_history)
-        if "close" in bm_df.columns:
-            bm_close = pd.to_numeric(bm_df["close"], errors="coerce")
-        elif "Close" in bm_df.columns:
-            bm_close = pd.to_numeric(bm_df["Close"], errors="coerce")
+        col = "close" if "close" in bm_df.columns else ("Close" if "Close" in bm_df.columns else None)
+        if col:
+            converted = pd.to_numeric(bm_df[col], errors="coerce")
+            if isinstance(converted, pd.Series):
+                bm_close = converted.dropna()
     rs_nifty = _relative_strength_vs_benchmark(close, bm_close, period=20)
 
     # Qualification criteria

@@ -108,3 +108,22 @@ class TestCatalystClassification:
         assert catalyst is not None
         assert catalyst.score >= 80
         assert catalyst.companies == ("Praj Industries",)
+
+    def test_classify_word_boundary_isolation(self):
+        """Ensure aliases like 'ORS' do not match substrings like 'directors' or 'investors'."""
+        article = Article(
+            title="D-Link announces new board of directors and investors meeting",
+            url="https://example.com",
+            source="Media",
+            published_at=None,
+            summary="Key sponsors and investors discuss contract awarded."
+        )
+
+        companies = [
+            {"name": "Organic Recycling Systems", "aliases": ["Organic Recycling Systems", "ORSL", "ORS"]}
+        ]
+
+        catalyst = classify(article, companies)
+        # Even though "contract awarded" is a catalyst event, Organic Recycling Systems must NOT match.
+        assert catalyst is not None
+        assert "Organic Recycling Systems" not in catalyst.companies

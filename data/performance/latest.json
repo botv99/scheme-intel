@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-27T12:26:46.542400+00:00",
+  "generated_at": "2026-09-27T18:34:37.379532+00:00",
   "data_period": {
     "start_date": "2026-09-28",
     "end_date": "2026-09-28"
@@ -13,13 +13,13 @@
   "strategy_status": "INSUFFICIENT DATA",
   "setup_metrics": {
     "total_setups": 7,
-    "qualified_setups": 1,
-    "rejected_setups": 3,
+    "qualified_setups": 2,
+    "rejected_setups": 2,
     "waiting_setups": 3,
     "watch_setups": 0,
-    "triggered_setups": 0,
-    "untriggered_setups": 7,
-    "active_setups": 0,
+    "triggered_setups": 2,
+    "untriggered_setups": 5,
+    "active_setups": 2,
     "completed_setups": 0,
     "expired_setups": 0
   },
@@ -50,23 +50,23 @@
     "std_dev_pnl_pct": null
   },
   "excursion_metrics": {
-    "average_mfe_pct": null,
-    "median_mfe_pct": null,
-    "maximum_mfe_pct": null,
-    "average_mae_pct": null,
-    "median_mae_pct": null,
-    "maximum_adverse_excursion": null,
+    "average_mfe_pct": 0.76,
+    "median_mfe_pct": 0.76,
+    "maximum_mfe_pct": 1.0,
+    "average_mae_pct": -2.47,
+    "median_mae_pct": -2.47,
+    "maximum_adverse_excursion": -4.68,
     "mfe_distribution": {
       "<0%": 0,
-      "0\u20132%": 0,
+      "0\u20132%": 2,
       "2\u20135%": 0,
       "5\u201310%": 0,
       ">10%": 0
     },
     "mae_distribution": {
-      "0 to -1%": 0,
+      "0 to -1%": 1,
       "-1 to -3%": 0,
-      "-3 to -5%": 0,
+      "-3 to -5%": 1,
       "<-5%": 0
     }
   },
@@ -118,8 +118,8 @@
     {
       "archetype": "Breakout Anticipation",
       "setups": 2,
-      "qualified": 1,
-      "triggered": 0,
+      "qualified": 2,
+      "triggered": 2,
       "completed": 0,
       "wins": 0,
       "losses": 0,
@@ -128,8 +128,8 @@
       "average_pnl_pct": null,
       "expectancy": null,
       "profit_factor": null,
-      "average_mfe_pct": null,
-      "average_mae_pct": null,
+      "average_mfe_pct": 0.76,
+      "average_mae_pct": -2.47,
       "average_holding_period": null,
       "sample_status": "INSUFFICIENT_SAMPLE"
     },
@@ -174,7 +174,7 @@
       "symbol": "IOC.NS",
       "setups": 1,
       "qualified": 1,
-      "triggered": 0,
+      "triggered": 1,
       "completed": 0,
       "wins": 0,
       "losses": 0,
@@ -182,8 +182,8 @@
       "win_rate": null,
       "average_pnl_pct": null,
       "expectancy": null,
-      "average_mfe_pct": null,
-      "average_mae_pct": null,
+      "average_mfe_pct": 1.0,
+      "average_mae_pct": -0.27,
       "average_holding_period": null,
       "sample_status": "INSUFFICIENT_SAMPLE"
     },
@@ -241,8 +241,8 @@
     {
       "symbol": "TRUALT.NS",
       "setups": 1,
-      "qualified": 0,
-      "triggered": 0,
+      "qualified": 1,
+      "triggered": 1,
       "completed": 0,
       "wins": 0,
       "losses": 0,
@@ -250,8 +250,8 @@
       "win_rate": null,
       "average_pnl_pct": null,
       "expectancy": null,
-      "average_mfe_pct": null,
-      "average_mae_pct": null,
+      "average_mfe_pct": 0.52,
+      "average_mae_pct": -4.68,
       "average_holding_period": null,
       "sample_status": "INSUFFICIENT_SAMPLE"
     },
@@ -291,9 +291,9 @@
       "observational_note": "Observational analysis only. Does not establish causation."
     },
     {
-      "provider": "Groq",
-      "setups": 1,
-      "triggered": 0,
+      "provider": "Mock",
+      "setups": 3,
+      "triggered": 2,
       "completed": 0,
       "wins": 0,
       "losses": 0,
@@ -301,24 +301,8 @@
       "win_rate": null,
       "average_pnl_pct": null,
       "expectancy": null,
-      "average_mfe_pct": null,
-      "average_mae_pct": null,
-      "sample_status": "INSUFFICIENT_SAMPLE",
-      "observational_note": "Observational analysis only. Does not establish causation."
-    },
-    {
-      "provider": "Groq \u2192 Openrouter failover",
-      "setups": 2,
-      "triggered": 0,
-      "completed": 0,
-      "wins": 0,
-      "losses": 0,
-      "expired": 0,
-      "win_rate": null,
-      "average_pnl_pct": null,
-      "expectancy": null,
-      "average_mfe_pct": null,
-      "average_mae_pct": null,
+      "average_mfe_pct": 0.76,
+      "average_mae_pct": -2.47,
       "sample_status": "INSUFFICIENT_SAMPLE",
       "observational_note": "Observational analysis only. Does not establish causation."
     }
@@ -368,7 +352,7 @@
       "min_score": 61,
       "max_score": 80,
       "setups": 2,
-      "triggered": 0,
+      "triggered": 1,
       "completed": 0,
       "wins": 0,
       "losses": 0,
@@ -381,7 +365,7 @@
       "min_score": 81,
       "max_score": 100,
       "setups": 1,
-      "triggered": 0,
+      "triggered": 1,
       "completed": 0,
       "wins": 0,
       "losses": 0,
@@ -394,8 +378,8 @@
     {
       "date": "2026-09-28",
       "setups_generated": 7,
-      "qualified_setups": 1,
-      "triggered": 0,
+      "qualified_setups": 2,
+      "triggered": 2,
       "completed": 0,
       "wins": 0,
       "losses": 0,
@@ -463,9 +447,12 @@
     "trade_comparisons": []
   },
   "data_integrity": {
-    "status": "PASS",
+    "status": "WARN",
     "checks_performed": 10,
-    "issues_detected": 0,
-    "issues": []
+    "issues_detected": 2,
+    "issues": [
+      "Setup SETUP-TRUALT_NS-20260925: entry_date (2026-09-25) is earlier than setup_date (2026-09-28)",
+      "Setup SETUP-IOC_NS-20260925: entry_date (2026-09-25) is earlier than setup_date (2026-09-28)"
+    ]
   }
 }

@@ -5,7 +5,7 @@ Guarantees 100% full coverage without silent omissions.
 """
 from __future__ import annotations
 
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Mapping, Sequence
 from .models import (
     Stock, DailyStockCard, TechnicalSnapshot, NewsItem, CandidateSetup, CatalystImpact,
     DATA_OK, DATA_UNAVAILABLE, DATA_STALE, DATA_INSUFFICIENT,
@@ -117,12 +117,12 @@ def build_stock_card(
 
 def scan_all_stocks(
     stocks: List[Stock],
-    market_data: Dict[str, TechnicalSnapshot],
-    stock_news: Dict[str, List[NewsItem]],
-    stock_catalysts: Optional[Dict[str, List[CatalystImpact]]] = None,
-    candidates: Optional[Dict[str, CandidateSetup]] = None,
-    statuses: Optional[Dict[str, str]] = None,
-    data_statuses: Optional[Dict[str, str]] = None,
+    market_data: Mapping[str, Optional[TechnicalSnapshot]],
+    stock_news: Mapping[str, List[NewsItem]],
+    stock_catalysts: Optional[Mapping[str, List[CatalystImpact]]] = None,
+    candidates: Optional[Mapping[str, CandidateSetup]] = None,
+    statuses: Optional[Mapping[str, str]] = None,
+    data_statuses: Optional[Mapping[str, str]] = None,
 ) -> List[DailyStockCard]:
     """
     Generate daily intelligence cards for all watchlist stocks.

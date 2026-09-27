@@ -19,11 +19,13 @@ import csv
 import io
 import logging
 from datetime import date, datetime, timedelta
+from typing import Any
 
 import requests
 
 from ..exceptions import SourceAccessError
 from ..logger import get_logger
+from ..core.http import create_retry_session
 from .models import Announcement, ExchangeDeal
 
 logger = get_logger(__name__)
@@ -56,8 +58,8 @@ def _browser_headers(referer: str | None = None) -> dict:
 
 
 def _nse_session() -> requests.Session:
-    """Session primed with NSE cookies (homepage visit) for API access."""
-    session = requests.Session()
+    """Session primed with NSE cookies (homepage visit) for API access with retries."""
+    session = create_retry_session(retries=3, backoff_factor=0.5)
     session.headers.update(_browser_headers("https://www.nseindia.com/"))
     session.get("https://www.nseindia.com/", timeout=DEFAULT_TIMEOUT)
     return session
@@ -72,7 +74,9 @@ def _watchlist_symbols(config: dict) -> set[str]:
     return symbols
 
 
-def _to_float(value: str) -> float | None:
+def _to_float(value: Any) -> float | None:
+    if value is None:
+        return None
     try:
         return float(str(value).replace(",", "").strip() or 0)
     except ValueError:
@@ -124,6 +128,7 @@ def collect_nse_bulk_deals(since: date, watchlist: set[str]) -> list[ExchangeDea
 def collect_nse_block_deals(since: date, config: dict) -> list[ExchangeDeal]:
     """Best-effort NSE block deals via the session-only historical API."""
     deals = []
+    watchlist = _watchlist_symbols(config)
     session = _nse_session()
     response = session.get(NSE_BLOCK_API, timeout=DEFAULT_TIMEOUT)
     response.raise_for_status()
@@ -321,12 +326,12 @@ def collect_exchange_activity(config: dict, days_back: int | None = None) -> tup
     for name, task in tasks.items():
         try:
             result = task()
-            if "bulk" in name or "block" in name:
-                deals = result if isinstance(result, list) else []
-                anchor = bulk_deals
-            else:
-                anchor = announcements
-            anchor.extend(result or [])
+            if isinstance(result, list):
+                for item in result:
+                    if isinstance(item, ExchangeDeal):
+                        bulk_deals.append(item)
+                    elif isinstance(item, Announcement):
+                        announcements.append(item)
             logger.info(f"{name}: collected {len(result or [])} records")
         except Exception as exc:
             logger.warning(f"{name} failed: {str(exc)[:180]}")

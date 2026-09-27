@@ -31,3 +31,15 @@ class TelegramError(SchemeIntelException):
 class DatabaseError(SchemeIntelException):
     """Raised when database operations fail."""
     pass
+
+
+class AIProviderError(SchemeIntelException):
+    """Raised when an AI provider fails or exhausts quota."""
+    pass
+
+
+# Compatibility aliases
+SchemeIntelError = SchemeIntelException
+ParsingError = DataParseError
+NotificationError = TelegramError
+

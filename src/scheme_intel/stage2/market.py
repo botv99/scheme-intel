@@ -283,11 +283,14 @@ def validate_ohlcv_bars(bars: list[dict], min_bars: int = 20) -> tuple[bool, str
             return False, f"Bar #{i} missing date field", []
 
         try:
-            o = float(bar.get("open") if bar.get("open") is not None else bar.get("Open"))
-            h = float(bar.get("high") if bar.get("high") is not None else bar.get("High"))
-            l = float(bar.get("low") if bar.get("low") is not None else bar.get("Low"))
-            c = float(bar.get("close") if bar.get("close") is not None else bar.get("Close"))
-            v = float(bar.get("volume") if bar.get("volume") is not None else bar.get("Volume", 0.0))
+            o_val = bar.get("open") if bar.get("open") is not None else bar.get("Open")
+            h_val = bar.get("high") if bar.get("high") is not None else bar.get("High")
+            l_val = bar.get("low") if bar.get("low") is not None else bar.get("Low")
+            c_val = bar.get("close") if bar.get("close") is not None else bar.get("Close")
+            v_val = bar.get("volume") if bar.get("volume") is not None else bar.get("Volume", 0.0)
+            if o_val is None or h_val is None or l_val is None or c_val is None:
+                return False, f"Bar on {d_val} missing required price fields", []
+            o, h, l, c, v = float(o_val), float(h_val), float(l_val), float(c_val), float(v_val or 0.0)
         except (TypeError, ValueError) as e:
             return False, f"Bar on {d_val} contains invalid non-numeric price data: {e}", []
 
@@ -315,13 +318,13 @@ def check_history_freshness(
     Calculates trading days lag, accounting for weekends and NSE holidays.
     """
     try:
-        latest_date = datetime.strptime(str(latest_bar_date_str)[:10], "%Y-%m-%d").date()
+        latest_date = datetime.strptime(latest_bar_date_str[:10], "%Y-%m-%d").date()
     except Exception as e:
         return False, f"Invalid latest bar date '{latest_bar_date_str}': {e}"
 
     if analysis_date_str:
         try:
-            target_date = datetime.strptime(str(analysis_date_str)[:10], "%Y-%m-%d").date()
+            target_date = datetime.strptime(analysis_date_str[:10], "%Y-%m-%d").date()
         except Exception:
             target_date = datetime.now(timezone.utc).date()
     else:

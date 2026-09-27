@@ -236,6 +236,7 @@ class TestOutcomeTracker:
         tracker.evaluate_active_setups({"PRAJIND.NS": snap_day1}, session_date="2026-09-24")
 
         outcome = temp_db.get_outcome(setup.setup_id)
+        assert outcome is not None
         assert outcome.entry_triggered is True
         assert outcome.holding_period_days == 1
         assert outcome.expired is False
@@ -248,6 +249,7 @@ class TestOutcomeTracker:
             assert len(res["expired"]) == 0
 
         outcome = temp_db.get_outcome(setup.setup_id)
+        assert outcome is not None
         assert outcome.holding_period_days == 4
         assert outcome.expired is False
 
@@ -261,6 +263,7 @@ class TestOutcomeTracker:
         assert "PRAJIND.NS" in res_day5["summary_text"]
 
         outcome_final = temp_db.get_outcome(setup.setup_id)
+        assert outcome_final is not None
         assert outcome_final.expired is True
         assert outcome_final.target_hit is False
         assert outcome_final.stop_hit is False

@@ -12,7 +12,7 @@ import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from .config import load_config as _load_config
 from .logger import get_logger
@@ -51,7 +51,7 @@ def run_all(send: bool = False, config_path: Optional[Path | str] = None) -> dic
 
     Returns a summary dict of all actions taken.
     """
-    result = {
+    result: dict[str, Any] = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "stocks_processed": 0,
         "stocks_succeeded": 0,
@@ -66,6 +66,7 @@ def run_all(send: bool = False, config_path: Optional[Path | str] = None) -> dic
     # Step 1: Run the core pipeline (catalysts, setups, DB save)
     # ----------------------------------------------------------------
     logger.info("Step 1: Running core pipeline...")
+    pipeline_result: Optional[dict] = None
     try:
         pipeline_result = Pipeline(config_path=config_path).run(send=False)
         result["pipeline_result"] = pipeline_result

@@ -127,23 +127,28 @@ class RequestStore:
         update_id: Optional[int] = None,
         normalized_query: str = "",
         resolved_intent: str = "UNKNOWN",
-        execution_path: ExecutionPath = ExecutionPath.FAST,
+        execution_path: Any = ExecutionPath.FAST,
         request_id: Optional[str] = None,
     ) -> TelegramRequest:
         """Log incoming Telegram request BEFORE processing."""
         req_id = request_id or self.generate_request_id()
         now_utc = datetime.now(timezone.utc).isoformat()
+        try:
+            val = getattr(execution_path, "value", str(execution_path))
+            path_enum = ExecutionPath(val)
+        except (ValueError, TypeError):
+            path_enum = ExecutionPath.FAST
 
         req = TelegramRequest(
             request_id=req_id,
             received_at=now_utc,
-            user_id=str(user_id) if user_id is not None else None,
-            chat_id=str(chat_id) if chat_id is not None else None,
+            user_id=user_id,
+            chat_id=chat_id,
             username=username,
             raw_query=raw_query,
             normalized_query=normalized_query,
             resolved_intent=resolved_intent,
-            execution_path=execution_path,
+            execution_path=path_enum,
             status=RequestStatus.RECEIVED,
             update_id=update_id,
         )

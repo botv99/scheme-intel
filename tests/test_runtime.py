@@ -250,7 +250,7 @@ class TestResearchQueueConcurrency:
         assert recovered_count == 1
 
         recovered_job = queue.get_job(job.job_id)
-        assert recovered_job.status == ResearchStatus.QUEUED
+        assert recovered_job is not None and recovered_job.status == ResearchStatus.QUEUED
         assert recovered_job.started_at is None
 
         # Confirm another worker can now claim it
@@ -284,7 +284,8 @@ class TestResearchWorkerLoop:
             if j and j.status == ResearchStatus.COMPLETED:
                 break
 
-        assert queue.get_job(job.job_id).status == ResearchStatus.COMPLETED
+        final_job = queue.get_job(job.job_id)
+        assert final_job is not None and final_job.status == ResearchStatus.COMPLETED
 
         # Signal stop
         worker.stop()
@@ -338,8 +339,8 @@ class TestSystemServiceAndHealth:
         t = threading.Thread(target=service.start, daemon=True)
         t.start()
         time.sleep(0.1)
-        assert service.is_running is True
+        assert service.is_running
 
         service.stop()
         t.join(timeout=2.0)
-        assert service.is_running is False
+        assert not service.is_running

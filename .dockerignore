@@ -10,3 +10,13 @@ coverage.xml
 .github/
 docs/
 tests/
+.venv/
+.vscode/
+.idea/
+*.aider*
+logs/
+.env
+.env.*
+STAGE*_AUDIT.md
+STAGE*_COMPLETION_REPORT.md
+STAGE*_TEST_REPORT.md

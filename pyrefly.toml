@@ -1,0 +1,16 @@
+project-includes = [
+    "src",
+    "tests",
+]
+search-path = [
+    "src",
+]
+infer-with-first-use = false
+
+[errors]
+untyped-import = "ignore"
+unknown-attribute-type = "ignore"
+missing-import = "ignore"
+unknown-argument-type = "ignore"
+unknown-variable-type = "ignore"
+unnecessary-type-conversion = "ignore"

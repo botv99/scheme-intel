@@ -190,7 +190,7 @@ class ResearchQueue:
         now_utc = datetime.now(timezone.utc).isoformat()
         query = "UPDATE research_jobs SET status = ?, completed_at = ?, error = ? WHERE job_id = ?;"
         with self._get_connection() as conn:
-            conn.execute(query, (ResearchStatus.FAILED.value, now_utc, str(error)[:500], job_id))
+            conn.execute(query, (ResearchStatus.FAILED.value, now_utc, error[:500], job_id))
             conn.commit()
         logger.warning("Marked research job %s as FAILED: %s", job_id, error)
 

@@ -418,6 +418,7 @@ class TestChatIsolationAndNoBroadcast:
 
         # Verify completed in DB
         updated = req_store.get_request(req_a.request_id)
+        assert updated is not None
         assert updated.status == RequestStatus.COMPLETED
 
     def test_user_b_does_not_receive_user_a_response(self, test_env):

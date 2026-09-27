@@ -300,12 +300,28 @@ def test_simulated_failover_safety() -> Dict[str, Any]:
     # Simulate Provider A returning 429 quota, Provider B succeeding
     class MockFailingProvider(LLMProvider):
         name = "mock_failing_gemini"
-        def generate(self, prompt, **kwargs):
+
+        def generate(
+            self,
+            prompt: str,
+            system_prompt: str = "",
+            schema: Optional[type[BaseModel]] = None,
+            temperature: float = 0.2,
+            caller: str = "",
+        ) -> ProviderResponse:
             raise RateLimitError("Simulated 429 quota limit", provider=self.name, status_code=429, retry_after=5.0)
 
     class MockBackupProvider(LLMProvider):
         name = "mock_backup_groq"
-        def generate(self, prompt, **kwargs):
+
+        def generate(
+            self,
+            prompt: str,
+            system_prompt: str = "",
+            schema: Optional[type[BaseModel]] = None,
+            temperature: float = 0.2,
+            caller: str = "",
+        ) -> ProviderResponse:
             return ProviderResponse(content='{"status": "BACKUP_OK", "symbol": "TEST.NS"}', provider="mock_backup_groq")
 
     mgr = LLMProviderManager(
@@ -381,6 +397,36 @@ def main():
         "failover_simulation": failover_res,
     }
     print(json.dumps(summary, indent=2, default=str))
+
+    summary_path = os.getenv("GITHUB_STEP_SUMMARY")
+    if summary_path:
+        try:
+            with open(summary_path, "a", encoding="utf-8") as f:
+                f.write("## 🤖 Live LLM Provider Verification Results\n\n")
+                f.write("| Provider | Configured | Status | Model | Latency | Details |\n")
+                f.write("| :--- | :---: | :---: | :--- | :---: | :--- |\n")
+                providers_info = [
+                    ("Gemini", gemini_res),
+                    ("Groq", groq_res),
+                    ("OpenRouter", openrouter_res),
+                    ("OpenAI", openai_res),
+                ]
+                for p_name, p_res in providers_info:
+                    cfg = "✅ YES" if p_res.get("configured") else "❌ NO"
+                    st_val = p_res.get("status")
+                    if st_val == "PASS":
+                        st = "🟢 **PASS**"
+                    elif st_val == "SKIPPED":
+                        st = "🟡 SKIPPED"
+                    else:
+                        st = "🔴 **FAIL**"
+                    mdl = f"`{p_res.get('model', '-')}`"
+                    lat = f"{p_res.get('latency', '-')}s" if "latency" in p_res else "-"
+                    det = p_res.get("reason") or "Structured JSON OK"
+                    f.write(f"| {p_name} | {cfg} | {st} | {mdl} | {lat} | {det} |\n")
+                f.write(f"\n- **Simulated Failover Safety:** {failover_res.get('status', 'N/A')} — {failover_res.get('summary', '')}\n")
+        except Exception as err:
+            print(f"Could not write to GITHUB_STEP_SUMMARY: {err}")
 
 
 if __name__ == "__main__":

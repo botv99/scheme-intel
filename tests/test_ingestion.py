@@ -215,10 +215,12 @@ class TestScreenerPrice:
         assert snapshots[0]["company"] == "Praj Industries"
 
     def test_rsi_extremes(self):
-        rising = list(range(100, 130))
-        assert price._rsi(rising) > 90
-        falling = list(range(130, 100, -1))
-        assert price._rsi(falling) < 10
+        rising = [float(x) for x in range(100, 130)]
+        rsi_rise = price._rsi(rising)
+        assert rsi_rise is not None and rsi_rise > 90
+        falling = [float(x) for x in range(130, 100, -1)]
+        rsi_fall = price._rsi(falling)
+        assert rsi_fall is not None and rsi_fall < 10
         assert price._rsi([1.0, 2.0]) is None  # too few points
 
     def test_ohlc_enrichment_fallback(self):

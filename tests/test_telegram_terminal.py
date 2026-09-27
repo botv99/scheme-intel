@@ -378,6 +378,7 @@ class TestSnapshotSyncer:
 
             # Check that local store now loads the new snapshot
             status, snap, _ = local_store.load_with_status()
+            assert snap is not None
             assert snap.snapshot_id == "SNAP-REMOTE-NEW"
 
     def test_syncer_ignores_older_remote_snapshot(self, tmp_path: Path, terminal_snapshot: IntelligenceSnapshot):
@@ -402,6 +403,7 @@ class TestSnapshotSyncer:
             assert updated is False
             assert syncer.last_sync_status == "UP_TO_DATE"
             status, snap, _ = local_store.load_with_status()
+            assert snap is not None
             assert snap.snapshot_id == "SNAP-LOCAL-NEWEST"
 
 

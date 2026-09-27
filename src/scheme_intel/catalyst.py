@@ -155,7 +155,9 @@ def classify(article: Article, companies: list[dict]) -> Catalyst | None:
     Classify an article into one of the 19 Stage 1 catalyst classifications.
     Returns an enriched Catalyst object containing all required Stage 1 fields.
     """
-    text = f"{article.title} {article.summary}".lower()
+    summary_text = getattr(article, "summary", "") or ""
+    title_text = getattr(article, "title", "") or ""
+    text = f"{title_text} {summary_text}".lower()
 
     # Match strongest material event pattern
     best_match = None
@@ -182,7 +184,16 @@ def classify(article: Article, companies: list[dict]) -> Catalyst | None:
     names = []
     for company in companies:
         aliases = [company["name"], *company.get("aliases", [])]
-        if any(alias.lower() in text for alias in aliases):
+        matched = False
+        for alias in aliases:
+            alias_clean = alias.strip()
+            if not alias_clean:
+                continue
+            pattern = rf"\b{re.escape(alias_clean.lower())}\b"
+            if re.search(pattern, text, re.IGNORECASE):
+                matched = True
+                break
+        if matched:
             names.append(company["name"])
 
     # Determine source tier
@@ -196,7 +207,12 @@ def classify(article: Article, companies: list[dict]) -> Catalyst | None:
     segment = _detect_segment(text)
 
     # Event date / Published date
-    pub_iso = article.published_at.isoformat() if article.published_at else None
+    pub_iso = None
+    if getattr(article, "published_at", None):
+        if isinstance(article.published_at, datetime):
+            pub_iso = article.published_at.isoformat()
+        elif isinstance(article.published_at, str):
+            pub_iso = article.published_at
     rationale = f"Detected {best_cat} language ('{best_term}') in {article.source}."
 
     # Return Catalyst with full Phase 5 metadata

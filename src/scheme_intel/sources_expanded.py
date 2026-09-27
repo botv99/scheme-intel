@@ -237,12 +237,13 @@ def fetch_economic_indicators() -> list[EconomicIndicator]:
     try:
         feed = feedparser.parse("https://oilprice.com/rss/main")
         for entry in feed.entries[:5]:
-            title = entry.get("title", "")
+            title = str(entry.get("title") or "")
             value = _extract_number(title)
+            link = str(entry.get("link") or "")
             if value:
                 indicators.append(EconomicIndicator(
                     name=title[:60], value=value, period="",
-                    source="OilPrice.com", url=entry.get("link", ""),
+                    source="OilPrice.com", url=link,
                 ))
     except Exception as exc:
         logger.debug(f"Commodity indicator fetch failed: {exc}")
@@ -302,12 +303,14 @@ def fetch_sector_headlines(
         feed = feedparser.parse(url)
         articles = []
         for entry in feed.entries[:max_results]:
+            src_obj = entry.get("source")
+            src_name = str(src_obj.get("title") or "Google News") if isinstance(src_obj, dict) else "Google News"
             articles.append(SectorArticle(
-                title=entry.get("title", ""),
-                url=entry.get("link", ""),
-                source=entry.get("source", {}).get("title", "Google News"),
+                title=str(entry.get("title") or ""),
+                url=str(entry.get("link") or ""),
+                source=src_name,
                 sector="custom",
-                published_at=entry.get("published", ""),
+                published_at=str(entry.get("published") or ""),
             ))
         return articles
     except Exception as exc:

@@ -1,6 +1,6 @@
 # Scheme-Intel Forward Performance & Validation Report
 
-**Generated At:** 2026-09-27T12:26:46.542400+00:00 UTC
+**Generated At:** 2026-09-27T18:34:37.379532+00:00 UTC
 **Data Period:** 2026-09-28 → 2026-09-28
 **Data Sufficiency Status:** `INSUFFICIENT_SAMPLE` — *Insufficient sample (0 completed trades; minimum 30 required for statistical validity)*
 **Strategy Validation Status:** `INSUFFICIENT DATA`
@@ -9,12 +9,12 @@
 
 ## 1. Setup Lifecycle Sample
 - **Total Setups Recorded:** 7
-- **Qualified Setups:** 1
+- **Qualified Setups:** 2
 - **Waiting Setups:** 3
-- **Rejected Setups (Hard Risk Veto / No Trade):** 3
-- **Triggered Entries:** 0
-- **Untriggered Setups:** 7 *(never counted as losses)*
-- **Currently Active (Open) Trades:** 0
+- **Rejected Setups (Hard Risk Veto / No Trade):** 2
+- **Triggered Entries:** 2
+- **Untriggered Setups:** 5 *(never counted as losses)*
+- **Currently Active (Open) Trades:** 2
 - **Completed Trades:** 0
 - **Expired Positions:** 0
 
@@ -46,19 +46,19 @@
 ---
 
 ## 4. MFE & MAE Excursions
-- **Average MFE (Max Favorable Excursion):** N/A
-- **Median MFE:** N/A
-- **Maximum MFE Observed:** N/A
-- **Average MAE (Max Adverse Excursion):** N/A
-- **Median MAE:** N/A
-- **Maximum Adverse Excursion (Worst Dip):** N/A
+- **Average MFE (Max Favorable Excursion):** +0.76%
+- **Median MFE:** +0.76%
+- **Maximum MFE Observed:** +1.00%
+- **Average MAE (Max Adverse Excursion):** -2.47%
+- **Median MAE:** -2.47%
+- **Maximum Adverse Excursion (Worst Dip):** -4.68%
 
 ### Excursion Distributions
 | MFE Bucket | Trades | MAE Bucket | Trades |
 | :--- | :--- | :--- | :--- |
-| <0% | 0 | 0 to -1% | 0 |
-| 0–2% | 0 | -1 to -3% | 0 |
-| 2–5% | 0 | -3 to -5% | 0 |
+| <0% | 0 | 0 to -1% | 1 |
+| 0–2% | 2 | -1 to -3% | 0 |
+| 2–5% | 0 | -3 to -5% | 1 |
 | 5–10% | 0 | <-5% | 0 |
 | >10% | 0 |  |  |
 
@@ -76,7 +76,7 @@
 | Archetype | Setups | Trig | Comp | Win Rate | Avg P&L | Expectancy | PF | Avg MFE | Avg MAE | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | Breakout | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| Breakout Anticipation | 2 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| Breakout Anticipation | 2 | 2 | 0 | N/A | N/A | N/A | N/A | +0.8% | -2.5% | `INSUFFICIENT_SAMPLE` |
 | Unspecified | 4 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
 
 ---
@@ -85,11 +85,11 @@
 | Symbol | Setups | Trig | Comp | Win Rate | Avg P&L | Expectancy | Avg MFE | Avg MAE | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | GAIL.NS | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| IOC.NS | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| IOC.NS | 1 | 1 | 0 | N/A | N/A | N/A | +1.0% | -0.3% | `INSUFFICIENT_SAMPLE` |
 | KIRLPNU.NS | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
 | ORGANICREC.BO | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
 | PRAJIND.NS | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| TRUALT.NS | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| TRUALT.NS | 1 | 1 | 0 | N/A | N/A | N/A | +0.5% | -4.7% | `INSUFFICIENT_SAMPLE` |
 | WABAG.NS | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
 
 ---
@@ -99,8 +99,7 @@
 | Provider | Setups | Trig | Comp | Win Rate | Avg P&L | Expectancy | Avg MFE | Avg MAE | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | Deterministic Fallback | 4 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| Groq | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| Groq → Openrouter failover | 2 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| Mock | 3 | 2 | 0 | N/A | N/A | N/A | +0.8% | -2.5% | `INSUFFICIENT_SAMPLE` |
 
 ---
 
@@ -110,8 +109,8 @@
 | 0–20 | 0 | 0 | 0 | N/A | N/A | N/A |
 | 21–40 | 0 | 0 | 0 | N/A | N/A | N/A |
 | 41–60 | 0 | 0 | 0 | N/A | N/A | N/A |
-| 61–80 | 2 | 0 | 0 | N/A | N/A | N/A |
-| 81–100 | 1 | 0 | 0 | N/A | N/A | N/A |
+| 61–80 | 2 | 1 | 0 | N/A | N/A | N/A |
+| 81–100 | 1 | 1 | 0 | N/A | N/A | N/A |
 
 ---
 
@@ -132,7 +131,10 @@
 ---
 
 ## 12. Data Integrity Checks
-- **Audit Status:** `PASS`
+- **Audit Status:** `WARN`
 - **Checks Performed:** 10
-- **Issues Detected:** 0
-- ✅ Zero schema violations, orphan records, or date inversions detected.
+- **Issues Detected:** 2
+
+**Integrity Warnings:**
+- ⚠️ Setup SETUP-TRUALT_NS-20260925: entry_date (2026-09-25) is earlier than setup_date (2026-09-28)
+- ⚠️ Setup SETUP-IOC_NS-20260925: entry_date (2026-09-25) is earlier than setup_date (2026-09-28)

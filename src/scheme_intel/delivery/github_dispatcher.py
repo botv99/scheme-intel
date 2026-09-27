@@ -77,8 +77,8 @@ class GitHubWorkflowDispatcher:
 
         client_payload = {
             "request_id": request_id,
-            "user_id": str(user_id) if user_id is not None else None,
-            "chat_id": str(chat_id),
+            "user_id": user_id,
+            "chat_id": chat_id,
             "query": query,
             "normalized_query": normalized_query or query.lower().strip(),
             "intent": intent,
