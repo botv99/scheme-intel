@@ -6,6 +6,8 @@ from .news import NewsEngine
 from .impact import evaluate_stock_catalysts
 from .catalysts import extract_catalysts, score_catalyst
 from .company_mapping import CompanyMapper
+from .technical_score import TechnicalScoreEngine, TechnicalScoreResult, TECHNICAL_SCORE_VERSION
+from .fundamental_score import FundamentalIntelligenceEngine, FundamentalScoreResult, FUNDAMENTAL_SCORE_VERSION
 
 __all__ = [
     "NewsEngine",
@@ -13,4 +15,10 @@ __all__ = [
     "extract_catalysts",
     "score_catalyst",
     "CompanyMapper",
+    "TechnicalScoreEngine",
+    "TechnicalScoreResult",
+    "TECHNICAL_SCORE_VERSION",
+    "FundamentalIntelligenceEngine",
+    "FundamentalScoreResult",
+    "FUNDAMENTAL_SCORE_VERSION",
 ]

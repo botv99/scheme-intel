@@ -12,6 +12,7 @@ export const BOT_COMMANDS = [
   { command: "stock", description: "Stock intelligence card (/stock <SYM>)" },
   { command: "setups", description: "Today's qualified setups" },
   { command: "watchlist", description: "Monitored watchlist stocks" },
+  { command: "research", description: "Deep policy research (/research <Q>)" },
 ];
 
 /**

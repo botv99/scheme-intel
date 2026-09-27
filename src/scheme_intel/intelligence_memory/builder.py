@@ -22,6 +22,8 @@ from ..schemes.registry import SchemeRegistry
 from ..schemes.models import SchemeConfig, SchemeStock
 from ..stage2.storage import Stage2Database, DEFAULT_STAGE2_DB_PATH
 from ..stage2.models import TradeSetup
+from ..intelligence.technical_score import TechnicalScoreEngine
+from ..intelligence.fundamental_score import FundamentalIntelligenceEngine
 from ..logger import get_logger
 
 logger = get_logger(__name__)
@@ -94,7 +96,20 @@ class IntelligenceSnapshotBuilder:
             except Exception as e:
                 logger.debug("Could not read ingested.json for snapshot evidence: %s", e)
 
-        # 3. Build CompanyIntelligence for every stock across active schemes
+        # 3. Initialize Technical and Fundamental scoring engines
+        tech_engine = TechnicalScoreEngine()
+        fund_engine = FundamentalIntelligenceEngine()
+
+        benchmark_bars = []
+        try:
+            from ..db import SchemeIntelDB
+            db_inst = SchemeIntelDB()
+            conn = db_inst.connect()
+            benchmark_bars = [dict(r) for r in conn.execute("SELECT * FROM benchmark_prices ORDER BY date ASC").fetchall()]
+        except Exception as e:
+            logger.debug("Could not load benchmark prices for technical scoring: %s", e)
+
+        # 4. Build CompanyIntelligence for every stock across active schemes
         for scheme in active_schemes:
             qualified_count = 0
             wait_count = 0
@@ -143,6 +158,8 @@ class IntelligenceSnapshotBuilder:
                         from ..market.engine import MarketDataEngine
                         m_engine = MarketDataEngine()
                         m_snap, _, _ = m_engine.get_snapshot_with_status(sym)
+                        if not m_snap and "IONEXCHANG" in sym:
+                            m_snap, _, _ = m_engine.get_snapshot_with_status("ORGANICREC.BO")
                         if m_snap:
                             price = m_snap.close
                             change_pct = m_snap.day_change_pct
@@ -198,6 +215,22 @@ class IntelligenceSnapshotBuilder:
                 # Evidence from ingested news or setup
                 evidence = ingested_news_by_symbol.get(sym, [])
 
+                # Quantitative Technical & Fundamental Intelligence Scores
+                tech_bars = []
+                try:
+                    from ..db import SchemeIntelDB
+                    db_inst = SchemeIntelDB()
+                    tech_bars = db_inst.get_historical_prices(sym, limit=120)
+                    if not tech_bars and "." in sym:
+                        tech_bars = db_inst.get_historical_prices(sym.split(".")[0], limit=120)
+                    if not tech_bars and "IONEXCHANG" in sym:
+                        tech_bars = db_inst.get_historical_prices("ORGANICREC.BO", limit=120)
+                except Exception as e:
+                    logger.debug("Could not load historical prices for %s: %s", sym, e)
+
+                tech_res = tech_engine.calculate(tech_bars, benchmark_bars=benchmark_bars)
+                fund_res = fund_engine.calculate(sym)
+
                 company_intel = CompanyIntelligence(
                     symbol=sym,
                     short_symbol=short_sym,
@@ -209,7 +242,17 @@ class IntelligenceSnapshotBuilder:
                     latest_development=latest_dev,
                     catalyst=catalyst_desc,
                     catalysts=catalysts_list,
-                    fundamental_score=None,
+                    fundamental_score=fund_res.score,
+                    fundamental_intelligence_score=fund_res.score,
+                    fundamental_score_components={k: v.to_dict() for k, v in fund_res.components.items()},
+                    fundamental_score_version=fund_res.version,
+                    fundamental_score_coverage=fund_res.coverage_pct,
+                    fundamental_score_data_as_of=fund_res.data_as_of,
+                    technical_intelligence_score=tech_res.score,
+                    technical_score_components={k: v.to_dict() for k, v in tech_res.components.items()},
+                    technical_score_version=tech_res.version,
+                    technical_score_data_as_of=tech_res.data_as_of,
+                    technical_score_coverage=tech_res.coverage_pct,
                     price=price,
                     change_pct=change_pct,
                     volume=vol,

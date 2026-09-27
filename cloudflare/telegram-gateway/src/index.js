@@ -377,10 +377,10 @@ export default {
       const question = resolved.question || rawText.replace(/^\/research\s*/i, "").trim();
 
       const ackMessage =
-        `🔬 *Deep Research Dispatched*\n\n` +
-        `*Request ID:* \`${requestId}\`\n` +
-        `*Question:* _${question}_\n\n` +
-        `Your research query has been dispatched. Synthesized findings will be delivered to this chat.`;
+        `🔬 *DEEP RESEARCH STARTED*\n\n` +
+        `*Request ID:*\n\`${requestId}\`\n\n` +
+        `Your research is being analyzed by the Scheme-Intel intelligence engine.\n\n` +
+        `This may take a little time.`;
 
       if (botToken) {
         ctx.waitUntil(sendMessage(botToken, chatId, ackMessage, { requestId }));

@@ -151,22 +151,52 @@ export function renderStockCard(comp, snapshot = null, isStale = false) {
   lines.push(`Volume Change: ${volumeChangeStr}`);
 
   // 4. FUNDAMENTAL SCORE
-  lines.push(
-    "",
-    "*FUNDAMENTAL SCORE*",
-    comp.fundamental_score != null
-      ? `Fundamental Score: ${Number(comp.fundamental_score).toFixed(1)}/10`
-      : "Fundamental Score: N/A\nReason: Fundamental scoring not available in current snapshot."
-  );
+  lines.push("", "*FUNDAMENTAL SCORE*");
+  const fundVal = comp.fundamental_intelligence_score != null ? comp.fundamental_intelligence_score : comp.fundamental_score;
+  if (fundVal != null) {
+    const covStr = comp.fundamental_score_coverage != null ? ` | Coverage: ${Math.round(comp.fundamental_score_coverage)}%` : "";
+    const asOfStr = comp.fundamental_score_data_as_of ? ` | As of: ${comp.fundamental_score_data_as_of}` : "";
+    lines.push(`Fundamental Score: ${Number(fundVal).toFixed(1)}/10${covStr}${asOfStr}`);
+    if (comp.fundamental_score_components && typeof comp.fundamental_score_components === "object") {
+      const parts = [];
+      for (const k of ["growth", "profitability", "balance_sheet", "cash_flow"]) {
+        const item = comp.fundamental_score_components[k];
+        if (item && item.score != null) {
+          const label = k.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
+          parts.push(`${label}: ${Number(item.score).toFixed(1)}`);
+        }
+      }
+      if (parts.length > 0) {
+        lines.push(`• ${parts.join(" | ")}`);
+      }
+    }
+  } else {
+    lines.push("Fundamental Score: N/A\nReason: Fundamental scoring not available in current snapshot.");
+  }
 
   // 5. TECHNICAL / INTELLIGENCE SCORE
-  lines.push(
-    "",
-    "*TECHNICAL INTELLIGENCE*",
-    comp.score != null
-      ? `Technical / Intel Score: ${(comp.score / 10).toFixed(1)}/10`
-      : "Technical / Intel Score: N/A"
-  );
+  lines.push("", "*TECHNICAL INTELLIGENCE*");
+  const techVal = comp.technical_intelligence_score != null ? comp.technical_intelligence_score : (comp.score != null ? comp.score / 10 : null);
+  if (techVal != null) {
+    const covStr = comp.technical_score_coverage != null ? ` | Coverage: ${Math.round(comp.technical_score_coverage)}%` : "";
+    const asOfStr = comp.technical_score_data_as_of ? ` | As of: ${comp.technical_score_data_as_of}` : "";
+    lines.push(`Technical / Intel Score: ${Number(techVal).toFixed(1)}/10${covStr}${asOfStr}`);
+    if (comp.technical_score_components && typeof comp.technical_score_components === "object") {
+      const parts = [];
+      for (const k of ["trend", "momentum", "structure", "volume"]) {
+        const item = comp.technical_score_components[k];
+        if (item && item.score != null) {
+          const label = k.charAt(0).toUpperCase() + k.slice(1);
+          parts.push(`${label}: ${Number(item.score).toFixed(1)}`);
+        }
+      }
+      if (parts.length > 0) {
+        lines.push(`• ${parts.join(" | ")}`);
+      }
+    }
+  } else {
+    lines.push("Technical / Intel Score: N/A");
+  }
 
   // 6. TODAY'S CATALYST
   lines.push("", "*TODAY'S CATALYST*");
@@ -445,6 +475,7 @@ export function renderStartMenu() {
     `• /stock <symbol> — Full stock intelligence card\n` +
     `• /setups — Today's qualified setups\n` +
     `• /watchlist — Monitored stocks\n` +
+    `• /research <question> — Deep policy research\n` +
     `• /help — Command guide`
   );
 }

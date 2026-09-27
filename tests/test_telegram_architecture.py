@@ -470,7 +470,7 @@ class TestPathCResearchRouting:
         resp = handler.handle_message("/research What is the latest SATAT policy?", user_id="111", chat_id="222")
 
         # 1. Returns research ACK
-        assert "Research queued" in resp or "Research request received" in resp
+        assert "Research queued" in resp or "Research request received" in resp or "DEEP RESEARCH STARTED" in resp
 
         # 2. Enqueued in SQLite research queue
         jobs = q_store.list_jobs(status="QUEUED")

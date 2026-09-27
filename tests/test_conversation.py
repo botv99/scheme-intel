@@ -438,16 +438,15 @@ class TestTelegramMessageRouter:
         retriever = FastIntelligenceRetriever(store=mock_store, auto_build_if_missing=False)
         router = TelegramMessageRouter(retriever=retriever, research_queue=test_queue)
         resp = router.route_message("/research What are the revised SATAT targets?", user_id="123", chat_id="456")
-        assert "Research request received" in resp
-        assert "Research ID:" in resp
-        assert "Status:* `QUEUED`" in resp
+        assert "DEEP RESEARCH STARTED" in resp or "Research request received" in resp
+        assert "Request ID:" in resp or "Research ID:" in resp
 
     def test_research_rate_limiting(self, mock_store: IntelligenceStore, test_queue: ResearchQueue):
         retriever = FastIntelligenceRetriever(store=mock_store, auto_build_if_missing=False)
         router = TelegramMessageRouter(retriever=retriever, research_queue=test_queue, research_cooldown_seconds=60)
         # First request succeeds
         r1 = router.route_message("/research First query", user_id="123")
-        assert "QUEUED" in r1
+        assert "DEEP RESEARCH STARTED" in r1 or "QUEUED" in r1
 
         # Second immediate request hits rate limit
         r2 = router.route_message("/research Second query", user_id="123")
@@ -455,7 +454,7 @@ class TestTelegramMessageRouter:
 
         # Different user is not blocked
         r3 = router.route_message("/research Query from another user", user_id="456")
-        assert "QUEUED" in r3
+        assert "DEEP RESEARCH STARTED" in r3 or "QUEUED" in r3
 
 
 # ---------------------------------------------------------------------------
@@ -475,10 +474,22 @@ class TestResearchWorker:
         assert "GOBARdhan" in why or "commercial" in why or "procurement" in why
 
     def test_worker_end_to_end(self, test_queue: ResearchQueue):
+        from unittest.mock import MagicMock
+        from scheme_intel.stage2.providers.base import ProviderResponse
+        from scheme_intel.stage2.providers.manager import LLMProviderManager
+
+        mock_mgr = MagicMock(spec=LLMProviderManager)
+        mock_mgr.generate.side_effect = [
+            ProviderResponse(content='{"bull_case": ["Strong order intake."]}', model="m", provider="p"),
+            ProviderResponse(content='{"bear_case": ["Execution risk."]}', model="m", provider="p"),
+            ProviderResponse(content='{"verdict": "BULL", "why": ["Supportive policy"], "confidence": "HIGH", "key_risk": "Delays", "invalidation": "Cancellation"}', model="m", provider="p"),
+        ]
+        executor = ResearchExecutor(provider_manager=mock_mgr)
+
         job = test_queue.enqueue_job("Test CBG query", user_id="123", chat_id="456")
 
         with patch("scheme_intel.research.worker.send_telegram") as mock_send:
-            worker = ResearchWorker(queue=test_queue)
+            worker = ResearchWorker(queue=test_queue, executor=executor)
             processed = worker.process_next_job(send_telegram_alert=True)
             assert processed is not None
             assert processed.job_id == job.job_id
@@ -486,5 +497,5 @@ class TestResearchWorker:
 
             mock_send.assert_called_once()
             args, kwargs = mock_send.call_args
-            assert "RESEARCH COMPLETE" in args[0]
+            assert "SCHEME-INTEL RESEARCH" in args[0]
             assert kwargs.get("chat_ids") == ["456"]

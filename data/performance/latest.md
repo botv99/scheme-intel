@@ -1,20 +1,20 @@
 # Scheme-Intel Forward Performance & Validation Report
 
-**Generated At:** 2026-09-27T18:34:37.379532+00:00 UTC
-**Data Period:** 2026-09-28 → 2026-09-28
+**Generated At:** 2026-09-27T19:12:33.248742+00:00 UTC
+**Data Period:** 2026-09-24 → 2026-09-28
 **Data Sufficiency Status:** `INSUFFICIENT_SAMPLE` — *Insufficient sample (0 completed trades; minimum 30 required for statistical validity)*
 **Strategy Validation Status:** `INSUFFICIENT DATA`
 
 ---
 
 ## 1. Setup Lifecycle Sample
-- **Total Setups Recorded:** 7
+- **Total Setups Recorded:** 14
 - **Qualified Setups:** 2
-- **Waiting Setups:** 3
-- **Rejected Setups (Hard Risk Veto / No Trade):** 2
-- **Triggered Entries:** 2
-- **Untriggered Setups:** 5 *(never counted as losses)*
-- **Currently Active (Open) Trades:** 2
+- **Waiting Setups:** 9
+- **Rejected Setups (Hard Risk Veto / No Trade):** 3
+- **Triggered Entries:** 3
+- **Untriggered Setups:** 11 *(never counted as losses)*
+- **Currently Active (Open) Trades:** 3
 - **Completed Trades:** 0
 - **Expired Positions:** 0
 
@@ -46,18 +46,18 @@
 ---
 
 ## 4. MFE & MAE Excursions
-- **Average MFE (Max Favorable Excursion):** +0.76%
-- **Median MFE:** +0.76%
-- **Maximum MFE Observed:** +1.00%
-- **Average MAE (Max Adverse Excursion):** -2.47%
-- **Median MAE:** -2.47%
-- **Maximum Adverse Excursion (Worst Dip):** -4.68%
+- **Average MFE (Max Favorable Excursion):** +0.64%
+- **Median MFE:** +0.52%
+- **Maximum MFE Observed:** +1.33%
+- **Average MAE (Max Adverse Excursion):** -2.15%
+- **Median MAE:** -1.30%
+- **Maximum Adverse Excursion (Worst Dip):** -4.88%
 
 ### Excursion Distributions
 | MFE Bucket | Trades | MAE Bucket | Trades |
 | :--- | :--- | :--- | :--- |
 | <0% | 0 | 0 to -1% | 1 |
-| 0–2% | 2 | -1 to -3% | 0 |
+| 0–2% | 3 | -1 to -3% | 1 |
 | 2–5% | 0 | -3 to -5% | 1 |
 | 5–10% | 0 | <-5% | 0 |
 | >10% | 0 |  |  |
@@ -76,21 +76,21 @@
 | Archetype | Setups | Trig | Comp | Win Rate | Avg P&L | Expectancy | PF | Avg MFE | Avg MAE | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | Breakout | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| Breakout Anticipation | 2 | 2 | 0 | N/A | N/A | N/A | N/A | +0.8% | -2.5% | `INSUFFICIENT_SAMPLE` |
-| Unspecified | 4 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| Breakout Anticipation | 2 | 2 | 0 | N/A | N/A | N/A | N/A | +0.9% | -2.6% | `INSUFFICIENT_SAMPLE` |
+| Unspecified | 11 | 1 | 0 | N/A | N/A | N/A | N/A | +0.1% | -1.3% | `INSUFFICIENT_SAMPLE` |
 
 ---
 
 ## 7. Breakdown by Stock Symbol
 | Symbol | Setups | Trig | Comp | Win Rate | Avg P&L | Expectancy | Avg MFE | Avg MAE | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| GAIL.NS | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| IOC.NS | 1 | 1 | 0 | N/A | N/A | N/A | +1.0% | -0.3% | `INSUFFICIENT_SAMPLE` |
-| KIRLPNU.NS | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| ORGANICREC.BO | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| PRAJIND.NS | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| TRUALT.NS | 1 | 1 | 0 | N/A | N/A | N/A | +0.5% | -4.7% | `INSUFFICIENT_SAMPLE` |
-| WABAG.NS | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| GAIL.NS | 2 | 1 | 0 | N/A | N/A | N/A | +0.1% | -1.3% | `INSUFFICIENT_SAMPLE` |
+| IOC.NS | 2 | 1 | 0 | N/A | N/A | N/A | +1.3% | -0.3% | `INSUFFICIENT_SAMPLE` |
+| KIRLPNU.NS | 2 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| ORGANICREC.BO | 2 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| PRAJIND.NS | 2 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| TRUALT.NS | 2 | 1 | 0 | N/A | N/A | N/A | +0.5% | -4.9% | `INSUFFICIENT_SAMPLE` |
+| WABAG.NS | 2 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
 
 ---
 
@@ -98,8 +98,8 @@
 *(Observational measurement only. Does not imply causation.)*
 | Provider | Setups | Trig | Comp | Win Rate | Avg P&L | Expectancy | Avg MFE | Avg MAE | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| Deterministic Fallback | 4 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| Mock | 3 | 2 | 0 | N/A | N/A | N/A | +0.8% | -2.5% | `INSUFFICIENT_SAMPLE` |
+| Deterministic Fallback | 11 | 1 | 0 | N/A | N/A | N/A | +0.1% | -1.3% | `INSUFFICIENT_SAMPLE` |
+| Mock | 3 | 2 | 0 | N/A | N/A | N/A | +0.9% | -2.6% | `INSUFFICIENT_SAMPLE` |
 
 ---
 
@@ -133,8 +133,9 @@
 ## 12. Data Integrity Checks
 - **Audit Status:** `WARN`
 - **Checks Performed:** 10
-- **Issues Detected:** 2
+- **Issues Detected:** 3
 
 **Integrity Warnings:**
 - ⚠️ Setup SETUP-TRUALT_NS-20260925: entry_date (2026-09-25) is earlier than setup_date (2026-09-28)
 - ⚠️ Setup SETUP-IOC_NS-20260925: entry_date (2026-09-25) is earlier than setup_date (2026-09-28)
+- ⚠️ Setup SETUP-GAIL_NS-20260925: entry_date (2026-09-25) is earlier than setup_date (2026-09-28)
