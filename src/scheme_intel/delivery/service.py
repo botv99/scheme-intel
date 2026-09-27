@@ -113,12 +113,14 @@ def get_system_health(
             issues.append(f"Component '{comp}' thread has failed/died")
 
     status_str = "healthy" if is_healthy and not issues else ("degraded" if is_healthy else "unhealthy")
+    telemetry = effective_service.get_telemetry() if effective_service else None
 
     return {
         "status": status_str,
         "is_healthy": is_healthy,
         "issues": issues,
         "components": component_status,
+        "telemetry": telemetry,
         "telegram": {
             "bot_token_configured": has_bot_token,
             "chat_id_configured": has_chat_id,
@@ -220,6 +222,24 @@ class SchemeIntelService:
             status["snapshot_syncer"] = "DISABLED"
 
         return status
+
+    def get_telemetry(self) -> Dict[str, Any]:
+        """Return runtime telemetry including polling state and counters."""
+        return {
+            "telegram": self.bot_handler.get_metrics(),
+            "research_worker": {
+                "is_running": self.worker.is_running,
+            },
+            "snapshot_syncer": {
+                "is_running": self.syncer.is_running,
+                "enabled": self.syncer.enabled,
+                "last_sync_time": (
+                    time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(self.syncer.last_sync_time))
+                    if self.syncer.last_sync_time
+                    else None
+                ),
+            },
+        }
 
     def start(self) -> None:
         """Start components according to configured mode and block until interrupted."""

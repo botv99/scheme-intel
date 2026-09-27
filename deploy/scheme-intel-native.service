@@ -1,0 +1,19 @@
+[Unit]
+Description=Scheme-Intel 24/7 Telegram Conversational Intelligence Terminal (Native Python)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/scheme-intel
+EnvironmentFile=/home/ubuntu/scheme-intel/.env
+ExecStart=/home/ubuntu/scheme-intel/venv/bin/python -m scheme_intel.delivery.service --mode all
+Restart=always
+RestartSec=5
+KillMode=mixed
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target

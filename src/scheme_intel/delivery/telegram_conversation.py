@@ -100,11 +100,27 @@ class TelegramConversationHandler:
     def __init__(self, router: Optional[TelegramMessageRouter] = None):
         self.router = router or TelegramMessageRouter()
         self.is_running = False
+        self.last_update_id: Optional[int] = None
+        self.last_poll_time: Optional[float] = None
+        self.processed_count: int = 0
 
     def stop(self) -> None:
         """Signal the polling loop to terminate gracefully."""
         self.is_running = False
         logger.info("TelegramConversationHandler stop signal received.")
+
+    def get_metrics(self) -> Dict[str, Any]:
+        """Return runtime polling telemetry metrics."""
+        return {
+            "is_running": self.is_running,
+            "last_update_id": self.last_update_id,
+            "last_poll_time": (
+                time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(self.last_poll_time))
+                if self.last_poll_time
+                else None
+            ),
+            "processed_count": self.processed_count,
+        }
 
     def handle_message(
         self,
@@ -137,9 +153,12 @@ class TelegramConversationHandler:
         update_id = update.get("update_id")
 
         # 1. Idempotency Check
+        if update_id is not None:
+            self.last_update_id = update_id
         if update_id is not None and self.router.request_store.is_duplicate_update(update_id):
             logger.info("[TELEGRAM] Skipping duplicate update_id=%s", update_id)
             return None
+        self.processed_count += 1
 
         # 2. Extract Message or CallbackQuery
         text: str = ""
@@ -301,6 +320,7 @@ class TelegramConversationHandler:
 
         backoff_seconds = 2
         while self.is_running:
+            self.last_poll_time = time.time()
             try:
                 resp = requests.get(url, params={"offset": offset, "timeout": 20}, timeout=25)
                 if resp.status_code == 200:
