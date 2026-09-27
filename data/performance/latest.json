@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-26T19:21:49.921018+00:00",
+  "generated_at": "2026-09-27T12:26:46.542400+00:00",
   "data_period": {
     "start_date": "2026-09-28",
     "end_date": "2026-09-28"
@@ -13,9 +13,9 @@
   "strategy_status": "INSUFFICIENT DATA",
   "setup_metrics": {
     "total_setups": 7,
-    "qualified_setups": 2,
+    "qualified_setups": 1,
     "rejected_setups": 3,
-    "waiting_setups": 2,
+    "waiting_setups": 3,
     "watch_setups": 0,
     "triggered_setups": 0,
     "untriggered_setups": 7,
@@ -118,7 +118,7 @@
     {
       "archetype": "Breakout Anticipation",
       "setups": 2,
-      "qualified": 2,
+      "qualified": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -241,7 +241,7 @@
     {
       "symbol": "TRUALT.NS",
       "setups": 1,
-      "qualified": 1,
+      "qualified": 0,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -394,7 +394,7 @@
     {
       "date": "2026-09-28",
       "setups_generated": 7,
-      "qualified_setups": 2,
+      "qualified_setups": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
