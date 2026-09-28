@@ -412,7 +412,10 @@ class TestRealComponentHealthReporting:
         service = SchemeIntelService(mode="worker", worker_poll_interval=0.05, sync_snapshot=False)
         thread = threading.Thread(target=service.start, daemon=True)
         thread.start()
-        time.sleep(0.1)
+        for _ in range(30):
+            if service.get_component_status().get("research_worker") == "RUNNING":
+                break
+            time.sleep(0.05)
 
         components = service.get_component_status()
         assert components["research_worker"] == "RUNNING"

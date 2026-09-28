@@ -6,11 +6,14 @@ degraded confidence management, and structured provenance.
 from __future__ import annotations
 
 import json
+import re
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import quote_plus
+import feedparser
 
 from .classifier import QueryClassifier, QueryType
 from .providers import ProviderRegistry, default_registry
@@ -51,10 +54,103 @@ class ResearchResult:
     is_fallback: bool = False
 
 
+def search_internet_for_research(query: str, scheme: Optional[SchemeConfig] = None, max_items: int = 10) -> List[Dict[str, Any]]:
+    """
+    Execute live web search for research query across Google News RSS and financial feeds.
+    Returns list of fresh evidence items: [{source, title, url, date, snippet}].
+    """
+    clean_q = re.sub(r"^/research\s*", "", query, flags=re.IGNORECASE).strip()
+    if not clean_q:
+        return []
+
+    evidence_items: List[Dict[str, Any]] = []
+    seen_titles = set()
+
+    # Search queries to fan out across internet
+    search_queries = [clean_q]
+    q_lower = clean_q.lower()
+
+    # Financial / Earnings query enrichment
+    if any(k in q_lower for k in ("earnings", "results", "profit", "revenue", "q1", "q2", "q3", "q4", "concall")):
+        search_queries.append(f"{clean_q} quarterly results")
+    elif scheme and scheme.keywords:
+        search_queries.append(f"{clean_q} {scheme.keywords[0]}")
+    else:
+        search_queries.append(f"{clean_q} latest news")
+
+    for sq in search_queries[:2]:
+        encoded = quote_plus(sq)
+        rss_url = f"https://news.google.com/rss/search?q={encoded}&hl=en-IN&gl=IN&ceid=IN:en"
+        try:
+            feed = feedparser.parse(rss_url)
+            for entry in feed.entries[:6]:
+                title = entry.get("title", "").strip()
+                if not title or title.lower() in seen_titles:
+                    continue
+                seen_titles.add(title.lower())
+
+                src_name = entry.get("source", {}).get("title") if isinstance(entry.get("source"), dict) else "Financial Media"
+                summary_raw = entry.get("summary", "")
+                clean_snippet = re.sub(r"<[^>]+>", " ", summary_raw).strip() if summary_raw else title
+                clean_snippet = re.sub(r"\s+", " ", clean_snippet)[:350]
+
+                pub_date = entry.get("published", "")
+                if pub_date:
+                    pub_parts = pub_date.split()
+                    if len(pub_parts) >= 4:
+                        pub_date = f"{pub_parts[1]} {pub_parts[2]} {pub_parts[3]}"
+
+                evidence_items.append({
+                    "source": src_name or "Financial Media",
+                    "title": title,
+                    "url": entry.get("link", ""),
+                    "date": pub_date or datetime.now(timezone.utc).strftime("%d %b %Y"),
+                    "snippet": clean_snippet,
+                })
+        except Exception as e:
+            logger.debug("Google News RSS search failed for '%s': %s", sq, e)
+
+    # yfinance news lookup if ticker mentioned
+    ticker_map = {
+        "gail": "GAIL.NS",
+        "praj": "PRAJIND.NS",
+        "prajind": "PRAJIND.NS",
+        "wabag": "WABAG.NS",
+        "trualt": "TRUALT.NS",
+        "organic": "ORGANICREC.BO",
+        "kirlpn": "KIRLPNU.NS",
+        "kirloskar": "KIRLPNU.NS",
+        "ioc": "IOC.NS",
+        "ionexchang": "IONEXCHANG.NS",
+    }
+    for key, sym in ticker_map.items():
+        if key in q_lower:
+            try:
+                import yfinance as yf
+                t = yf.Ticker(sym)
+                yf_news = getattr(t, "news", []) or []
+                for n in yf_news[:4]:
+                    content_block = n.get("content", {}) if isinstance(n.get("content"), dict) else {}
+                    t_title = content_block.get("title") or n.get("title", "")
+                    if t_title and t_title.lower() not in seen_titles:
+                        seen_titles.add(t_title.lower())
+                        evidence_items.append({
+                            "source": content_block.get("provider", {}).get("displayName") or n.get("publisher") or "Yahoo Finance",
+                            "title": t_title,
+                            "url": content_block.get("canonicalUrl", {}).get("url") or n.get("link") or "",
+                            "date": datetime.now(timezone.utc).strftime("%d %b %Y"),
+                            "snippet": content_block.get("summary") or t_title,
+                        })
+            except Exception as yf_err:
+                logger.debug("yfinance news fetch failed for %s: %s", sym, yf_err)
+
+    return evidence_items[:max_items]
+
+
 class ResearchOrchestrator:
     """
     Orchestrates true multi-provider AI research:
-    1. Gathers context from snapshot and fresh evidence from news/filings.
+    1. Gathers context from snapshot, fresh evidence from internet search, news, and filings.
     2. Fans out to available distinct AI providers (Groq, Gemini, OpenAI, OpenRouter).
     3. Executes role-based agents (Research/Fact, Bull, Bear, Arbiter).
     4. Detects contradictions and builds consensus without hallucinations.
@@ -76,7 +172,7 @@ class ResearchOrchestrator:
         snapshot_context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
-        Gather fresh evidence from ingested news, filings, and official sources.
+        Gather fresh evidence from live internet search, ingested news, filings, and official sources.
         Snapshot data is passed as background context only, NEVER as complete evidence.
         """
         evidence_items: List[Dict[str, Any]] = []
@@ -87,7 +183,18 @@ class ResearchOrchestrator:
         q_lower = query.lower()
         q_tokens = [w for w in q_lower.split() if len(w) > 3]
 
-        # 1. Snapshot as Background Context ONLY
+        # 1. Live Internet Search (Google News RSS, Financial Media, yfinance)
+        try:
+            internet_evidence = search_internet_for_research(query, scheme)
+            for ev in internet_evidence:
+                evidence_items.append(ev)
+                sources.append(ev)
+            if internet_evidence:
+                logger.info("INTERNET_SEARCH_COLLECTED: %d live items retrieved for query '%s'", len(internet_evidence), query[:40])
+        except Exception as e:
+            logger.debug("Internet search encountered error: %s", e)
+
+        # 2. Snapshot as Background Context ONLY
         if snapshot_context:
             for sym, comp in snapshot_context.get("companies", {}).items():
                 name = comp.get("name", "").lower()
@@ -97,7 +204,7 @@ class ResearchOrchestrator:
                     for c in comp.get("catalysts", []):
                         catalysts.append(f"{comp.get('short_symbol')}: {c}")
 
-        # 2. Fresh Ingested News & Announcements (authoritative recent facts)
+        # 3. Fresh Ingested News & Announcements (authoritative recent facts)
         ingested_path = REPO_ROOT / "data" / "ingested.json"
         if ingested_path.exists():
             try:
@@ -133,7 +240,7 @@ class ResearchOrchestrator:
             except Exception as e:
                 logger.debug("Error reading ingested.json for fresh evidence: %s", e)
 
-        # 3. Official Scheme Monitored Sources
+        # 4. Official Scheme Monitored Sources
         if scheme and scheme.sources:
             for src in scheme.sources[:3]:
                 sources.append({
@@ -147,10 +254,10 @@ class ResearchOrchestrator:
         logger.info("EVIDENCE_COLLECTED: %d items gathered for query '%s'", len(evidence_items), query[:40])
 
         return {
-            "evidence_items": evidence_items[:10],
+            "evidence_items": evidence_items[:12],
             "company_data": company_data,
             "catalysts": catalysts[:4],
-            "sources": sources[:6],
+            "sources": sources[:8],
         }
 
     def execute_research(
@@ -444,14 +551,25 @@ Return JSON:
 
     def _get_active_providers(self) -> Dict[str, LLMProvider]:
         """Fetch configured and initialized LLM providers."""
-        if self.provider_manager:
-            # If user passed a custom provider_manager, inspect its providers
-            if hasattr(self.provider_manager, "providers") and self.provider_manager.providers:
-                return {k: v for k, v in self.provider_manager.providers.items() if not self.provider_manager.is_in_cooldown(k)}
-            return {"provider_manager": self.provider_manager}
+        active: Dict[str, LLMProvider] = {}
+        # 1. Fetch from ProviderRegistry (Groq, Gemini, OpenAI, OpenRouter)
+        reg_active = self.registry.get_active_providers()
+        if reg_active:
+            active.update(reg_active)
 
-        # Query provider registry
-        active = self.registry.get_active_providers()
+        # 2. Fetch from provider_manager if available
+        if self.provider_manager and hasattr(self.provider_manager, "providers"):
+            for k, v in self.provider_manager.providers.items():
+                if k not in active and not self.provider_manager.is_in_cooldown(k):
+                    active[k] = v
+
+        # 3. If mock was provided or provider_manager is the only entity
+        if not active and self.provider_manager:
+            if hasattr(self.provider_manager, "providers") and self.provider_manager.providers:
+                active.update(self.provider_manager.providers)
+            else:
+                active["provider_manager"] = self.provider_manager
+
         return active
 
     def _call_provider(

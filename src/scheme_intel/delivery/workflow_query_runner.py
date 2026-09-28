@@ -35,12 +35,15 @@ def process_workflow_query(
     query = payload.get("query") or payload.get("raw_query", "")
     scheme_id = payload.get("scheme_id", "gobardhan")
     symbol = payload.get("symbol")
+    intent = payload.get("intent")
+    raw_query = payload.get("raw_query")
     workflow_run_id = os.getenv("GITHUB_RUN_ID", "local")
 
     logger.info(
-        "[WORKFLOW RUNNER] Starting query processing: request_id=%s, chat_id=%s, run_id=%s",
+        "[WORKFLOW RUNNER] Starting query processing: request_id=%s, chat_id=%s, intent=%s, run_id=%s",
         request_id,
         chat_id,
+        intent,
         workflow_run_id,
     )
 
@@ -124,6 +127,8 @@ def process_workflow_query(
             snapshot=snapshot,
             scheme_id=scheme_id,
             target_symbol=symbol,
+            intent=intent,
+            raw_query=raw_query,
         )
 
         # 5. Format Curated Terminal Card

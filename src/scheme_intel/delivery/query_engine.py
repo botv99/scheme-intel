@@ -36,17 +36,19 @@ class ComplexQueryEngine:
         snapshot: IntelligenceSnapshot,
         scheme_id: Optional[str] = "gobardhan",
         target_symbol: Optional[str] = None,
+        intent: Optional[str] = None,
+        raw_query: Optional[str] = None,
     ) -> str:
         """
         Evaluate conversational query.
         For genuine research queries, triggers fresh multi-provider research with snapshot as background context.
         For simple status/price queries, answers from snapshot facts.
         """
-        classification = QueryClassifier.classify(query)
+        classification = QueryClassifier.classify(query, intent=intent, raw_query=raw_query)
 
         # 1. Genuine Research Query: Fan out to Research Orchestrator
-        if classification in (QueryType.RESEARCH_QUERY, QueryType.DEEP_RESEARCH):
-            logger.info("[QUERY ENGINE] Classified as %s: Routing to Research Orchestrator", classification.value)
+        if intent == "RESEARCH_REQUEST" or classification in (QueryType.RESEARCH_QUERY, QueryType.DEEP_RESEARCH):
+            logger.info("[QUERY ENGINE] Classified as %s (intent=%s): Routing to Research Orchestrator", classification.value, intent)
             res: ResearchResult = self.orchestrator.execute_research(
                 query=query,
                 scheme_id=scheme_id or "gobardhan",

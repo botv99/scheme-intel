@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 
 from .models import ResearchJob
 from .formatter import format_research_result, format_research_failure
-from .orchestrator import ResearchOrchestrator, ResearchProvenance
+from .orchestrator import ResearchOrchestrator, ResearchProvenance, search_internet_for_research
 from ..schemes.registry import SchemeRegistry
 from ..schemes.models import SchemeConfig
 from ..stage2.providers.manager import LLMProviderManager
@@ -76,6 +76,17 @@ class ResearchExecutor:
 
         q_lower = question.lower()
         q_tokens = [w for w in q_lower.split() if len(w) > 3]
+
+        # 0. Live Internet Search (Google News RSS, Financial Media, yfinance)
+        try:
+            internet_evidence = search_internet_for_research(question, scheme)
+            for ev in internet_evidence:
+                evidence_items.append(ev)
+                sources.append(ev)
+            if internet_evidence:
+                logger.info("INTERNET_SEARCH_COLLECTED: %d live items retrieved for research question '%s'", len(internet_evidence), question[:40])
+        except Exception as e:
+            logger.debug("Internet search in executor encountered error: %s", e)
 
         # 1. Search latest intelligence snapshot (data/intelligence/latest.json)
         snap_path = REPO_ROOT / "data" / "intelligence" / "latest.json"

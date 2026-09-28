@@ -54,6 +54,27 @@ class QueryClassifier:
         "implications",
         "pros and cons",
         "thesis",
+        "earnings",
+        "results",
+        "financials",
+        "quarterly",
+        "concall",
+        "transcript",
+        "guidance",
+        "dividend",
+        "acquisition",
+        "order book",
+        "revenue",
+        "profit",
+        "ebitda",
+        "valuation",
+        "target price",
+        "balance sheet",
+        "annual report",
+        "q1",
+        "q2",
+        "q3",
+        "q4",
     ]
 
     SIMPLE_PATTERNS = [
@@ -71,18 +92,34 @@ class QueryClassifier:
     ]
 
     @classmethod
-    def classify(cls, query: str) -> QueryType:
+    def classify(
+        cls,
+        query: str,
+        intent: Optional[str] = None,
+        raw_query: Optional[str] = None,
+    ) -> QueryType:
         """
-        Determine QueryType for a given query text.
+        Determine QueryType for a given query text, intent, and raw command.
         """
-        raw = (query or "").strip()
-        lowered = raw.lower()
+        # If caller passed explicit RESEARCH_REQUEST intent, prioritize deep research immediately
+        if intent and intent.upper() in ("RESEARCH_REQUEST", "RESEARCH", "DEEP_RESEARCH"):
+            return QueryType.DEEP_RESEARCH
 
-        if not raw:
+        raw = (query or "").strip()
+        raw_q = (raw_query or "").strip()
+        combined_text = f"{raw} {raw_q}".lower()
+
+        # Check for /research command in either query or raw_query
+        if "/research" in combined_text:
+            return QueryType.DEEP_RESEARCH
+
+        if not raw and not raw_q:
             return QueryType.SIMPLE_QUERY
 
+        lowered = raw.lower()
+
         # 1. Check Deep Research Indicators
-        if any(ind in lowered for ind in cls.DEEP_RESEARCH_INDICATORS):
+        if any(ind in lowered for ind in cls.DEEP_RESEARCH_INDICATORS) or any(ind in combined_text for ind in cls.DEEP_RESEARCH_INDICATORS):
             return QueryType.DEEP_RESEARCH
 
         # 2. Check explicitly simple command patterns
@@ -90,8 +127,8 @@ class QueryClassifier:
             if re.search(pattern, lowered):
                 return QueryType.SIMPLE_QUERY
 
-        # 3. Check Research Query Indicators
-        if any(ind in lowered for ind in cls.RESEARCH_INDICATORS):
+        # 3. Check Research Query Indicators (including earnings, results, etc.)
+        if any(ind in lowered for ind in cls.RESEARCH_INDICATORS) or any(ind in combined_text for ind in cls.RESEARCH_INDICATORS):
             return QueryType.RESEARCH_QUERY
 
         # 4. Multi-entity detection (e.g. mentions multiple tickers or "and" with companies)

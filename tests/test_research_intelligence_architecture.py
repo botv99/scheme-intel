@@ -33,10 +33,12 @@ from scheme_intel.research.orchestrator import (
     ResearchOrchestrator,
     ResearchResult,
     ResearchProvenance,
+    search_internet_for_research,
 )
 from scheme_intel.research.executor import ResearchExecutor
 from scheme_intel.research.models import ResearchJob
 from scheme_intel.delivery.query_engine import ComplexQueryEngine
+from scheme_intel.delivery.workflow_query_runner import process_workflow_query
 from scheme_intel.intelligence.market_sentiment import (
     IndianMarketSentiment,
     GlobalMarketSentiment,
@@ -401,3 +403,142 @@ class TestResearchIntelligenceArchitecture:
         with patch.dict("os.environ", {}, clear=True):
             status = registry.get_health_status("openai", verified_live=False)
             assert status == ProviderHealthStatus.NOT_CONFIGURED
+
+    # -------------------------------------------------------------------------
+    # TEST 13: Research Query Classification with Intent & Financial Indicators
+    # -------------------------------------------------------------------------
+    def test_research_classification_financial_and_intent(self):
+        """Verifies /research, intent=RESEARCH_REQUEST, and financial terms trigger research."""
+        # 1. Direct /research command
+        assert QueryClassifier.classify("/research gail earnings") == QueryType.DEEP_RESEARCH
+        assert QueryClassifier.classify("gail earnings", raw_query="/research gail earnings") == QueryType.DEEP_RESEARCH
+
+        # 2. Intent metadata passed from Telegram gateway
+        assert QueryClassifier.classify("gail earnings", intent="RESEARCH_REQUEST") == QueryType.DEEP_RESEARCH
+
+        # 3. Financial queries without /research trigger RESEARCH_QUERY
+        assert QueryClassifier.classify("GAIL earnings") == QueryType.RESEARCH_QUERY
+        assert QueryClassifier.classify("Praj Q1 results") == QueryType.RESEARCH_QUERY
+        assert QueryClassifier.classify("Wabag concall highlights") == QueryType.RESEARCH_QUERY
+
+        # 4. Simple stock lookup remains SIMPLE_QUERY
+        assert QueryClassifier.classify("/stock trualt") == QueryType.SIMPLE_QUERY
+        assert QueryClassifier.classify("/setups") == QueryType.SIMPLE_QUERY
+
+    # -------------------------------------------------------------------------
+    # TEST 14: Internet Search Evidence Gathering
+    # -------------------------------------------------------------------------
+    def test_internet_search_evidence_gathering(self):
+        """Verifies search_internet_for_research gathers structured web items without error."""
+        items = search_internet_for_research("GAIL earnings results", max_items=5)
+        assert isinstance(items, list)
+        # Even if offline/mocked, returns a list of dictionaries with standard keys
+        for item in items:
+            assert "source" in item
+            assert "title" in item
+            assert "url" in item
+            assert "date" in item
+            assert "snippet" in item
+
+    # -------------------------------------------------------------------------
+    # TEST 15: Research Orchestrator Uses Live Internet Search
+    # -------------------------------------------------------------------------
+    def test_research_orchestrator_uses_live_internet_evidence(self):
+        """Orchestrator gather_fresh_evidence integrates live internet search into dossier."""
+        scheme = SchemeRegistry.get("gobardhan") or SchemeRegistry.get_active()
+        orchestrator = ResearchOrchestrator()
+
+        mock_web_items = [
+            {
+                "source": "NDTV Profit",
+                "title": "GAIL Q1 Net Profit Jumps 28% Driven by Transmission",
+                "url": "https://ndtvprofit.com/gail-q1",
+                "date": "2026-08-05",
+                "snippet": "GAIL reported 28% growth in net profit for Q1 supported by strong natural gas transmission volumes.",
+            }
+        ]
+
+        with patch("scheme_intel.research.orchestrator.search_internet_for_research", return_value=mock_web_items):
+            dossier = orchestrator.gather_fresh_evidence(
+                query="GAIL earnings",
+                scheme=scheme,
+                snapshot_context={"companies": {"GAIL.NS": {"name": "GAIL (India)", "short_symbol": "GAIL", "status": "MONITORING"}}},
+            )
+            assert len(dossier["evidence_items"]) > 0
+            assert any("GAIL Q1 Net Profit" in ev["title"] for ev in dossier["evidence_items"])
+            assert any(s["source"] == "NDTV Profit" for s in dossier["sources"])
+
+    # -------------------------------------------------------------------------
+    # TEST 16: Workflow Query Runner Routes Research Pathway
+    # -------------------------------------------------------------------------
+    def test_workflow_query_runner_routes_research_pathway(self, tmp_path: Path):
+        """Workflow query runner dispatches fresh research when intent=RESEARCH_REQUEST."""
+        from scheme_intel.delivery.request_store import RequestStore
+        db_path = str(tmp_path / "research_test_req.db")
+        store = RequestStore(db_path=db_path)
+
+        mock_groq = MockTestProvider("groq", '{"fact_points": ["GAIL Q1 PAT grew 28% YoY on transmission volume expansion."]}')
+        mock_gemini = MockTestProvider("gemini", '{"bull_case": ["Gas consumption tailwind and policy support for CBG blending."]}')
+        mock_openai = MockTestProvider("openai", '{"bear_case": ["Global LNG price spread volatility and tariff regulation risks."]}')
+        mock_openrouter = MockTestProvider("openrouter", '{"verdict": "BULL", "why": ["Strong operational throughput and volume visibility"], "confidence": "HIGH", "key_risk": "LNG spread contraction", "invalidation": "Drop in gas throughput below 110 mmscmd"}')
+
+        providers = {
+            "groq": mock_groq,
+            "gemini": mock_gemini,
+            "openai": mock_openai,
+            "openrouter": mock_openrouter,
+        }
+
+        test_registry = ProviderRegistry()
+        with patch.object(test_registry, "get_active_providers", return_value=providers):
+            orchestrator = ResearchOrchestrator(registry=test_registry)
+            engine = ComplexQueryEngine(orchestrator=orchestrator)
+
+            # Simulated payload matching Cloudflare Worker /research dispatch
+            payload = {
+                "request_id": "REQ-RESEARCH-ISOLATED-001",
+                "chat_id": "123456789",
+                "query": "gail earnings",
+                "raw_query": "/research gail earnings",
+                "intent": "RESEARCH_REQUEST",
+                "scheme_id": "gobardhan",
+                "symbol": None,
+            }
+
+            dummy_snapshot = IntelligenceSnapshot(
+                snapshot_id="SNAP-TEST-001",
+                generated_at="2026-09-28T09:00:00Z",
+                companies={
+                    "GAIL.NS": CompanyIntelligence(
+                        symbol="GAIL.NS",
+                        short_symbol="GAIL",
+                        name="GAIL (India)",
+                        scheme_id="gobardhan",
+                        scheme_name="GOBARdhan",
+                        price=215.50,
+                    )
+                },
+            )
+
+            mock_retriever = MagicMock()
+            mock_retriever.get_status.return_value = (True, dummy_snapshot, "OK")
+
+            with patch("scheme_intel.delivery.workflow_query_runner.send_telegram", return_value=True) as mock_send:
+                success = process_workflow_query(
+                    payload=payload,
+                    request_store=store,
+                    retriever=mock_retriever,
+                    query_engine=engine,
+                )
+                assert success is True
+                assert mock_send.called
+                sent_msg = mock_send.call_args[0][0]
+                # Verifies it delivered the fresh multi-provider research card, NOT snapshot fallback
+                assert "SCHEME-INTEL MULTI-PROVIDER RESEARCH" in sent_msg
+                assert "SNAPSHOT_FALLBACK" not in sent_msg
+                assert "The snapshot contains no earnings data" not in sent_msg
+                assert "INDEPENDENT FACT FINDINGS" in sent_msg
+                assert "BULL CASE" in sent_msg
+                assert "BEAR CASE" in sent_msg
+                assert "ARBITER SYNTHESIS" in sent_msg
+
