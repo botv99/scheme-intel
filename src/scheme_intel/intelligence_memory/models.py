@@ -9,6 +9,13 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
+from ..intelligence.market_sentiment import (
+    IndianMarketSentiment,
+    GlobalMarketSentiment,
+    SchemeSentimentImpact,
+    WatchlistSentimentImpact,
+)
+
 
 class SnapshotHealthStatus(str, Enum):
     READY = "READY"
@@ -123,6 +130,11 @@ class IntelligenceSnapshot(BaseModel):
     waiting_setups: List[str] = Field(default_factory=list)
     performance: PerformanceIntelligence = Field(default_factory=PerformanceIntelligence)
     benchmark: BenchmarkIntelligence = Field(default_factory=BenchmarkIntelligence)
+    indian_sentiment: Optional[IndianMarketSentiment] = None
+    global_sentiment: Optional[GlobalMarketSentiment] = None
+    scheme_impacts: Dict[str, SchemeSentimentImpact] = Field(default_factory=dict)
+    watchlist_impacts: Dict[str, WatchlistSentimentImpact] = Field(default_factory=dict)
+    market_and_global_sentiment: Optional[Dict[str, Any]] = None
 
     def get_age_seconds(self) -> float:
         """Return snapshot age in seconds."""

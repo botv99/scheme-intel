@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 
 from .models import ResearchJob
 from .formatter import format_research_result, format_research_failure
+from .orchestrator import ResearchOrchestrator, ResearchProvenance
 from ..schemes.registry import SchemeRegistry
 from ..schemes.models import SchemeConfig
 from ..stage2.providers.manager import LLMProviderManager
@@ -30,8 +31,18 @@ class ResearchExecutor:
     and multi-agent adversarial debate (Bull Analyst, Bear Analyst, Arbiter).
     """
 
-    def __init__(self, provider_manager: Optional[LLMProviderManager] = None):
+    def __init__(
+        self,
+        provider_manager: Optional[LLMProviderManager] = None,
+        orchestrator: Optional[ResearchOrchestrator] = None,
+    ):
         self.provider_manager = provider_manager or LLMProviderManager()
+        self.orchestrator = orchestrator or ResearchOrchestrator(provider_manager=self.provider_manager)
+        self.last_provenance: Optional[ResearchProvenance] = None
+        self.providers_attempted: List[str] = []
+        self.providers_successful: List[str] = []
+        self.model_names: Dict[str, str] = {}
+        self.contradictions: List[str] = []
 
     def _synthesize(
         self,
@@ -274,7 +285,17 @@ Return JSON:
                 "Valuation multiple or technical resistance levels limiting immediate risk/reward expansion.",
             ]
 
+        # Cross-Check & Contradiction Detection
+        for b in bull_points:
+            for r in bear_points:
+                if any(w in b.lower() and w in r.lower() for w in ("margin", "timeline", "subsidy", "volume", "delay", "capex", "debt", "risk")):
+                    c_msg = f"Tension noted regarding: {b[:50]} vs {r[:50]}"
+                    if c_msg not in self.contradictions:
+                        self.contradictions.append(c_msg)
+                        logger.info("CONTRADICTION_DETECTED: %s", c_msg)
+
         # 3. Arbiter Agent
+        logger.info("ARBITRATION_STARTED: Reconciling Bull and Bear arguments")
         arbiter_prompt = f"""You are the Institutional Evidence Arbiter for Scheme-Intel.
 Your duty is to judge which side is better supported by available evidence.
 QUESTION: {question}
@@ -287,6 +308,9 @@ BULL CASE:
 
 BEAR CASE:
 {json.dumps(bear_points)}
+
+CONTRADICTIONS IDENTIFIED:
+{json.dumps(self.contradictions)}
 
 TASK:
 Determine:
@@ -305,7 +329,7 @@ Return JSON:
   "invalidation": "one sentence"
 }}
 """
-        arbiter_raw = self._call_llm(arbiter_prompt, "You are an impartial institutional arbiter evaluating evidence weight.")
+        arbiter_raw = self._call_llm(arbiter_prompt, "You are an impartial institutional arbiter evaluating evidence weight.", caller="ArbiterAgent")
         arbiter_dict = self._parse_json_dict(arbiter_raw)
         if not arbiter_dict or "verdict" not in arbiter_dict:
             arbiter_dict = {
@@ -321,14 +345,19 @@ Return JSON:
 
         return bull_points, bear_points, arbiter_dict
 
-    def _call_llm(self, prompt: str, system_prompt: str) -> str:
-        """Execute LLM call with provider manager failover."""
+    def _call_llm(self, prompt: str, system_prompt: str, caller: str = "deep_research_executor") -> str:
+        """Execute LLM call with provider tracking and failover."""
         resp: ProviderResponse = self.provider_manager.generate(
             prompt=prompt,
             system_prompt=system_prompt,
             temperature=0.2,
-            caller="deep_research_executor",
+            caller=caller,
         )
+        p_name = getattr(resp, "provider", None) or getattr(self.provider_manager, "last_provider_used", "default")
+        if p_name and p_name not in self.providers_successful:
+            self.providers_successful.append(p_name)
+        if getattr(resp, "model", None) and p_name:
+            self.model_names[p_name] = resp.model
         return resp.content.strip()
 
     def _parse_json_list(self, text: str, key: str) -> List[str]:

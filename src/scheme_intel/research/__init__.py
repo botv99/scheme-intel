@@ -12,6 +12,10 @@ from .formatter import (
     format_research_failure,
 )
 
+from .orchestrator import ResearchOrchestrator, ResearchResult, ResearchProvenance
+from .providers import ProviderRegistry, default_registry, AIProvider, ProviderConfig, ProviderHealthStatus
+from .classifier import QueryClassifier, QueryType
+
 __all__ = [
     "ResearchJob",
     "ResearchStatus",
@@ -21,4 +25,14 @@ __all__ = [
     "format_research_acknowledgement",
     "format_research_result",
     "format_research_failure",
+    "ResearchOrchestrator",
+    "ResearchResult",
+    "ResearchProvenance",
+    "ProviderRegistry",
+    "default_registry",
+    "AIProvider",
+    "ProviderConfig",
+    "ProviderHealthStatus",
+    "QueryClassifier",
+    "QueryType",
 ]

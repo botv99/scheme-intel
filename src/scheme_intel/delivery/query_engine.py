@@ -1,7 +1,9 @@
 """
 Complex Query Intelligence Engine for Scheme-Intel (Stage 3).
-Answers natural language and multi-stock comparison questions using
-the validated IntelligenceSnapshot and multi-provider LLM failover.
+Answers natural language and multi-stock comparison questions:
+- Simple queries: evaluated concisely against validated snapshot facts.
+- Research queries: routed to Fresh Multi-Provider Research Orchestrator (snapshot is context, not substitute).
+- Graceful degradation: snapshot fallbacks are explicitly labelled with [SNAPSHOT_FALLBACK].
 """
 from __future__ import annotations
 
@@ -10,16 +12,23 @@ from typing import Any, Dict, List, Optional
 from ..intelligence_memory.models import IntelligenceSnapshot, CompanyIntelligence
 from ..stage2.providers.manager import LLMProviderManager
 from ..stage2.providers.base import ProviderResponse
+from ..research.classifier import QueryClassifier, QueryType
+from ..research.orchestrator import ResearchOrchestrator, ResearchResult
 from ..logger import get_logger
 
 logger = get_logger(__name__)
 
 
 class ComplexQueryEngine:
-    """Evaluates complex conversational questions against snapshot data."""
+    """Evaluates complex conversational questions with query classification and multi-provider research."""
 
-    def __init__(self, provider_manager: Optional[LLMProviderManager] = None):
+    def __init__(
+        self,
+        provider_manager: Optional[LLMProviderManager] = None,
+        orchestrator: Optional[ResearchOrchestrator] = None,
+    ):
         self.provider_manager = provider_manager or LLMProviderManager()
+        self.orchestrator = orchestrator or ResearchOrchestrator(provider_manager=self.provider_manager)
 
     def process_query(
         self,
@@ -29,10 +38,31 @@ class ComplexQueryEngine:
         target_symbol: Optional[str] = None,
     ) -> str:
         """
-        Evaluate complex natural language query against snapshot facts.
-        Uses LLMProviderManager if configured; falls back to deterministic synthesis.
+        Evaluate conversational query.
+        For genuine research queries, triggers fresh multi-provider research with snapshot as background context.
+        For simple status/price queries, answers from snapshot facts.
         """
-        # 1. Build factual context from snapshot
+        classification = QueryClassifier.classify(query)
+
+        # 1. Genuine Research Query: Fan out to Research Orchestrator
+        if classification in (QueryType.RESEARCH_QUERY, QueryType.DEEP_RESEARCH):
+            logger.info("[QUERY ENGINE] Classified as %s: Routing to Research Orchestrator", classification.value)
+            res: ResearchResult = self.orchestrator.execute_research(
+                query=query,
+                scheme_id=scheme_id or "gobardhan",
+                snapshot_context=snapshot.model_dump(),
+            )
+            if res.is_fallback:
+                logger.warning("[QUERY ENGINE] Fresh multi-provider research unavailable; returning explicit SNAPSHOT_FALLBACK.")
+                deterministic_text = self._deterministic_fallback(query, snapshot, is_fallback=True)
+                return (
+                    "⚠️ *[SNAPSHOT_FALLBACK]*\n"
+                    "_Fresh multi-provider research unavailable; returning available snapshot intelligence._\n\n"
+                    f"{deterministic_text}"
+                )
+            return res.result_text
+
+        # 2. Simple Query: Snapshot context lookup
         context_lines = []
         context_lines.append(f"Scheme ID: {scheme_id or 'gobardhan'}")
         context_lines.append(f"Snapshot Timestamp: {snapshot.generated_at}")
@@ -55,18 +85,15 @@ class ComplexQueryEngine:
 
         context_text = "\n".join(context_lines)
 
-        # 2. Check if LLM provider is available
         prompt = (
             "You are Scheme-Intel, an evidence-led government policy and equity market intelligence terminal.\n"
-            "Answer the user's specific query concisely based STRICTLY on the provided precomputed snapshot facts.\n\n"
+            "Answer the user's specific query concisely based on the provided snapshot facts.\n\n"
             f"=== SNAPSHOT INTELLIGENCE FACTS ===\n{context_text}\n===================================\n\n"
             f"USER QUERY: {query}\n\n"
             "REQUIREMENTS:\n"
             "1. Ground your answer completely in the snapshot data above. Do not hallucinate prices or announcements.\n"
-            "2. If comparing companies, contrast their catalysts, setup status, risk/reward, and policy alignment.\n"
-            "3. If asked about strongest catalysts or ranking, highlight companies with active catalysts and qualified setups.\n"
-            "4. Keep the response concise, punchy, and formatted with clean Telegram Markdown (*bold*, _italic_, bullet points).\n"
-            "5. If data is unavailable in the snapshot, state it clearly.\n"
+            "2. Keep the response concise, punchy, and formatted with clean Telegram Markdown (*bold*, _italic_, bullet points).\n"
+            "3. If data is unavailable in the snapshot, state it clearly.\n"
         )
 
         try:
@@ -82,9 +109,14 @@ class ComplexQueryEngine:
             logger.warning("[QUERY ENGINE] LLM generation failed or unavailable (%s). Falling back to deterministic synthesis.", e)
 
         # 3. Deterministic Fallback Synthesis
-        return self._deterministic_fallback(query, snapshot)
+        return self._deterministic_fallback(query, snapshot, is_fallback=False)
 
-    def _deterministic_fallback(self, query: str, snapshot: IntelligenceSnapshot) -> str:
+    def _deterministic_fallback(
+        self,
+        query: str,
+        snapshot: IntelligenceSnapshot,
+        is_fallback: bool = False,
+    ) -> str:
         """Deterministic query synthesizer when no external LLM is reachable."""
         q_lowered = query.lower()
 

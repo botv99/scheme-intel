@@ -8,6 +8,16 @@ from .catalysts import extract_catalysts, score_catalyst
 from .company_mapping import CompanyMapper
 from .technical_score import TechnicalScoreEngine, TechnicalScoreResult, TECHNICAL_SCORE_VERSION
 from .fundamental_score import FundamentalIntelligenceEngine, FundamentalScoreResult, FUNDAMENTAL_SCORE_VERSION
+from .market_sentiment import (
+    IndianMarketSentiment,
+    GlobalMarketSentiment,
+    SchemeSentimentImpact,
+    WatchlistSentimentImpact,
+    MarketSentimentEngine,
+    SentimentClassification,
+    DirectionalImpact,
+    RiskRegime,
+)
 
 __all__ = [
     "NewsEngine",
@@ -21,4 +31,12 @@ __all__ = [
     "FundamentalIntelligenceEngine",
     "FundamentalScoreResult",
     "FUNDAMENTAL_SCORE_VERSION",
+    "IndianMarketSentiment",
+    "GlobalMarketSentiment",
+    "SchemeSentimentImpact",
+    "WatchlistSentimentImpact",
+    "MarketSentimentEngine",
+    "SentimentClassification",
+    "DirectionalImpact",
+    "RiskRegime",
 ]

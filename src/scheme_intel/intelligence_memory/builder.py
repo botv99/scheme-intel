@@ -24,6 +24,7 @@ from ..stage2.storage import Stage2Database, DEFAULT_STAGE2_DB_PATH
 from ..stage2.models import TradeSetup
 from ..intelligence.technical_score import TechnicalScoreEngine
 from ..intelligence.fundamental_score import FundamentalIntelligenceEngine
+from ..intelligence.market_sentiment import MarketSentimentEngine
 from ..logger import get_logger
 
 logger = get_logger(__name__)
@@ -335,6 +336,93 @@ class IntelligenceSnapshotBuilder:
         session_info = stage2_result.get("session_info") if stage2_result else None
         pipeline_run_id = getattr(session_info, "analysis_date", None) or (session_info.get("analysis_date") if isinstance(session_info, dict) else None)
 
+        # 5. Compute Market Sentiment and Cross-Layer Impacts (Stage 3)
+        watchlist_cards_data = [comp.model_dump() for comp in companies_dict.values()]
+        all_news_items = []
+        for n_list in ingested_news_by_symbol.values():
+            all_news_items.extend(n_list)
+
+        all_catalysts = []
+        for comp in companies_dict.values():
+            for cat_str in comp.catalysts:
+                all_catalysts.append({"catalyst": cat_str, "score": comp.score or 50})
+
+        indian_sentiment = MarketSentimentEngine.calculate_indian_sentiment(
+            benchmark_bars=benchmark_bars,
+            watchlist_cards=watchlist_cards_data,
+            news_items=all_news_items,
+            catalysts=all_catalysts,
+        )
+        global_sentiment = MarketSentimentEngine.calculate_global_sentiment()
+
+        scheme_impacts: Dict[str, Any] = {}
+        for scheme in active_schemes:
+            sec_list = [sec for st in scheme.watchlist for sec in st.sectors]
+            scheme_impacts[scheme.id] = MarketSentimentEngine.evaluate_scheme_impact(
+                scheme_id=scheme.id,
+                scheme_name=scheme.name,
+                indian_sentiment=indian_sentiment,
+                global_sentiment=global_sentiment,
+                scheme_sectors=sec_list,
+            )
+
+        watchlist_impacts: Dict[str, Any] = {}
+        for sym, comp in companies_dict.items():
+            if sym not in watchlist_impacts:
+                watchlist_impacts[sym] = MarketSentimentEngine.evaluate_watchlist_impact(
+                    stock_symbol=sym,
+                    short_symbol=comp.short_symbol,
+                    company_name=comp.name,
+                    indian_sentiment=indian_sentiment,
+                    global_sentiment=global_sentiment,
+                    catalysts=comp.catalysts,
+                    technical_trend=comp.trend,
+                )
+
+        market_and_global_sentiment = {
+            "section_title": "MARKET & GLOBAL SENTIMENT",
+            "indian_market": {
+                "classification": indian_sentiment.classification.value,
+                "score": indian_sentiment.score,
+                "confidence": indian_sentiment.confidence,
+                "key_drivers": [indian_sentiment.nifty_direction] if indian_sentiment.nifty_direction else [],
+                "evidence": [e.get("source", "") for e in indian_sentiment.evidence],
+                "breadth": indian_sentiment.breadth,
+                "sector_rotation": indian_sentiment.sector_rotation,
+            },
+            "global_market": {
+                "classification": global_sentiment.classification.value,
+                "score": global_sentiment.score,
+                "confidence": global_sentiment.confidence,
+                "key_drivers": global_sentiment.key_drivers,
+                "evidence": global_sentiment.evidence,
+                "risk_regime": global_sentiment.risk_regime.value,
+            },
+            "scheme_impact": {
+                sid: {
+                    "scheme_name": imp.scheme_name,
+                    "scheme_level_implications": imp.estimated_directional_impact.value,
+                    "positive_factors": imp.positive_factors,
+                    "negative_factors": imp.negative_factors,
+                    "uncertainties": imp.neutral_uncertain_factors,
+                    "confidence": imp.confidence,
+                }
+                for sid, imp in scheme_impacts.items()
+            },
+            "watchlist_impact": {
+                sym: {
+                    "relevant_stock": imp.stock,
+                    "sector_effect": imp.sector_impact.value,
+                    "scheme_effect": imp.scheme_relationship,
+                    "global_effect": imp.global_market_impact.value,
+                    "company_specific_interaction": imp.company_catalyst_interaction,
+                    "confidence": imp.confidence,
+                    "estimated_impact": imp.estimated_impact,
+                }
+                for sym, imp in watchlist_impacts.items()
+            },
+        }
+
         snapshot = IntelligenceSnapshot(
             snapshot_id=snapshot_id,
             generated_at=now_utc,
@@ -346,6 +434,11 @@ class IntelligenceSnapshotBuilder:
             waiting_setups=waiting_setups,
             performance=perf_intel,
             benchmark=bench_intel,
+            indian_sentiment=indian_sentiment,
+            global_sentiment=global_sentiment,
+            scheme_impacts=scheme_impacts,
+            watchlist_impacts=watchlist_impacts,
+            market_and_global_sentiment=market_and_global_sentiment,
         )
         return snapshot
 
