@@ -1,8 +1,8 @@
 {
-  "snapshot_id": "SNAP-20260927-191233",
+  "snapshot_id": "SNAP-20260928-010324",
   "schema_version": "1.0",
-  "generated_at": "2026-09-27T19:12:33.265649+00:00",
-  "pipeline_run_id": "2026-09-25",
+  "generated_at": "2026-09-28T01:03:24.538782+00:00",
+  "pipeline_run_id": null,
   "scheme_ids": [
     "gobardhan"
   ],
@@ -12,9 +12,9 @@
       "name": "GOBARdhan (Galvanizing Organic Bio-Agro Resources Dhan)",
       "description": "Government umbrella initiative covering CBG, Bio-CNG, SATAT, and organic bio-fertilizer commercialization.",
       "watchlist_count": 7,
-      "qualified_setups_count": 2,
-      "waiting_count": 1,
-      "no_trade_count": 4,
+      "qualified_setups_count": 0,
+      "waiting_count": 0,
+      "no_trade_count": 7,
       "data_unavailable_count": 0,
       "key_developments": [],
       "important_sources": [
@@ -23,7 +23,7 @@
         "Ministry of New and Renewable Energy",
         "Ministry of Jal Shakti"
       ],
-      "last_update": "2026-09-27T19:12:33.265649+00:00"
+      "last_update": "2026-09-28T01:03:24.538782+00:00"
     }
   },
   "companies": {
@@ -35,7 +35,7 @@
       "scheme_name": "GOBARdhan (Galvanizing Organic Bio-Agro Resources Dhan)",
       "relevance": "High",
       "mapping_rationale": "Leading technology provider for 1G/2G ethanol, CBG (Compressed Bio-Gas), and brewery plants.",
-      "latest_development": "Downtrend below 50 DMA (₹327.3) with no active scheme catalysts.",
+      "latest_development": null,
       "catalyst": null,
       "catalysts": [],
       "fundamental_score": 8.5,
@@ -115,91 +115,11 @@
       "fundamental_score_version": "v1.0",
       "fundamental_score_coverage": 100.0,
       "fundamental_score_data_as_of": "2026-06-30",
-      "technical_intelligence_score": 4.5,
-      "technical_score_components": {
-        "trend": {
-          "score": 2.5,
-          "weight": 0.2,
-          "data_available": true,
-          "value": {
-            "ema20": 323.6,
-            "ema50": 330.42,
-            "sma200": null
-          },
-          "reason": "Price ₹315.90 vs EMA20 ₹323.60, EMA50 ₹330.42"
-        },
-        "momentum": {
-          "score": 3.9,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "rsi14": 28.4,
-            "macd_hist": -0.931
-          },
-          "reason": "RSI(14) at 28.4, MACD hist -0.931"
-        },
-        "structure": {
-          "score": 3.9,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "high_20d": 354.85,
-            "low_20d": 310.0,
-            "pos_in_range_pct": 13.2
-          },
-          "reason": "Position in 20D range: 13.2% (20D High ₹354.85)"
-        },
-        "volume": {
-          "score": 6.0,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "volume_ratio": 0.8,
-            "day_change_pct": -0.06
-          },
-          "reason": "Volume ratio 0.80x 20D avg on -0.06% day"
-        },
-        "relative_strength": {
-          "score": 4.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "excess_return_pct": -3.86,
-            "lookback_days": 20
-          },
-          "reason": "Alpha vs Nifty: -3.86% over 20D"
-        },
-        "volatility_structure": {
-          "score": 9.0,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "atr_pct": 2.34,
-            "atr14": 7.38
-          },
-          "reason": "ATR% 2.34% (constructive volatility regime)"
-        },
-        "market_regime": {
-          "score": 3.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": "BEARISH",
-          "reason": "Nifty trend BEARISH vs 20 SMA"
-        },
-        "price_action": {
-          "score": 5.5,
-          "weight": 0.05,
-          "data_available": true,
-          "value": {
-            "close_position_pct": 57.2,
-            "body_ratio": 0.02
-          },
-          "reason": "Closed at 57.2% of daily range"
-        }
-      },
+      "technical_intelligence_score": null,
+      "technical_score_components": {},
       "technical_score_version": "v1.0",
-      "technical_score_data_as_of": "2026-09-25",
-      "technical_score_coverage": 100.0,
+      "technical_score_data_as_of": null,
+      "technical_score_coverage": 0.0,
       "price": 315.9,
       "change_pct": -0.06,
       "volume": 337732,
@@ -219,10 +139,10 @@
       "bear_thesis": null,
       "risk_summary": null,
       "waiting_conditions": [],
-      "next_session": "28 Sep 2026 (Monday)",
+      "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-27T19:12:25.138516+00:00"
+      "updated_at": "2026-09-28T01:03:24.538782+00:00"
     },
     "PRAJIND": {
       "symbol": "PRAJIND.NS",
@@ -232,7 +152,7 @@
       "scheme_name": "GOBARdhan (Galvanizing Organic Bio-Agro Resources Dhan)",
       "relevance": "High",
       "mapping_rationale": "Leading technology provider for 1G/2G ethanol, CBG (Compressed Bio-Gas), and brewery plants.",
-      "latest_development": "Downtrend below 50 DMA (₹327.3) with no active scheme catalysts.",
+      "latest_development": null,
       "catalyst": null,
       "catalysts": [],
       "fundamental_score": 8.5,
@@ -312,91 +232,11 @@
       "fundamental_score_version": "v1.0",
       "fundamental_score_coverage": 100.0,
       "fundamental_score_data_as_of": "2026-06-30",
-      "technical_intelligence_score": 4.5,
-      "technical_score_components": {
-        "trend": {
-          "score": 2.5,
-          "weight": 0.2,
-          "data_available": true,
-          "value": {
-            "ema20": 323.6,
-            "ema50": 330.42,
-            "sma200": null
-          },
-          "reason": "Price ₹315.90 vs EMA20 ₹323.60, EMA50 ₹330.42"
-        },
-        "momentum": {
-          "score": 3.9,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "rsi14": 28.4,
-            "macd_hist": -0.931
-          },
-          "reason": "RSI(14) at 28.4, MACD hist -0.931"
-        },
-        "structure": {
-          "score": 3.9,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "high_20d": 354.85,
-            "low_20d": 310.0,
-            "pos_in_range_pct": 13.2
-          },
-          "reason": "Position in 20D range: 13.2% (20D High ₹354.85)"
-        },
-        "volume": {
-          "score": 6.0,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "volume_ratio": 0.8,
-            "day_change_pct": -0.06
-          },
-          "reason": "Volume ratio 0.80x 20D avg on -0.06% day"
-        },
-        "relative_strength": {
-          "score": 4.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "excess_return_pct": -3.86,
-            "lookback_days": 20
-          },
-          "reason": "Alpha vs Nifty: -3.86% over 20D"
-        },
-        "volatility_structure": {
-          "score": 9.0,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "atr_pct": 2.34,
-            "atr14": 7.38
-          },
-          "reason": "ATR% 2.34% (constructive volatility regime)"
-        },
-        "market_regime": {
-          "score": 3.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": "BEARISH",
-          "reason": "Nifty trend BEARISH vs 20 SMA"
-        },
-        "price_action": {
-          "score": 5.5,
-          "weight": 0.05,
-          "data_available": true,
-          "value": {
-            "close_position_pct": 57.2,
-            "body_ratio": 0.02
-          },
-          "reason": "Closed at 57.2% of daily range"
-        }
-      },
+      "technical_intelligence_score": null,
+      "technical_score_components": {},
       "technical_score_version": "v1.0",
-      "technical_score_data_as_of": "2026-09-25",
-      "technical_score_coverage": 100.0,
+      "technical_score_data_as_of": null,
+      "technical_score_coverage": 0.0,
       "price": 315.9,
       "change_pct": -0.06,
       "volume": 337732,
@@ -416,10 +256,10 @@
       "bear_thesis": null,
       "risk_summary": null,
       "waiting_conditions": [],
-      "next_session": "28 Sep 2026 (Monday)",
+      "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-27T19:12:25.138516+00:00"
+      "updated_at": "2026-09-28T01:03:24.538782+00:00"
     },
     "TRUALT.NS": {
       "symbol": "TRUALT.NS",
@@ -488,91 +328,11 @@
       "fundamental_score_version": "v1.0",
       "fundamental_score_coverage": 0.0,
       "fundamental_score_data_as_of": "Pre-IPO",
-      "technical_intelligence_score": 7.6,
-      "technical_score_components": {
-        "trend": {
-          "score": 5.0,
-          "weight": 0.2,
-          "data_available": true,
-          "value": {
-            "ema20": 428.34,
-            "ema50": 437.55,
-            "sma200": null
-          },
-          "reason": "Price ₹441.90 vs EMA20 ₹428.34, EMA50 ₹437.55"
-        },
-        "momentum": {
-          "score": 8.6,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "rsi14": 59.6,
-            "macd_hist": 3.178
-          },
-          "reason": "RSI(14) at 59.6, MACD hist +3.178"
-        },
-        "structure": {
-          "score": 9.5,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "high_20d": 445.0,
-            "low_20d": 400.0,
-            "pos_in_range_pct": 93.1
-          },
-          "reason": "Position in 20D range: 93.1% (20D High ₹445.00)"
-        },
-        "volume": {
-          "score": 8.5,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "volume_ratio": 1.82,
-            "day_change_pct": 3.01
-          },
-          "reason": "Volume ratio 1.82x 20D avg on +3.01% day"
-        },
-        "relative_strength": {
-          "score": 8.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "excess_return_pct": 7.14,
-            "lookback_days": 20
-          },
-          "reason": "Alpha vs Nifty: +7.14% over 20D"
-        },
-        "volatility_structure": {
-          "score": 9.0,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "atr_pct": 3.78,
-            "atr14": 16.72
-          },
-          "reason": "ATR% 3.78% (constructive volatility regime)"
-        },
-        "market_regime": {
-          "score": 3.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": "BEARISH",
-          "reason": "Nifty trend BEARISH vs 20 SMA"
-        },
-        "price_action": {
-          "score": 9.5,
-          "weight": 0.05,
-          "data_available": true,
-          "value": {
-            "close_position_pct": 90.0,
-            "body_ratio": 0.55
-          },
-          "reason": "Closed at 90.0% of daily range"
-        }
-      },
+      "technical_intelligence_score": null,
+      "technical_score_components": {},
       "technical_score_version": "v1.0",
-      "technical_score_data_as_of": "2026-09-25",
-      "technical_score_coverage": 100.0,
+      "technical_score_data_as_of": null,
+      "technical_score_coverage": 0.0,
       "price": 441.9,
       "change_pct": 3.01,
       "volume": 442258,
@@ -582,20 +342,20 @@
       "support": 400.0,
       "resistance": 445.0,
       "rsi": 59.6,
-      "status": "QUALIFIED_SETUP",
-      "archetype": "Breakout Anticipation",
-      "score": 100,
-      "trigger_price": 441.9,
-      "stop_loss": 417.27,
-      "target": 486.23,
-      "bull_thesis": "Strong momentum breakout confirmed by CBG government scheme and 1.8x volume expansion.",
-      "bear_thesis": "Approaching major overhead resistance with potential false breakout risk.",
-      "risk_summary": "R:R 1.8:1 | Max Risk 0.56% | Target 486.23",
+      "status": "NO_TRADE",
+      "archetype": null,
+      "score": null,
+      "trigger_price": null,
+      "stop_loss": null,
+      "target": null,
+      "bull_thesis": null,
+      "bear_thesis": null,
+      "risk_summary": null,
       "waiting_conditions": [],
-      "next_session": "28 Sep 2026 (Monday)",
-      "ai_provider": "Mock",
+      "next_session": null,
+      "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-27T19:12:25.082944+00:00"
+      "updated_at": "2026-09-28T01:03:24.538782+00:00"
     },
     "TRUALT": {
       "symbol": "TRUALT.NS",
@@ -664,91 +424,11 @@
       "fundamental_score_version": "v1.0",
       "fundamental_score_coverage": 0.0,
       "fundamental_score_data_as_of": "Pre-IPO",
-      "technical_intelligence_score": 7.6,
-      "technical_score_components": {
-        "trend": {
-          "score": 5.0,
-          "weight": 0.2,
-          "data_available": true,
-          "value": {
-            "ema20": 428.34,
-            "ema50": 437.55,
-            "sma200": null
-          },
-          "reason": "Price ₹441.90 vs EMA20 ₹428.34, EMA50 ₹437.55"
-        },
-        "momentum": {
-          "score": 8.6,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "rsi14": 59.6,
-            "macd_hist": 3.178
-          },
-          "reason": "RSI(14) at 59.6, MACD hist +3.178"
-        },
-        "structure": {
-          "score": 9.5,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "high_20d": 445.0,
-            "low_20d": 400.0,
-            "pos_in_range_pct": 93.1
-          },
-          "reason": "Position in 20D range: 93.1% (20D High ₹445.00)"
-        },
-        "volume": {
-          "score": 8.5,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "volume_ratio": 1.82,
-            "day_change_pct": 3.01
-          },
-          "reason": "Volume ratio 1.82x 20D avg on +3.01% day"
-        },
-        "relative_strength": {
-          "score": 8.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "excess_return_pct": 7.14,
-            "lookback_days": 20
-          },
-          "reason": "Alpha vs Nifty: +7.14% over 20D"
-        },
-        "volatility_structure": {
-          "score": 9.0,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "atr_pct": 3.78,
-            "atr14": 16.72
-          },
-          "reason": "ATR% 3.78% (constructive volatility regime)"
-        },
-        "market_regime": {
-          "score": 3.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": "BEARISH",
-          "reason": "Nifty trend BEARISH vs 20 SMA"
-        },
-        "price_action": {
-          "score": 9.5,
-          "weight": 0.05,
-          "data_available": true,
-          "value": {
-            "close_position_pct": 90.0,
-            "body_ratio": 0.55
-          },
-          "reason": "Closed at 90.0% of daily range"
-        }
-      },
+      "technical_intelligence_score": null,
+      "technical_score_components": {},
       "technical_score_version": "v1.0",
-      "technical_score_data_as_of": "2026-09-25",
-      "technical_score_coverage": 100.0,
+      "technical_score_data_as_of": null,
+      "technical_score_coverage": 0.0,
       "price": 441.9,
       "change_pct": 3.01,
       "volume": 442258,
@@ -758,20 +438,20 @@
       "support": 400.0,
       "resistance": 445.0,
       "rsi": 59.6,
-      "status": "QUALIFIED_SETUP",
-      "archetype": "Breakout Anticipation",
-      "score": 100,
-      "trigger_price": 441.9,
-      "stop_loss": 417.27,
-      "target": 486.23,
-      "bull_thesis": "Strong momentum breakout confirmed by CBG government scheme and 1.8x volume expansion.",
-      "bear_thesis": "Approaching major overhead resistance with potential false breakout risk.",
-      "risk_summary": "R:R 1.8:1 | Max Risk 0.56% | Target 486.23",
+      "status": "NO_TRADE",
+      "archetype": null,
+      "score": null,
+      "trigger_price": null,
+      "stop_loss": null,
+      "target": null,
+      "bull_thesis": null,
+      "bear_thesis": null,
+      "risk_summary": null,
       "waiting_conditions": [],
-      "next_session": "28 Sep 2026 (Monday)",
-      "ai_provider": "Mock",
+      "next_session": null,
+      "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-27T19:12:25.082944+00:00"
+      "updated_at": "2026-09-28T01:03:24.538782+00:00"
     },
     "IONEXCHANG.NS": {
       "symbol": "IONEXCHANG.NS",
@@ -861,91 +541,11 @@
       "fundamental_score_version": "v1.0",
       "fundamental_score_coverage": 100.0,
       "fundamental_score_data_as_of": "2026-06-30",
-      "technical_intelligence_score": 8.3,
-      "technical_score_components": {
-        "trend": {
-          "score": 10.0,
-          "weight": 0.2,
-          "data_available": true,
-          "value": {
-            "ema20": 171.03,
-            "ema50": 164.2,
-            "sma200": null
-          },
-          "reason": "Price ₹197.45 vs EMA20 ₹171.03, EMA50 ₹164.20"
-        },
-        "momentum": {
-          "score": 8.4,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "rsi14": 70.9,
-            "macd_hist": 2.079
-          },
-          "reason": "RSI(14) at 70.9, MACD hist +2.079"
-        },
-        "structure": {
-          "score": 10.0,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "high_20d": 194.95,
-            "low_20d": 148.0,
-            "pos_in_range_pct": 105.3
-          },
-          "reason": "Position in 20D range: 105.3% (20D High ₹194.95)"
-        },
-        "volume": {
-          "score": 8.5,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "volume_ratio": 1.65,
-            "day_change_pct": 9.63
-          },
-          "reason": "Volume ratio 1.65x 20D avg on +9.63% day"
-        },
-        "relative_strength": {
-          "score": 10.0,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "excess_return_pct": 37.65,
-            "lookback_days": 20
-          },
-          "reason": "Alpha vs Nifty: +37.65% over 20D"
-        },
-        "volatility_structure": {
-          "score": 4.0,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "atr_pct": 5.87,
-            "atr14": 11.59
-          },
-          "reason": "ATR% 5.87% (constructive volatility regime)"
-        },
-        "market_regime": {
-          "score": 3.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": "BEARISH",
-          "reason": "Nifty trend BEARISH vs 20 SMA"
-        },
-        "price_action": {
-          "score": 9.5,
-          "weight": 0.05,
-          "data_available": true,
-          "value": {
-            "close_position_pct": 80.3,
-            "body_ratio": 0.8
-          },
-          "reason": "Closed at 80.3% of daily range"
-        }
-      },
+      "technical_intelligence_score": null,
+      "technical_score_components": {},
       "technical_score_version": "v1.0",
-      "technical_score_data_as_of": "2026-09-25",
-      "technical_score_coverage": 100.0,
+      "technical_score_data_as_of": null,
+      "technical_score_coverage": 0.0,
       "price": 420.15,
       "change_pct": -0.1,
       "volume": 108351,
@@ -968,7 +568,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-27T19:12:33.265649+00:00"
+      "updated_at": "2026-09-28T01:03:24.538782+00:00"
     },
     "IONEXCHANG": {
       "symbol": "IONEXCHANG.NS",
@@ -1058,91 +658,11 @@
       "fundamental_score_version": "v1.0",
       "fundamental_score_coverage": 100.0,
       "fundamental_score_data_as_of": "2026-06-30",
-      "technical_intelligence_score": 8.3,
-      "technical_score_components": {
-        "trend": {
-          "score": 10.0,
-          "weight": 0.2,
-          "data_available": true,
-          "value": {
-            "ema20": 171.03,
-            "ema50": 164.2,
-            "sma200": null
-          },
-          "reason": "Price ₹197.45 vs EMA20 ₹171.03, EMA50 ₹164.20"
-        },
-        "momentum": {
-          "score": 8.4,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "rsi14": 70.9,
-            "macd_hist": 2.079
-          },
-          "reason": "RSI(14) at 70.9, MACD hist +2.079"
-        },
-        "structure": {
-          "score": 10.0,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "high_20d": 194.95,
-            "low_20d": 148.0,
-            "pos_in_range_pct": 105.3
-          },
-          "reason": "Position in 20D range: 105.3% (20D High ₹194.95)"
-        },
-        "volume": {
-          "score": 8.5,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "volume_ratio": 1.65,
-            "day_change_pct": 9.63
-          },
-          "reason": "Volume ratio 1.65x 20D avg on +9.63% day"
-        },
-        "relative_strength": {
-          "score": 10.0,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "excess_return_pct": 37.65,
-            "lookback_days": 20
-          },
-          "reason": "Alpha vs Nifty: +37.65% over 20D"
-        },
-        "volatility_structure": {
-          "score": 4.0,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "atr_pct": 5.87,
-            "atr14": 11.59
-          },
-          "reason": "ATR% 5.87% (constructive volatility regime)"
-        },
-        "market_regime": {
-          "score": 3.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": "BEARISH",
-          "reason": "Nifty trend BEARISH vs 20 SMA"
-        },
-        "price_action": {
-          "score": 9.5,
-          "weight": 0.05,
-          "data_available": true,
-          "value": {
-            "close_position_pct": 80.3,
-            "body_ratio": 0.8
-          },
-          "reason": "Closed at 80.3% of daily range"
-        }
-      },
+      "technical_intelligence_score": null,
+      "technical_score_components": {},
       "technical_score_version": "v1.0",
-      "technical_score_data_as_of": "2026-09-25",
-      "technical_score_coverage": 100.0,
+      "technical_score_data_as_of": null,
+      "technical_score_coverage": 0.0,
       "price": 420.15,
       "change_pct": -0.1,
       "volume": 108351,
@@ -1165,7 +685,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-27T19:12:33.265649+00:00"
+      "updated_at": "2026-09-28T01:03:24.538782+00:00"
     },
     "WABAG.NS": {
       "symbol": "WABAG.NS",
@@ -1255,91 +775,11 @@
       "fundamental_score_version": "v1.0",
       "fundamental_score_coverage": 100.0,
       "fundamental_score_data_as_of": "2026-06-30",
-      "technical_intelligence_score": 5.5,
-      "technical_score_components": {
-        "trend": {
-          "score": 7.4,
-          "weight": 0.2,
-          "data_available": true,
-          "value": {
-            "ema20": 2070.91,
-            "ema50": 2022.61,
-            "sma200": null
-          },
-          "reason": "Price ₹2,008.40 vs EMA20 ₹2,070.91, EMA50 ₹2,022.61"
-        },
-        "momentum": {
-          "score": 6.3,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "rsi14": 50.0,
-            "macd_hist": -16.313
-          },
-          "reason": "RSI(14) at 50.0, MACD hist -16.313"
-        },
-        "structure": {
-          "score": 1.0,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "high_20d": 2319.0,
-            "low_20d": 1948.9,
-            "pos_in_range_pct": 16.1
-          },
-          "reason": "Position in 20D range: 16.1% (20D High ₹2,319.00)"
-        },
-        "volume": {
-          "score": 6.0,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "volume_ratio": 0.4,
-            "day_change_pct": -1.03
-          },
-          "reason": "Volume ratio 0.40x 20D avg on -1.03% day"
-        },
-        "relative_strength": {
-          "score": 8.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "excess_return_pct": 5.76,
-            "lookback_days": 20
-          },
-          "reason": "Alpha vs Nifty: +5.76% over 20D"
-        },
-        "volatility_structure": {
-          "score": 6.0,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "atr_pct": 4.34,
-            "atr14": 87.24
-          },
-          "reason": "ATR% 4.34% (constructive volatility regime)"
-        },
-        "market_regime": {
-          "score": 3.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": "BEARISH",
-          "reason": "Nifty trend BEARISH vs 20 SMA"
-        },
-        "price_action": {
-          "score": 3.5,
-          "weight": 0.05,
-          "data_available": true,
-          "value": {
-            "close_position_pct": 29.6,
-            "body_ratio": 0.36
-          },
-          "reason": "Closed at 29.6% of daily range"
-        }
-      },
+      "technical_intelligence_score": null,
+      "technical_score_components": {},
       "technical_score_version": "v1.0",
-      "technical_score_data_as_of": "2026-09-25",
-      "technical_score_coverage": 100.0,
+      "technical_score_data_as_of": null,
+      "technical_score_coverage": 0.0,
       "price": 2008.4,
       "change_pct": -1.03,
       "volume": 272100,
@@ -1349,23 +789,20 @@
       "support": 1948.9,
       "resistance": 2319.0,
       "rsi": 50.0,
-      "status": "WAIT",
+      "status": "NO_TRADE",
       "archetype": null,
       "score": null,
-      "trigger_price": 2319.0,
-      "stop_loss": 1948.9,
+      "trigger_price": null,
+      "stop_loss": null,
       "target": null,
       "bull_thesis": null,
       "bear_thesis": null,
       "risk_summary": null,
-      "waiting_conditions": [
-        "Decisive breakout and close above resistance ₹2319.0.",
-        "Institutional volume expansion (>1.4x 20D average volume)."
-      ],
-      "next_session": "28 Sep 2026 (Monday)",
+      "waiting_conditions": [],
+      "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-27T19:12:25.132209+00:00"
+      "updated_at": "2026-09-28T01:03:24.538782+00:00"
     },
     "WABAG": {
       "symbol": "WABAG.NS",
@@ -1455,91 +892,11 @@
       "fundamental_score_version": "v1.0",
       "fundamental_score_coverage": 100.0,
       "fundamental_score_data_as_of": "2026-06-30",
-      "technical_intelligence_score": 5.5,
-      "technical_score_components": {
-        "trend": {
-          "score": 7.4,
-          "weight": 0.2,
-          "data_available": true,
-          "value": {
-            "ema20": 2070.91,
-            "ema50": 2022.61,
-            "sma200": null
-          },
-          "reason": "Price ₹2,008.40 vs EMA20 ₹2,070.91, EMA50 ₹2,022.61"
-        },
-        "momentum": {
-          "score": 6.3,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "rsi14": 50.0,
-            "macd_hist": -16.313
-          },
-          "reason": "RSI(14) at 50.0, MACD hist -16.313"
-        },
-        "structure": {
-          "score": 1.0,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "high_20d": 2319.0,
-            "low_20d": 1948.9,
-            "pos_in_range_pct": 16.1
-          },
-          "reason": "Position in 20D range: 16.1% (20D High ₹2,319.00)"
-        },
-        "volume": {
-          "score": 6.0,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "volume_ratio": 0.4,
-            "day_change_pct": -1.03
-          },
-          "reason": "Volume ratio 0.40x 20D avg on -1.03% day"
-        },
-        "relative_strength": {
-          "score": 8.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "excess_return_pct": 5.76,
-            "lookback_days": 20
-          },
-          "reason": "Alpha vs Nifty: +5.76% over 20D"
-        },
-        "volatility_structure": {
-          "score": 6.0,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "atr_pct": 4.34,
-            "atr14": 87.24
-          },
-          "reason": "ATR% 4.34% (constructive volatility regime)"
-        },
-        "market_regime": {
-          "score": 3.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": "BEARISH",
-          "reason": "Nifty trend BEARISH vs 20 SMA"
-        },
-        "price_action": {
-          "score": 3.5,
-          "weight": 0.05,
-          "data_available": true,
-          "value": {
-            "close_position_pct": 29.6,
-            "body_ratio": 0.36
-          },
-          "reason": "Closed at 29.6% of daily range"
-        }
-      },
+      "technical_intelligence_score": null,
+      "technical_score_components": {},
       "technical_score_version": "v1.0",
-      "technical_score_data_as_of": "2026-09-25",
-      "technical_score_coverage": 100.0,
+      "technical_score_data_as_of": null,
+      "technical_score_coverage": 0.0,
       "price": 2008.4,
       "change_pct": -1.03,
       "volume": 272100,
@@ -1549,23 +906,20 @@
       "support": 1948.9,
       "resistance": 2319.0,
       "rsi": 50.0,
-      "status": "WAIT",
+      "status": "NO_TRADE",
       "archetype": null,
       "score": null,
-      "trigger_price": 2319.0,
-      "stop_loss": 1948.9,
+      "trigger_price": null,
+      "stop_loss": null,
       "target": null,
       "bull_thesis": null,
       "bear_thesis": null,
       "risk_summary": null,
-      "waiting_conditions": [
-        "Decisive breakout and close above resistance ₹2319.0.",
-        "Institutional volume expansion (>1.4x 20D average volume)."
-      ],
-      "next_session": "28 Sep 2026 (Monday)",
+      "waiting_conditions": [],
+      "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-27T19:12:25.132209+00:00"
+      "updated_at": "2026-09-28T01:03:24.538782+00:00"
     },
     "KIRLPNU.NS": {
       "symbol": "KIRLPNU.NS",
@@ -1575,7 +929,7 @@
       "scheme_name": "GOBARdhan (Galvanizing Organic Bio-Agro Resources Dhan)",
       "relevance": "High",
       "mapping_rationale": "Gas compressors for CNG/CBG booster stations, essential for SATAT grid injection.",
-      "latest_development": "Downtrend below 50 DMA (₹739.7) with no active scheme catalysts.",
+      "latest_development": null,
       "catalyst": null,
       "catalysts": [],
       "fundamental_score": 8.6,
@@ -1655,91 +1009,11 @@
       "fundamental_score_version": "v1.0",
       "fundamental_score_coverage": 100.0,
       "fundamental_score_data_as_of": "2026-06-30",
-      "technical_intelligence_score": 4.3,
-      "technical_score_components": {
-        "trend": {
-          "score": 2.4,
-          "weight": 0.2,
-          "data_available": true,
-          "value": {
-            "ema20": 717.2,
-            "ema50": 744.22,
-            "sma200": null
-          },
-          "reason": "Price ₹691.95 vs EMA20 ₹717.20, EMA50 ₹744.22"
-        },
-        "momentum": {
-          "score": 2.4,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "rsi14": 21.6,
-            "macd_hist": -0.687
-          },
-          "reason": "RSI(14) at 21.6, MACD hist -0.687"
-        },
-        "structure": {
-          "score": 4.1,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "high_20d": 772.8,
-            "low_20d": 676.55,
-            "pos_in_range_pct": 16.0
-          },
-          "reason": "Position in 20D range: 16.0% (20D High ₹772.80)"
-        },
-        "volume": {
-          "score": 6.0,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "volume_ratio": 0.5,
-            "day_change_pct": -0.83
-          },
-          "reason": "Volume ratio 0.50x 20D avg on -0.83% day"
-        },
-        "relative_strength": {
-          "score": 4.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "excess_return_pct": -0.05,
-            "lookback_days": 20
-          },
-          "reason": "Alpha vs Nifty: -0.05% over 20D"
-        },
-        "volatility_structure": {
-          "score": 9.0,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "atr_pct": 3.03,
-            "atr14": 21.0
-          },
-          "reason": "ATR% 3.03% (constructive volatility regime)"
-        },
-        "market_regime": {
-          "score": 3.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": "BEARISH",
-          "reason": "Nifty trend BEARISH vs 20 SMA"
-        },
-        "price_action": {
-          "score": 5.5,
-          "weight": 0.05,
-          "data_available": true,
-          "value": {
-            "close_position_pct": 45.1,
-            "body_ratio": 0.55
-          },
-          "reason": "Closed at 45.1% of daily range"
-        }
-      },
+      "technical_intelligence_score": null,
+      "technical_score_components": {},
       "technical_score_version": "v1.0",
-      "technical_score_data_as_of": "2026-09-25",
-      "technical_score_coverage": 100.0,
+      "technical_score_data_as_of": null,
+      "technical_score_coverage": 0.0,
       "price": 691.95,
       "change_pct": -0.83,
       "volume": 72155,
@@ -1759,10 +1033,10 @@
       "bear_thesis": null,
       "risk_summary": null,
       "waiting_conditions": [],
-      "next_session": "28 Sep 2026 (Monday)",
+      "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-27T19:12:29.162145+00:00"
+      "updated_at": "2026-09-28T01:03:24.538782+00:00"
     },
     "KIRLPNU": {
       "symbol": "KIRLPNU.NS",
@@ -1772,7 +1046,7 @@
       "scheme_name": "GOBARdhan (Galvanizing Organic Bio-Agro Resources Dhan)",
       "relevance": "High",
       "mapping_rationale": "Gas compressors for CNG/CBG booster stations, essential for SATAT grid injection.",
-      "latest_development": "Downtrend below 50 DMA (₹739.7) with no active scheme catalysts.",
+      "latest_development": null,
       "catalyst": null,
       "catalysts": [],
       "fundamental_score": 8.6,
@@ -1852,91 +1126,11 @@
       "fundamental_score_version": "v1.0",
       "fundamental_score_coverage": 100.0,
       "fundamental_score_data_as_of": "2026-06-30",
-      "technical_intelligence_score": 4.3,
-      "technical_score_components": {
-        "trend": {
-          "score": 2.4,
-          "weight": 0.2,
-          "data_available": true,
-          "value": {
-            "ema20": 717.2,
-            "ema50": 744.22,
-            "sma200": null
-          },
-          "reason": "Price ₹691.95 vs EMA20 ₹717.20, EMA50 ₹744.22"
-        },
-        "momentum": {
-          "score": 2.4,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "rsi14": 21.6,
-            "macd_hist": -0.687
-          },
-          "reason": "RSI(14) at 21.6, MACD hist -0.687"
-        },
-        "structure": {
-          "score": 4.1,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "high_20d": 772.8,
-            "low_20d": 676.55,
-            "pos_in_range_pct": 16.0
-          },
-          "reason": "Position in 20D range: 16.0% (20D High ₹772.80)"
-        },
-        "volume": {
-          "score": 6.0,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "volume_ratio": 0.5,
-            "day_change_pct": -0.83
-          },
-          "reason": "Volume ratio 0.50x 20D avg on -0.83% day"
-        },
-        "relative_strength": {
-          "score": 4.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "excess_return_pct": -0.05,
-            "lookback_days": 20
-          },
-          "reason": "Alpha vs Nifty: -0.05% over 20D"
-        },
-        "volatility_structure": {
-          "score": 9.0,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "atr_pct": 3.03,
-            "atr14": 21.0
-          },
-          "reason": "ATR% 3.03% (constructive volatility regime)"
-        },
-        "market_regime": {
-          "score": 3.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": "BEARISH",
-          "reason": "Nifty trend BEARISH vs 20 SMA"
-        },
-        "price_action": {
-          "score": 5.5,
-          "weight": 0.05,
-          "data_available": true,
-          "value": {
-            "close_position_pct": 45.1,
-            "body_ratio": 0.55
-          },
-          "reason": "Closed at 45.1% of daily range"
-        }
-      },
+      "technical_intelligence_score": null,
+      "technical_score_components": {},
       "technical_score_version": "v1.0",
-      "technical_score_data_as_of": "2026-09-25",
-      "technical_score_coverage": 100.0,
+      "technical_score_data_as_of": null,
+      "technical_score_coverage": 0.0,
       "price": 691.95,
       "change_pct": -0.83,
       "volume": 72155,
@@ -1956,10 +1150,10 @@
       "bear_thesis": null,
       "risk_summary": null,
       "waiting_conditions": [],
-      "next_session": "28 Sep 2026 (Monday)",
+      "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-27T19:12:29.162145+00:00"
+      "updated_at": "2026-09-28T01:03:24.538782+00:00"
     },
     "GAIL.NS": {
       "symbol": "GAIL.NS",
@@ -1969,7 +1163,7 @@
       "scheme_name": "GOBARdhan (Galvanizing Organic Bio-Agro Resources Dhan)",
       "relevance": "High",
       "mapping_rationale": "National gas grid operator; mandated CBG offtake under SATAT; setting up 500+ CBG plants.",
-      "latest_development": "Downtrend below 50 DMA (₹173.6) with no active scheme catalysts.",
+      "latest_development": null,
       "catalyst": null,
       "catalysts": [],
       "fundamental_score": 8.3,
@@ -2049,91 +1243,11 @@
       "fundamental_score_version": "v1.0",
       "fundamental_score_coverage": 100.0,
       "fundamental_score_data_as_of": "2026-06-30",
-      "technical_intelligence_score": 5.5,
-      "technical_score_components": {
-        "trend": {
-          "score": 6.4,
-          "weight": 0.2,
-          "data_available": true,
-          "value": {
-            "ema20": 173.11,
-            "ema50": 172.78,
-            "sma200": null
-          },
-          "reason": "Price ₹172.70 vs EMA20 ₹173.11, EMA50 ₹172.78"
-        },
-        "momentum": {
-          "score": 3.6,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "rsi14": 38.1,
-            "macd_hist": -0.027
-          },
-          "reason": "RSI(14) at 38.1, MACD hist -0.027"
-        },
-        "structure": {
-          "score": 4.7,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "high_20d": 177.3,
-            "low_20d": 168.72,
-            "pos_in_range_pct": 46.4
-          },
-          "reason": "Position in 20D range: 46.4% (20D High ₹177.30)"
-        },
-        "volume": {
-          "score": 6.0,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "volume_ratio": 0.95,
-            "day_change_pct": -0.66
-          },
-          "reason": "Volume ratio 0.95x 20D avg on -0.66% day"
-        },
-        "relative_strength": {
-          "score": 6.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "excess_return_pct": 1.86,
-            "lookback_days": 20
-          },
-          "reason": "Alpha vs Nifty: +1.86% over 20D"
-        },
-        "volatility_structure": {
-          "score": 7.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "atr_pct": 1.36,
-            "atr14": 2.35
-          },
-          "reason": "ATR% 1.36% (constructive volatility regime)"
-        },
-        "market_regime": {
-          "score": 3.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": "BEARISH",
-          "reason": "Nifty trend BEARISH vs 20 SMA"
-        },
-        "price_action": {
-          "score": 5.5,
-          "weight": 0.05,
-          "data_available": true,
-          "value": {
-            "close_position_pct": 46.4,
-            "body_ratio": 0.5
-          },
-          "reason": "Closed at 46.4% of daily range"
-        }
-      },
+      "technical_intelligence_score": null,
+      "technical_score_components": {},
       "technical_score_version": "v1.0",
-      "technical_score_data_as_of": "2026-09-25",
-      "technical_score_coverage": 100.0,
+      "technical_score_data_as_of": null,
+      "technical_score_coverage": 0.0,
       "price": 172.7,
       "change_pct": -0.66,
       "volume": 5454851,
@@ -2153,10 +1267,10 @@
       "bear_thesis": null,
       "risk_summary": null,
       "waiting_conditions": [],
-      "next_session": "28 Sep 2026 (Monday)",
+      "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-27T19:12:29.176450+00:00"
+      "updated_at": "2026-09-28T01:03:24.538782+00:00"
     },
     "GAIL": {
       "symbol": "GAIL.NS",
@@ -2166,7 +1280,7 @@
       "scheme_name": "GOBARdhan (Galvanizing Organic Bio-Agro Resources Dhan)",
       "relevance": "High",
       "mapping_rationale": "National gas grid operator; mandated CBG offtake under SATAT; setting up 500+ CBG plants.",
-      "latest_development": "Downtrend below 50 DMA (₹173.6) with no active scheme catalysts.",
+      "latest_development": null,
       "catalyst": null,
       "catalysts": [],
       "fundamental_score": 8.3,
@@ -2246,91 +1360,11 @@
       "fundamental_score_version": "v1.0",
       "fundamental_score_coverage": 100.0,
       "fundamental_score_data_as_of": "2026-06-30",
-      "technical_intelligence_score": 5.5,
-      "technical_score_components": {
-        "trend": {
-          "score": 6.4,
-          "weight": 0.2,
-          "data_available": true,
-          "value": {
-            "ema20": 173.11,
-            "ema50": 172.78,
-            "sma200": null
-          },
-          "reason": "Price ₹172.70 vs EMA20 ₹173.11, EMA50 ₹172.78"
-        },
-        "momentum": {
-          "score": 3.6,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "rsi14": 38.1,
-            "macd_hist": -0.027
-          },
-          "reason": "RSI(14) at 38.1, MACD hist -0.027"
-        },
-        "structure": {
-          "score": 4.7,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "high_20d": 177.3,
-            "low_20d": 168.72,
-            "pos_in_range_pct": 46.4
-          },
-          "reason": "Position in 20D range: 46.4% (20D High ₹177.30)"
-        },
-        "volume": {
-          "score": 6.0,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "volume_ratio": 0.95,
-            "day_change_pct": -0.66
-          },
-          "reason": "Volume ratio 0.95x 20D avg on -0.66% day"
-        },
-        "relative_strength": {
-          "score": 6.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "excess_return_pct": 1.86,
-            "lookback_days": 20
-          },
-          "reason": "Alpha vs Nifty: +1.86% over 20D"
-        },
-        "volatility_structure": {
-          "score": 7.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "atr_pct": 1.36,
-            "atr14": 2.35
-          },
-          "reason": "ATR% 1.36% (constructive volatility regime)"
-        },
-        "market_regime": {
-          "score": 3.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": "BEARISH",
-          "reason": "Nifty trend BEARISH vs 20 SMA"
-        },
-        "price_action": {
-          "score": 5.5,
-          "weight": 0.05,
-          "data_available": true,
-          "value": {
-            "close_position_pct": 46.4,
-            "body_ratio": 0.5
-          },
-          "reason": "Closed at 46.4% of daily range"
-        }
-      },
+      "technical_intelligence_score": null,
+      "technical_score_components": {},
       "technical_score_version": "v1.0",
-      "technical_score_data_as_of": "2026-09-25",
-      "technical_score_coverage": 100.0,
+      "technical_score_data_as_of": null,
+      "technical_score_coverage": 0.0,
       "price": 172.7,
       "change_pct": -0.66,
       "volume": 5454851,
@@ -2350,10 +1384,10 @@
       "bear_thesis": null,
       "risk_summary": null,
       "waiting_conditions": [],
-      "next_session": "28 Sep 2026 (Monday)",
+      "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-27T19:12:29.176450+00:00"
+      "updated_at": "2026-09-28T01:03:24.538782+00:00"
     },
     "IOC.NS": {
       "symbol": "IOC.NS",
@@ -2443,91 +1477,11 @@
       "fundamental_score_version": "v1.0",
       "fundamental_score_coverage": 100.0,
       "fundamental_score_data_as_of": "2026-06-30",
-      "technical_intelligence_score": 6.2,
-      "technical_score_components": {
-        "trend": {
-          "score": 6.4,
-          "weight": 0.2,
-          "data_available": true,
-          "value": {
-            "ema20": 136.37,
-            "ema50": 137.47,
-            "sma200": null
-          },
-          "reason": "Price ₹135.70 vs EMA20 ₹136.37, EMA50 ₹137.47"
-        },
-        "momentum": {
-          "score": 7.5,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "rsi14": 51.7,
-            "macd_hist": 0.28
-          },
-          "reason": "RSI(14) at 51.7, MACD hist +0.280"
-        },
-        "structure": {
-          "score": 6.7,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "high_20d": 139.3,
-            "low_20d": 131.7,
-            "pos_in_range_pct": 52.6
-          },
-          "reason": "Position in 20D range: 52.6% (20D High ₹139.30)"
-        },
-        "volume": {
-          "score": 4.5,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "volume_ratio": 1.02,
-            "day_change_pct": -0.42
-          },
-          "reason": "Volume ratio 1.02x 20D avg on -0.42% day"
-        },
-        "relative_strength": {
-          "score": 6.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "excess_return_pct": 1.82,
-            "lookback_days": 20
-          },
-          "reason": "Alpha vs Nifty: +1.82% over 20D"
-        },
-        "volatility_structure": {
-          "score": 9.0,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "atr_pct": 1.66,
-            "atr14": 2.26
-          },
-          "reason": "ATR% 1.66% (constructive volatility regime)"
-        },
-        "market_regime": {
-          "score": 3.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": "BEARISH",
-          "reason": "Nifty trend BEARISH vs 20 SMA"
-        },
-        "price_action": {
-          "score": 3.5,
-          "weight": 0.05,
-          "data_available": true,
-          "value": {
-            "close_position_pct": 21.4,
-            "body_ratio": 0.46
-          },
-          "reason": "Closed at 21.4% of daily range"
-        }
-      },
+      "technical_intelligence_score": null,
+      "technical_score_components": {},
       "technical_score_version": "v1.0",
-      "technical_score_data_as_of": "2026-09-25",
-      "technical_score_coverage": 100.0,
+      "technical_score_data_as_of": null,
+      "technical_score_coverage": 0.0,
       "price": 135.7,
       "change_pct": -0.42,
       "volume": 7769991,
@@ -2537,20 +1491,20 @@
       "support": 131.7,
       "resistance": 139.3,
       "rsi": 51.7,
-      "status": "QUALIFIED_SETUP",
-      "archetype": "Breakout Anticipation",
-      "score": 75,
-      "trigger_price": 135.7,
-      "stop_loss": 130.85,
-      "target": 144.43,
-      "bull_thesis": "Strong momentum breakout confirmed by CBG government scheme and 1.8x volume expansion.",
-      "bear_thesis": "Approaching major overhead resistance with potential false breakout risk.",
-      "risk_summary": "R:R 1.8:1 | Max Risk 0.36% | Target 144.43",
+      "status": "NO_TRADE",
+      "archetype": null,
+      "score": null,
+      "trigger_price": null,
+      "stop_loss": null,
+      "target": null,
+      "bull_thesis": null,
+      "bear_thesis": null,
+      "risk_summary": null,
       "waiting_conditions": [],
-      "next_session": "28 Sep 2026 (Monday)",
-      "ai_provider": "Mock",
+      "next_session": null,
+      "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-27T19:12:33.188837+00:00"
+      "updated_at": "2026-09-28T01:03:24.538782+00:00"
     },
     "IOC": {
       "symbol": "IOC.NS",
@@ -2640,91 +1594,11 @@
       "fundamental_score_version": "v1.0",
       "fundamental_score_coverage": 100.0,
       "fundamental_score_data_as_of": "2026-06-30",
-      "technical_intelligence_score": 6.2,
-      "technical_score_components": {
-        "trend": {
-          "score": 6.4,
-          "weight": 0.2,
-          "data_available": true,
-          "value": {
-            "ema20": 136.37,
-            "ema50": 137.47,
-            "sma200": null
-          },
-          "reason": "Price ₹135.70 vs EMA20 ₹136.37, EMA50 ₹137.47"
-        },
-        "momentum": {
-          "score": 7.5,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "rsi14": 51.7,
-            "macd_hist": 0.28
-          },
-          "reason": "RSI(14) at 51.7, MACD hist +0.280"
-        },
-        "structure": {
-          "score": 6.7,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "high_20d": 139.3,
-            "low_20d": 131.7,
-            "pos_in_range_pct": 52.6
-          },
-          "reason": "Position in 20D range: 52.6% (20D High ₹139.30)"
-        },
-        "volume": {
-          "score": 4.5,
-          "weight": 0.15,
-          "data_available": true,
-          "value": {
-            "volume_ratio": 1.02,
-            "day_change_pct": -0.42
-          },
-          "reason": "Volume ratio 1.02x 20D avg on -0.42% day"
-        },
-        "relative_strength": {
-          "score": 6.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "excess_return_pct": 1.82,
-            "lookback_days": 20
-          },
-          "reason": "Alpha vs Nifty: +1.82% over 20D"
-        },
-        "volatility_structure": {
-          "score": 9.0,
-          "weight": 0.1,
-          "data_available": true,
-          "value": {
-            "atr_pct": 1.66,
-            "atr14": 2.26
-          },
-          "reason": "ATR% 1.66% (constructive volatility regime)"
-        },
-        "market_regime": {
-          "score": 3.5,
-          "weight": 0.1,
-          "data_available": true,
-          "value": "BEARISH",
-          "reason": "Nifty trend BEARISH vs 20 SMA"
-        },
-        "price_action": {
-          "score": 3.5,
-          "weight": 0.05,
-          "data_available": true,
-          "value": {
-            "close_position_pct": 21.4,
-            "body_ratio": 0.46
-          },
-          "reason": "Closed at 21.4% of daily range"
-        }
-      },
+      "technical_intelligence_score": null,
+      "technical_score_components": {},
       "technical_score_version": "v1.0",
-      "technical_score_data_as_of": "2026-09-25",
-      "technical_score_coverage": 100.0,
+      "technical_score_data_as_of": null,
+      "technical_score_coverage": 0.0,
       "price": 135.7,
       "change_pct": -0.42,
       "volume": 7769991,
@@ -2734,29 +1608,24 @@
       "support": 131.7,
       "resistance": 139.3,
       "rsi": 51.7,
-      "status": "QUALIFIED_SETUP",
-      "archetype": "Breakout Anticipation",
-      "score": 75,
-      "trigger_price": 135.7,
-      "stop_loss": 130.85,
-      "target": 144.43,
-      "bull_thesis": "Strong momentum breakout confirmed by CBG government scheme and 1.8x volume expansion.",
-      "bear_thesis": "Approaching major overhead resistance with potential false breakout risk.",
-      "risk_summary": "R:R 1.8:1 | Max Risk 0.36% | Target 144.43",
+      "status": "NO_TRADE",
+      "archetype": null,
+      "score": null,
+      "trigger_price": null,
+      "stop_loss": null,
+      "target": null,
+      "bull_thesis": null,
+      "bear_thesis": null,
+      "risk_summary": null,
       "waiting_conditions": [],
-      "next_session": "28 Sep 2026 (Monday)",
-      "ai_provider": "Mock",
+      "next_session": null,
+      "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-09-27T19:12:33.188837+00:00"
+      "updated_at": "2026-09-28T01:03:24.538782+00:00"
     }
   },
-  "qualified_setups": [
-    "TRUALT.NS",
-    "IOC.NS"
-  ],
-  "waiting_setups": [
-    "WABAG.NS"
-  ],
+  "qualified_setups": [],
+  "waiting_setups": [],
   "performance": {
     "completed_trades": 0,
     "validation_threshold": 30,
@@ -2766,7 +1635,7 @@
     "profit_factor": null,
     "expectancy": null,
     "summary_text": "",
-    "audit_status": "WARN"
+    "audit_status": "PASS"
   },
   "benchmark": {
     "status": "UNAVAILABLE — 0 completed trades",
