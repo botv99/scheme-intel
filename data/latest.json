@@ -1,8 +1,12 @@
 {
-  "generated_at": "2026-09-28T01:02:02.228185+00:00",
+  "generated_at": "2026-09-29T02:12:15.010652+00:00",
   "catalysts": [],
   "setups": [],
   "source_errors": [
+    {
+      "source": "Ministry of New and Renewable Energy",
+      "error": "Failed to access Ministry of New and Renewable Energy: HTTPSConnectionPool(host='mnre.gov.in', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<HTTPSConn"
+    },
     {
       "source": "ingestion::NSE block deals",
       "error": "Expecting value: line 2 column 1 (char 1)"

@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-09-28T01:02:44.710100+00:00",
+  "generated_at": "2026-09-29T02:16:45.403328+00:00",
   "data_period": {
-    "start_date": "2026-09-28",
-    "end_date": "2026-09-28"
+    "start_date": "2026-09-29",
+    "end_date": "2026-09-29"
   },
   "data_sufficiency": {
     "status": "INSUFFICIENT_SAMPLE",
@@ -276,7 +276,7 @@
   "provider_breakdown": [
     {
       "provider": "Deterministic Fallback",
-      "setups": 5,
+      "setups": 4,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -292,23 +292,7 @@
     },
     {
       "provider": "Groq",
-      "setups": 1,
-      "triggered": 0,
-      "completed": 0,
-      "wins": 0,
-      "losses": 0,
-      "expired": 0,
-      "win_rate": null,
-      "average_pnl_pct": null,
-      "expectancy": null,
-      "average_mfe_pct": null,
-      "average_mae_pct": null,
-      "sample_status": "INSUFFICIENT_SAMPLE",
-      "observational_note": "Observational analysis only. Does not establish causation."
-    },
-    {
-      "provider": "Groq \u2192 Gemini failover",
-      "setups": 1,
+      "setups": 3,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -392,7 +376,7 @@
   ],
   "daily_series": [
     {
-      "date": "2026-09-28",
+      "date": "2026-09-29",
       "setups_generated": 7,
       "qualified_setups": 1,
       "triggered": 0,
