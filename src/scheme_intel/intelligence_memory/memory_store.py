@@ -52,24 +52,28 @@ class SchemeMemoryFactStore:
     def _init_storage(self) -> None:
         try:
             self.memory_dir.mkdir(parents=True, exist_ok=True)
-            with self._lock, self._get_connection() as conn:
-                conn.execute("""
-                CREATE TABLE IF NOT EXISTS scheme_memory_events (
-                    event_id            TEXT PRIMARY KEY,
-                    scheme_id           TEXT NOT NULL,
-                    entity              TEXT NOT NULL,
-                    event_text          TEXT NOT NULL,
-                    timestamp           TEXT NOT NULL,
-                    importance          TEXT DEFAULT 'MEDIUM',
-                    source              TEXT,
-                    confidence          REAL DEFAULT 1.0,
-                    status              TEXT DEFAULT 'ACTIVE',
-                    created_at          TEXT NOT NULL DEFAULT (datetime('now'))
-                );
-                """)
-                conn.execute("CREATE INDEX IF NOT EXISTS idx_memory_scheme_entity ON scheme_memory_events(scheme_id, entity);")
-                conn.execute("CREATE INDEX IF NOT EXISTS idx_memory_scheme_time ON scheme_memory_events(scheme_id, timestamp);")
-                conn.commit()
+            conn = self._get_connection()
+            try:
+                with self._lock:
+                    conn.execute("""
+                    CREATE TABLE IF NOT EXISTS scheme_memory_events (
+                        event_id            TEXT PRIMARY KEY,
+                        scheme_id           TEXT NOT NULL,
+                        entity              TEXT NOT NULL,
+                        event_text          TEXT NOT NULL,
+                        timestamp           TEXT NOT NULL,
+                        importance          TEXT DEFAULT 'MEDIUM',
+                        source              TEXT,
+                        confidence          REAL DEFAULT 1.0,
+                        status              TEXT DEFAULT 'ACTIVE',
+                        created_at          TEXT NOT NULL DEFAULT (datetime('now'))
+                    );
+                    """)
+                    conn.execute("CREATE INDEX IF NOT EXISTS idx_memory_scheme_entity ON scheme_memory_events(scheme_id, entity);")
+                    conn.execute("CREATE INDEX IF NOT EXISTS idx_memory_scheme_time ON scheme_memory_events(scheme_id, timestamp);")
+                    conn.commit()
+            finally:
+                conn.close()
         except Exception as e:
             logger.debug("SchemeMemoryFactStore init note: %s", e)
 
@@ -121,23 +125,27 @@ class SchemeMemoryFactStore:
             status=status,
         )
 
-        with self._lock, self._get_connection() as conn:
-            conn.execute("""
-            INSERT OR REPLACE INTO scheme_memory_events (
-                event_id, scheme_id, entity, event_text, timestamp, importance, source, confidence, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
-            """, (
-                fact.event_id,
-                fact.scheme_id,
-                fact.entity,
-                fact.event_text,
-                fact.timestamp,
-                fact.importance,
-                fact.source,
-                fact.confidence,
-                fact.status,
-            ))
-            conn.commit()
+        conn = self._get_connection()
+        try:
+            with self._lock:
+                conn.execute("""
+                INSERT OR REPLACE INTO scheme_memory_events (
+                    event_id, scheme_id, entity, event_text, timestamp, importance, source, confidence, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                """, (
+                    fact.event_id,
+                    fact.scheme_id,
+                    fact.entity,
+                    fact.event_text,
+                    fact.timestamp,
+                    fact.importance,
+                    fact.source,
+                    fact.confidence,
+                    fact.status,
+                ))
+                conn.commit()
+        finally:
+            conn.close()
 
         # Also append to scheme-isolated JSONL disk ledger
         try:
@@ -151,6 +159,31 @@ class SchemeMemoryFactStore:
 
         logger.info("[MEMORY] Recorded fact for %s in scheme '%s' (event_id=%s)", clean_entity, norm_scheme, event_id)
         return fact
+
+    def ingest_event(
+        self,
+        scheme_id: str,
+        event_id: str,
+        fact_type: str = "event",
+        title: str = "",
+        content: str = "",
+        confidence: float = 1.0,
+        importance: str = "MEDIUM",
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> MemoryFact:
+        """Convenience adapter for ingesting NormalizedSchemeEvents into memory facts."""
+        entity = "GLOBAL"
+        if metadata and metadata.get("companies"):
+            entity = metadata["companies"][0]
+        text = f"{title}: {content}".strip() if title else content
+        return self.record_fact(
+            scheme_id=scheme_id,
+            entity=entity,
+            event_text=text or "event",
+            importance=importance,
+            confidence=confidence,
+            source=fact_type,
+        )
 
     def query_facts(
         self,
@@ -178,9 +211,13 @@ class SchemeMemoryFactStore:
         query += " ORDER BY timestamp DESC LIMIT ?"
         params.append(limit)
 
-        with self._lock, self._get_connection() as conn:
-            cur = conn.execute(query, params)
-            rows = cur.fetchall()
+        conn = self._get_connection()
+        try:
+            with self._lock:
+                cur = conn.execute(query, params)
+                rows = cur.fetchall()
+        finally:
+            conn.close()
 
         results = [
             MemoryFact(
@@ -201,9 +238,13 @@ class SchemeMemoryFactStore:
     def count_facts(self, scheme_id: str) -> int:
         """Count total stored facts for a specific scheme."""
         norm_scheme = (scheme_id or "").strip().lower()
-        with self._lock, self._get_connection() as conn:
-            cur = conn.execute("SELECT COUNT(*) FROM scheme_memory_events WHERE scheme_id = ?", (norm_scheme,))
-            return cur.fetchone()[0]
+        conn = self._get_connection()
+        try:
+            with self._lock:
+                cur = conn.execute("SELECT COUNT(*) FROM scheme_memory_events WHERE scheme_id = ?", (norm_scheme,))
+                return cur.fetchone()[0]
+        finally:
+            conn.close()
 
     def clear_scheme_memory(self, scheme_id: str) -> None:
         """Clear memory for a single scheme without affecting other schemes."""

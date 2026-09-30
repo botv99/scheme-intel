@@ -29,3 +29,8 @@ class ResearchJob(BaseModel):
     result: Optional[str] = None
     evidence: List[Dict[str, Any]] = Field(default_factory=list)
     error: Optional[str] = None
+
+    @property
+    def result_text(self) -> Optional[str]:
+        """Convenience alias for result."""
+        return self.result

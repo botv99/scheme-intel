@@ -4,6 +4,7 @@ Guarantees research jobs survive restarts and process boundaries.
 """
 from __future__ import annotations
 
+import contextlib
 import json
 import sqlite3
 from pathlib import Path
@@ -44,12 +45,16 @@ class ResearchQueue:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_schema()
 
-    def _get_connection(self) -> sqlite3.Connection:
+    @contextlib.contextmanager
+    def _get_connection(self):
         conn = sqlite3.connect(str(self.db_path))
         conn.row_factory = sqlite3.Row
-        return conn
+        try:
+            yield conn
+        finally:
+            conn.close()
 
-    def _connect(self) -> sqlite3.Connection:
+    def _connect(self):
         """Alias for _get_connection."""
         return self._get_connection()
 
@@ -140,7 +145,10 @@ class ResearchQueue:
                 # Lost race to another worker
                 return None
 
-            return self.get_job(job_id)
+            job_row = conn.execute("SELECT * FROM research_jobs WHERE job_id = ?;", (job_id,)).fetchone()
+            if job_row:
+                return self._row_to_job(job_row)
+            return None
 
     def recover_stale_running_jobs(self, timeout_seconds: float = 300.0) -> int:
         """

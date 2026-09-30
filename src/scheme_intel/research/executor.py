@@ -138,34 +138,44 @@ class ResearchExecutor:
         if ingested_path.exists():
             try:
                 ingested = json.loads(ingested_path.read_text(encoding="utf-8"))
+                scheme_kw = [k.lower() for k in scheme.keywords]
+                scheme_stocks = [s.name.lower() for s in scheme.watchlist] + [s.symbol.split(".")[0].lower() for s in scheme.watchlist]
+
                 for item in ingested.get("news", []):
                     title = item.get("title", "")
                     summary = item.get("summary", "")
                     content = f"{title} {summary}".lower()
-                    if any(t in content for t in q_tokens) or any(k in content for k in scheme.keywords[:8]):
-                        ev_dict = {
-                            "source": item.get("source", "News"),
-                            "title": title,
-                            "url": item.get("url", ""),
-                            "date": item.get("published_at", "")[:10] if item.get("published_at") else "",
-                            "snippet": summary[:250],
-                        }
-                        evidence_items.append(ev_dict)
-                        sources.append(ev_dict)
+                    # Must belong to this scheme's universe/keywords
+                    if not (any(k in content for k in scheme_kw) or any(s in content for s in scheme_stocks)):
+                        continue
+                    if q_tokens and not any(t in content for t in q_tokens):
+                        continue
+                    ev_dict = {
+                        "source": item.get("source", "News"),
+                        "title": title,
+                        "url": item.get("url", ""),
+                        "date": item.get("published_at", "")[:10] if item.get("published_at") else "",
+                        "snippet": summary[:250],
+                    }
+                    evidence_items.append(ev_dict)
+                    sources.append(ev_dict)
 
                 for ann in ingested.get("announcements", []):
                     title = ann.get("title", "")
                     content = title.lower()
-                    if any(t in content for t in q_tokens) or any(k in content for k in scheme.keywords[:8]):
-                        ev_dict = {
-                            "source": f"{ann.get('exchange', 'Exchange')} Filing",
-                            "title": f"{ann.get('company', '')}: {title}",
-                            "url": ann.get("url", ""),
-                            "date": ann.get("date", "")[:10] if ann.get("date") else "",
-                            "snippet": title[:250],
-                        }
-                        evidence_items.append(ev_dict)
-                        sources.append(ev_dict)
+                    if not (any(k in content for k in scheme_kw) or any(s in content for s in scheme_stocks)):
+                        continue
+                    if q_tokens and not any(t in content for t in q_tokens):
+                        continue
+                    ev_dict = {
+                        "source": f"{ann.get('exchange', 'Exchange')} Filing",
+                        "title": f"{ann.get('company', '')}: {title}",
+                        "url": ann.get("url", ""),
+                        "date": ann.get("date", "")[:10] if ann.get("date") else "",
+                        "snippet": title[:250],
+                    }
+                    evidence_items.append(ev_dict)
+                    sources.append(ev_dict)
             except Exception as e:
                 logger.debug("Error reading ingested.json for research: %s", e)
 

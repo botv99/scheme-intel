@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional, Set
 import requests
 
 from .models import NormalizedSchemeEvent, SchemeIngestionBatch
+from .adapters.base import SourceHealthRecord
 from ..schemes.registry import SchemeRegistry
 from ..schemes.models import SchemeConfig, SchemeSource
 from ..sources import fetch_rss, scan_page
@@ -77,17 +78,22 @@ class SchemeIngestionCoordinator:
         events: List[NormalizedSchemeEvent] = []
         source_health: Dict[str, str] = {}
         errors: List[Dict[str, Any]] = []
+        source_health_records: List[SourceHealthRecord] = []
+        raw_documents: List[Dict[str, Any]] = []
 
         logger.info("[INGESTION] Starting isolated ingestion for scheme '%s' (sources=%d)", norm_scheme, len(scheme.sources))
 
         for src in scheme.sources:
             if not src.enabled:
                 source_health[src.id] = "DISABLED"
+                source_health_records.append(SourceHealthRecord(source_id=src.id, status="DISABLED"))
                 continue
 
             # Support deterministic test mock data if provided
             if mock_source_data and src.id in mock_source_data:
                 source_health[src.id] = "OK"
+                source_health_records.append(SourceHealthRecord(source_id=src.id, status="OK", event_count=len(mock_source_data[src.id])))
+                raw_documents.extend(mock_source_data[src.id])
                 for item in mock_source_data[src.id]:
                     # Hard boundary check: enforce scheme identity
                     if item.get("scheme_id") and item.get("scheme_id").lower() != norm_scheme:
@@ -110,15 +116,91 @@ class SchemeIngestionCoordinator:
                         importance=item.get("importance", "MEDIUM"),
                         confidence=item.get("confidence", 1.0),
                         url=item.get("url", src.url),
+                        external_id=item.get("external_id"),
+                        companies=item.get("companies", []),
+                        projects=item.get("projects", []),
+                        contracts=item.get("contracts", []),
+                        relevance_reason=item.get("relevance_reason"),
+                        water_depth=item.get("water_depth"),
                     ))
                 continue
 
-            # Live network adapter execution
+            # Check for specialized real SourceAdapter
+            from .adapters import AdapterRegistry
+            adapter = AdapterRegistry.get_adapter(norm_scheme, src.id)
+            if adapter:
+                try:
+                    adapter_events, health = adapter.ingest(custom_url=src.url)
+                    source_health[src.id] = health.status
+                    source_health_records.append(health)
+                    for raw_rec in getattr(adapter, "last_raw_records", []) or []:
+                        raw_documents.append({
+                            "source_id": src.id,
+                            "title": getattr(raw_rec, "title", ""),
+                            "url": getattr(raw_rec, "url", ""),
+                            "content": getattr(raw_rec, "content", ""),
+                            "summary": getattr(raw_rec, "summary", None),
+                            "published_at": getattr(raw_rec, "published_at", None),
+                            "external_id": getattr(raw_rec, "external_id", None),
+                            "raw_metadata": getattr(raw_rec, "raw_metadata", {}),
+                        })
+                    for evt in adapter_events:
+                        self.ingest_event(evt, target_scheme_id=norm_scheme)
+                        if evt.event_id in self._seen_event_hashes:
+                            continue
+                        self._seen_event_hashes.add(evt.event_id)
+                        events.append(evt)
+                    if health.status in ("FAILED", "BLOCKED") and health.reason:
+                        errors.append({"source_id": src.id, "error": health.reason})
+                        # Activate fallbacks if Samudra source is blocked/failed
+                        if norm_scheme == "samudra_manthan":
+                            from ..schemes.samudra_manthan.redundancy import get_fallback_sources_for_source
+                            fallbacks = get_fallback_sources_for_source(src.id)
+                            if fallbacks:
+                                health.fallback = f"Active fallbacks: {', '.join(f.source_id for f in fallbacks)}"
+                                logger.info(
+                                    "[INGESTION] Source '%s' %s. Fallback group activated: %s",
+                                    src.id, health.status, health.fallback
+                                )
+                                # Dynamically execute fallback adapters if not part of scheme source list
+                                configured_source_ids = {s.id for s in scheme.sources}
+                                for fb in fallbacks:
+                                    if fb.source_id not in configured_source_ids and fb.enabled:
+                                        fb_adapter = AdapterRegistry.get_adapter(norm_scheme, fb.source_id)
+                                        if fb_adapter:
+                                            try:
+                                                fb_events, fb_health = fb_adapter.ingest(custom_url=fb.url)
+                                                source_health[fb.source_id] = fb_health.status
+                                                source_health_records.append(fb_health)
+                                                for fb_evt in fb_events:
+                                                    self.ingest_event(fb_evt, target_scheme_id=norm_scheme)
+                                                    if fb_evt.event_id in self._seen_event_hashes:
+                                                        continue
+                                                    self._seen_event_hashes.add(fb_evt.event_id)
+                                                    events.append(fb_evt)
+                                            except Exception as fb_err:
+                                                logger.warning("[INGESTION] Fallback adapter '%s' failed: %s", fb.source_id, fb_err)
+                except Exception as e:
+                    logger.warning("[INGESTION] Adapter '%s' failed: %s", src.id, e)
+                    fb_note = None
+                    if norm_scheme == "samudra_manthan":
+                        from ..schemes.samudra_manthan.redundancy import get_fallback_sources_for_source
+                        fallbacks = get_fallback_sources_for_source(src.id)
+                        if fallbacks:
+                            fb_note = f"Active fallbacks: {', '.join(f.source_id for f in fallbacks)}"
+                    source_health[src.id] = "DEGRADED"
+                    source_health_records.append(SourceHealthRecord(source_id=src.id, status="DEGRADED", reason=str(e)[:200], fallback=fb_note))
+                    errors.append({"source_id": src.id, "error": str(e)[:200]})
+                continue
+
+            # Fallback network adapter execution (for non-adaptered schemes/sources)
             try:
                 if src.type == "rss":
                     articles = fetch_rss(src.name, src.url, timeout=self.timeout)
                     source_health[src.id] = "OK"
+                    source_health_records.append(SourceHealthRecord(source_id=src.id, status="OK", event_count=len(articles[:10])))
                     for art in articles[:10]:
+                        raw_documents.append({"source_id": src.id, "title": art.title, "url": art.url})
                         evt_id = self.generate_event_id(norm_scheme, src.id, art.title, art.published_at.isoformat() if art.published_at else None)
                         if evt_id in self._seen_event_hashes:
                             continue
@@ -140,17 +222,32 @@ class SchemeIngestionCoordinator:
                             url=art.url,
                         ))
                 else:
-                    # HTML / Tender / Filing adapter
-                    # Safe check with short timeout
-                    resp = requests.get(src.url, timeout=self.timeout, headers={"User-Agent": "scheme-intel/0.4"})
+                    # HTML / Tender / Filing fallback ping
+                    resp = requests.get(src.url, timeout=self.timeout, headers={"User-Agent": "scheme-intel/0.4"}, verify=False)
                     if resp.status_code == 200:
                         source_health[src.id] = "OK"
+                        source_health_records.append(SourceHealthRecord(source_id=src.id, status="OK"))
+                        raw_documents.append({"source_id": src.id, "url": src.url, "content": resp.text[:500]})
                     else:
                         source_health[src.id] = f"HTTP_{resp.status_code}"
+                        source_health_records.append(SourceHealthRecord(source_id=src.id, status=f"HTTP_{resp.status_code}"))
             except Exception as e:
                 logger.warning("[INGESTION] Source '%s' (%s) degraded/failed: %s", src.id, src.name, e)
                 source_health[src.id] = "DEGRADED"
+                source_health_records.append(SourceHealthRecord(source_id=src.id, status="DEGRADED", reason=str(e)[:200]))
                 errors.append({"source_id": src.id, "error": str(e)[:200]})
+
+        # Cross-Source Corroboration & Deduplication for Samudra Manthan
+        if norm_scheme == "samudra_manthan" and events:
+            from .corroboration import CrossSourceCorroborator
+            pre_count = len(events)
+            events = CrossSourceCorroborator.corroborate_and_deduplicate(events)
+            logger.info(
+                "[INGESTION] Cross-source corroboration complete for '%s': %d raw -> %d canonical events",
+                norm_scheme,
+                pre_count,
+                len(events),
+            )
 
         batch = SchemeIngestionBatch(
             scheme_id=norm_scheme,
@@ -159,6 +256,8 @@ class SchemeIngestionCoordinator:
             events=events,
             source_health=source_health,
             errors=errors,
+            source_health_records=source_health_records,
+            raw_documents=raw_documents,
         )
         logger.info(
             "[INGESTION] Completed scheme '%s': %d events, %d errors, status=%s",
@@ -168,6 +267,15 @@ class SchemeIngestionCoordinator:
             "OK" if not errors else "PARTIAL",
         )
         return batch
+
+    def run_ingestion(
+        self,
+        scheme_id: str,
+        run_id: Optional[str] = None,
+        mock_source_data: Optional[Dict[str, List[Dict[str, Any]]]] = None,
+    ) -> SchemeIngestionBatch:
+        """Alias for ingest_scheme."""
+        return self.ingest_scheme(scheme_id=scheme_id, run_id=run_id, mock_source_data=mock_source_data)
 
     def ingest_all_active_schemes(
         self,

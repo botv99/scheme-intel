@@ -126,6 +126,12 @@ class NormalizedSchemeEvent:
     importance: str = "MEDIUM"
     confidence: float = 1.0
     url: str = ""
+    external_id: Optional[str] = None
+    companies: list[str] = field(default_factory=list)
+    projects: list[str] = field(default_factory=list)
+    contracts: list[str] = field(default_factory=list)
+    relevance_reason: Optional[str] = None
+    water_depth: Optional[str] = None
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -140,6 +146,12 @@ class SchemeIngestionBatch:
     events: list[NormalizedSchemeEvent] = field(default_factory=list)
     source_health: dict[str, str] = field(default_factory=dict)
     errors: list[dict] = field(default_factory=list)
+    source_health_records: list[Any] = field(default_factory=list)
+    raw_documents: list[dict] = field(default_factory=list)
+
+    @property
+    def normalized_events(self) -> list[NormalizedSchemeEvent]:
+        return self.events
 
     def to_dict(self) -> dict:
         return asdict(self)

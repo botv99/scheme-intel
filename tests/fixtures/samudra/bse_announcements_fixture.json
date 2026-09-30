@@ -1,0 +1,31 @@
+{
+  "Table": [
+    {
+      "SCRIP_CD": 526325,
+      "SLONGNAME": "Alphageo (India) Ltd",
+      "NEWSSUB": "Alphageo India bags contract for 2D/3D marine and transition zone seismic acquisition in Andaman Basin worth Rs 92 Crore",
+      "HEADLINE": "Receipt of Work Order for Offshore Seismic Data Acquisition",
+      "MORE": "Oil India Limited has awarded contract for 3D marine seismic survey in offshore Andaman blocks.",
+      "DT_TM": "2026-09-29T11:00:00",
+      "NEWSID": "BSE-ALPH-0929"
+    },
+    {
+      "SCRIP_CD": 500620,
+      "SLONGNAME": "Great Eastern Shipping Co Ltd",
+      "NEWSSUB": "GE Shipping contracts its offshore platform supply vessel to ONGC for deepwater drilling support",
+      "HEADLINE": "Offshore vessel contract award",
+      "MORE": "Contract for deepwater anchor handling and subsea supply operations for 2 years.",
+      "DT_TM": "2026-09-28T09:45:00",
+      "NEWSID": "BSE-GESCO-0928"
+    },
+    {
+      "SCRIP_CD": 532540,
+      "SLONGNAME": "Tata Consultancy Services Ltd",
+      "NEWSSUB": "Media Release - TCS and Google Cloud launch generative AI center of excellence",
+      "HEADLINE": "Strategic Partnership Announcement",
+      "MORE": "Non-offshore IT services announcement.",
+      "DT_TM": "2026-09-27T14:00:00",
+      "NEWSID": "BSE-TCS-0927"
+    }
+  ]
+}

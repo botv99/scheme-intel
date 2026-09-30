@@ -1,0 +1,31 @@
+{
+  "data": [
+    {
+      "symbol": "DEEPINDS",
+      "companyName": "Deep Industries Limited",
+      "subject": "Deep Industries Limited secures Rs 185 Crore contract from ONGC for offshore support vessel and deepwater services in Western Offshore",
+      "desc": "The company has received Letter of Award from ONGC for hiring of Mobile Offshore Production Unit and oilfield offshore services for 3 years.",
+      "an_dt": "28-Sep-2026 15:30:00",
+      "attmntFile": "DEEP_28092026.pdf",
+      "seq_id": "NSE-CORP-20260928-001"
+    },
+    {
+      "symbol": "LT",
+      "companyName": "Larsen & Toubro Limited",
+      "subject": "L&T Hydrocarbon business secures Ultra-Mega offshore order from ONGC for deepwater Daman development",
+      "desc": "The Hydrocarbon business vertical of L&T has bagged an ultra-mega contract for offshore deepwater pipeline and wellhead platform fabrication.",
+      "an_dt": "27-Sep-2026 11:15:00",
+      "attmntFile": "LT_27092026.pdf",
+      "seq_id": "NSE-CORP-20260927-042"
+    },
+    {
+      "symbol": "TCS",
+      "companyName": "Tata Consultancy Services Limited",
+      "subject": "TCS recognized as Leader in Multi-Cloud Managed Services by analyst firm",
+      "desc": "TCS receives leadership recognition in IT services report.",
+      "an_dt": "26-Sep-2026 16:00:00",
+      "attmntFile": "TCS_26092026.pdf",
+      "seq_id": "NSE-CORP-20260926-088"
+    }
+  ]
+}

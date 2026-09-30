@@ -4,6 +4,7 @@ Enforces customer scheme licensing BEFORE data retrieval.
 """
 from __future__ import annotations
 
+import contextlib
 import json
 import sqlite3
 import threading
@@ -39,10 +40,14 @@ class EntitlementService:
         cid = str(chat_id or "")
         return (bool(uid) and uid in self.admin_user_ids) or (bool(cid) and cid in self.admin_user_ids)
 
-    def _get_connection(self) -> sqlite3.Connection:
+    @contextlib.contextmanager
+    def _get_connection(self):
         conn = sqlite3.connect(str(self.db_path), timeout=10.0)
         conn.row_factory = sqlite3.Row
-        return conn
+        try:
+            yield conn
+        finally:
+            conn.close()
 
     def _init_db(self) -> None:
         try:
@@ -285,3 +290,36 @@ class EntitlementService:
                 return False, f"Feature '{feature}' is not included in your '{norm_scheme}' subscription."
 
         return True, "Authorized"
+
+    def has_scheme_access(
+        self,
+        customer_id: Optional[str] = None,
+        scheme_id: str = "",
+        user_id: Optional[str] = None,
+        chat_id: Optional[str] = None,
+    ) -> bool:
+        """Convenience method returning boolean authorization status."""
+        authorized, _ = self.authorize_access(
+            scheme_id=scheme_id,
+            customer_id=customer_id,
+            user_id=user_id,
+            chat_id=chat_id,
+        )
+        return authorized
+
+    def is_entitled(
+        self,
+        scheme_id: str,
+        customer_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+        chat_id: Optional[str] = None,
+        feature: Optional[str] = None,
+    ) -> Tuple[bool, str]:
+        """Alias for authorize_access."""
+        return self.authorize_access(
+            scheme_id=scheme_id,
+            customer_id=customer_id,
+            user_id=user_id,
+            chat_id=chat_id,
+            feature=feature,
+        )

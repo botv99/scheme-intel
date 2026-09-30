@@ -11,6 +11,7 @@ from typing import Dict, Optional
 from datetime import datetime, timezone
 
 from .models import IntelligenceSnapshot, SnapshotHealthStatus
+from .memory_store import SchemeMemoryFactStore, MemoryFact
 from ..logger import get_logger
 
 logger = get_logger(__name__)

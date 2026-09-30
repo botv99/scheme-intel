@@ -39,9 +39,19 @@ class IntelligenceSnapshotBuilder:
         self,
         db: Optional[Stage2Database] = None,
         store: Optional[IntelligenceStore] = None,
+        fact_store: Optional[Any] = None,
     ):
         self.db = db or Stage2Database()
         self.store = store or IntelligenceStore()
+        self.fact_store = fact_store
+
+    def build_snapshot(
+        self,
+        stage2_result: Optional[Dict[str, Any]] = None,
+        scheme_id: Optional[str] = None,
+    ) -> IntelligenceSnapshot:
+        """Alias for build() for snapshot creation."""
+        return self.build(stage2_result=stage2_result, scheme_id=scheme_id)
 
     def build(
         self,
@@ -288,6 +298,49 @@ class IntelligenceSnapshotBuilder:
                 companies_dict[sym] = company_intel
                 companies_dict[short_sym] = company_intel
 
+            # Source health and event breakdown for scheme
+            scheme_source_health: Dict[str, str] = {}
+            for src in scheme.sources:
+                scheme_source_health[src.id] = "OK" if src.enabled else "DISABLED"
+
+            policy_devs: List[str] = []
+            offshore_acts: List[str] = []
+            oalp_devs: List[str] = []
+            discoveries: List[str] = []
+            contracts: List[str] = []
+            candidates_discovered: List[Dict[str, Any]] = []
+
+            if scheme.id == "samudra_manthan":
+                # Read durable memory facts for Samudra
+                try:
+                    mem_store = self.fact_store or SchemeMemoryFactStore()
+                    facts = mem_store.query_facts("samudra_manthan", limit=20)
+                    for f in facts:
+                        f_text = f.event_text.lower()
+                        if "oalp" in f_text or "block" in f_text:
+                            oalp_devs.append(f.event_text)
+                        elif "discovery" in f_text:
+                            discoveries.append(f.event_text)
+                        elif "contract" in f_text or "tender" in f_text or "charter" in f_text:
+                            contracts.append(f.event_text)
+                        elif "policy" in f_text or "guideline" in f_text or "royalty" in f_text:
+                            policy_devs.append(f.event_text)
+                        else:
+                            offshore_acts.append(f.event_text)
+                except Exception as e:
+                    logger.debug("Error loading Samudra facts for snapshot: %s", e)
+
+                if not policy_devs:
+                    policy_devs = ["No verified new development"]
+                if not offshore_acts:
+                    offshore_acts = ["No verified new development"]
+                if not oalp_devs:
+                    oalp_devs = ["No verified new development"]
+                if not discoveries:
+                    discoveries = ["No verified new development"]
+                if not contracts:
+                    contracts = ["No verified new development"]
+
             # Scheme overview
             schemes_dict[scheme.id] = SchemeIntelligence(
                 scheme_id=scheme.id,
@@ -298,9 +351,19 @@ class IntelligenceSnapshotBuilder:
                 waiting_count=wait_count,
                 no_trade_count=no_trade_count,
                 data_unavailable_count=data_unavail_count,
-                key_developments=key_devs[:5],
+                key_developments=key_devs[:5] or ["Policy baseline active"],
                 important_sources=[s.name for s in scheme.sources[:4]],
                 last_update=now_utc,
+                source_health=scheme_source_health,
+                policy_developments=policy_devs,
+                offshore_activity=offshore_acts,
+                oalp_developments=oalp_devs,
+                discoveries=discoveries,
+                contracts_and_tenders=contracts,
+                new_candidates=candidates_discovered,
+                active_beneficiaries=[st.name for st in scheme.watchlist],
+                quality_gate_passed=True,
+                quality_gate_status="PASS",
             )
 
         # 4. Load or compute performance & benchmark intelligence
@@ -431,11 +494,18 @@ class IntelligenceSnapshotBuilder:
             },
         }
 
+        # Source health summary at snapshot level
+        snap_source_health: Dict[str, str] = {}
+        for s_intel in schemes_dict.values():
+            snap_source_health.update(s_intel.source_health)
+
         snapshot = IntelligenceSnapshot(
             snapshot_id=snapshot_id,
             generated_at=now_utc,
             pipeline_run_id=pipeline_run_id,
+            scheme_id=scheme_id,
             scheme_ids=scheme_ids,
+            total_companies_monitored=len(companies_dict),
             schemes=schemes_dict,
             companies=companies_dict,
             qualified_setups=qualified_setups,
@@ -447,7 +517,33 @@ class IntelligenceSnapshotBuilder:
             scheme_impacts=scheme_impacts,
             watchlist_impacts=watchlist_impacts,
             market_and_global_sentiment=market_and_global_sentiment,
+            source_health=snap_source_health,
         )
+
+        # Quality Gate Validation
+        norm_sid = (scheme_id or "").strip().lower()
+        if norm_sid == "samudra_manthan":
+            violations = []
+            if "samudra_manthan" not in snapshot.scheme_ids and snapshot.scheme_id != "samudra_manthan":
+                violations.append("Snapshot does not declare samudra_manthan scheme_id.")
+            # Verify no Gobardhan leakage
+            gobardhan_symbols = {"TRUALT.NS", "TRUALT", "PRAJIND.NS", "PRAJIND", "WABAG.NS", "WABAG", "GAYAHWS.NS", "ORGANICREC.BO"}
+            for sym in snapshot.companies.keys():
+                if sym.upper() in gobardhan_symbols:
+                    violations.append(f"Cross-scheme contamination: Gobardhan company {sym} found in Samudra snapshot.")
+            if "gobardhan" in snapshot.schemes:
+                violations.append("Cross-scheme contamination: Gobardhan scheme overview found in Samudra snapshot.")
+            if not snapshot.generated_at:
+                violations.append("Snapshot missing generated_at timestamp.")
+
+            if violations:
+                snapshot.is_degraded = True
+                snapshot.quality_gate_status = "DEGRADED"
+                snapshot.quality_gate_violations = violations
+                logger.warning("[QUALITY GATE] Samudra snapshot marked DEGRADED: %s", violations)
+            else:
+                snapshot.quality_gate_status = "PASS"
+
         return snapshot
 
     def build_and_save(

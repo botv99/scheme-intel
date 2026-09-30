@@ -77,6 +77,7 @@ class SchemeIntelligence(BaseModel):
     scheme_id: str
     name: str
     description: str = ""
+    total_budget: Optional[str] = None
     watchlist_count: int = 0
     qualified_setups_count: int = 0
     waiting_count: int = 0
@@ -85,6 +86,18 @@ class SchemeIntelligence(BaseModel):
     key_developments: List[str] = Field(default_factory=list)
     important_sources: List[str] = Field(default_factory=list)
     last_update: str = ""
+    source_health: Dict[str, str] = Field(default_factory=dict)
+    source_health_records: List[Dict[str, Any]] = Field(default_factory=list)
+    policy_developments: List[str] = Field(default_factory=list)
+    offshore_activity: List[str] = Field(default_factory=list)
+    oalp_developments: List[str] = Field(default_factory=list)
+    discoveries: List[str] = Field(default_factory=list)
+    contracts_and_tenders: List[str] = Field(default_factory=list)
+    new_candidates: List[Dict[str, Any]] = Field(default_factory=list)
+    active_beneficiaries: List[str] = Field(default_factory=list)
+    quality_gate_passed: bool = True
+    quality_gate_status: str = "PASS"
+    quality_gate_notes: List[str] = Field(default_factory=list)
 
 
 class PerformanceIntelligence(BaseModel):
@@ -123,7 +136,9 @@ class IntelligenceSnapshot(BaseModel):
     schema_version: str = "1.0"
     generated_at: str                            # ISO 8601 UTC
     pipeline_run_id: Optional[str] = None
+    scheme_id: Optional[str] = None
     scheme_ids: List[str] = Field(default_factory=list)
+    total_companies_monitored: Optional[int] = None
     schemes: Dict[str, SchemeIntelligence] = Field(default_factory=dict)
     companies: Dict[str, CompanyIntelligence] = Field(default_factory=dict)
     qualified_setups: List[str] = Field(default_factory=list)
@@ -135,6 +150,16 @@ class IntelligenceSnapshot(BaseModel):
     scheme_impacts: Dict[str, SchemeSentimentImpact] = Field(default_factory=dict)
     watchlist_impacts: Dict[str, WatchlistSentimentImpact] = Field(default_factory=dict)
     market_and_global_sentiment: Optional[Dict[str, Any]] = None
+    source_health: Dict[str, str] = Field(default_factory=dict)
+    source_health_records: List[Dict[str, Any]] = Field(default_factory=list)
+    events: List[Dict[str, Any]] = Field(default_factory=list)
+    is_degraded: bool = False
+    quality_gate_status: str = "PASS"
+    quality_gate_violations: List[str] = Field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize snapshot to dictionary."""
+        return self.model_dump()
 
     def get_age_seconds(self) -> float:
         """Return snapshot age in seconds."""

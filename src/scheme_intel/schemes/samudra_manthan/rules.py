@@ -179,7 +179,105 @@ class DynamicBeneficiaryDiscovery:
             "role": BeneficiaryRelationshipType.OFFSHORE_INFRASTRUCTURE,
             "exchange": "NSE",
         },
+        "LARSEN & TOUBRO": {
+            "symbol": "LT.NS",
+            "name": "Larsen & Toubro (Hydrocarbon)",
+            "role": BeneficiaryRelationshipType.OFFSHORE_ENGINEERING,
+            "exchange": "NSE",
+        },
+        "L&T": {
+            "symbol": "LT.NS",
+            "name": "Larsen & Toubro",
+            "role": BeneficiaryRelationshipType.EPC,
+            "exchange": "NSE",
+        },
+        "DEEP INDUSTRIES": {
+            "symbol": "DEEPINDS.NS",
+            "name": "Deep Industries Limited",
+            "role": BeneficiaryRelationshipType.OILFIELD_SERVICES,
+            "exchange": "NSE",
+        },
+        "ALPHAGEO": {
+            "symbol": "ALPHAGEO.NS",
+            "name": "Alphageo (India) Limited",
+            "role": BeneficiaryRelationshipType.SEISMIC_PROVIDER,
+            "exchange": "NSE",
+        },
+        "ASIAN ENERGY": {
+            "symbol": "ASIANENE.NS",
+            "name": "Asian Energy Services",
+            "role": BeneficiaryRelationshipType.SEISMIC_PROVIDER,
+            "exchange": "NSE",
+        },
+        "GREAT EASTERN SHIPPING": {
+            "symbol": "GESHIP.NS",
+            "name": "Great Eastern Shipping (Offshore)",
+            "role": BeneficiaryRelationshipType.MARINE_LOGISTICS,
+            "exchange": "NSE",
+        },
     }
+
+    @classmethod
+    def evaluate_candidate_promotion(
+        cls,
+        rel: CompanySchemeRelationship,
+        event_title: str,
+        event_content: str,
+    ) -> CompanySchemeRelationship:
+        """
+        Evaluate candidate for promotion: CANDIDATE -> ACTIVE / CORE.
+        Requires verified evidence of contract award, commercial order, or DGH block award.
+        Never promotes on generic keyword mentions.
+        """
+        combined = f"{event_title} {event_content}".lower()
+
+        # Check for confirmed operational / commercial award
+        has_verified_award = any(k in combined for k in [
+            "awarded contract", "contract award", "order win", "wins contract",
+            "letter of intent", "loi issued", "awarded block", "charter award",
+            "commercial order", "secures order", "epc contract win", "consortium award"
+        ])
+
+        # Exclusions (debarment, tender cancellation, dispute)
+        is_excluded = any(k in combined for k in [
+            "debarred", "blacklisted", "contract terminated", "disqualified", "tender cancelled"
+        ])
+
+        if is_excluded:
+            rel.status = CompanyWatchlistStatus.EXCLUDED.value
+            rel.confidence = 0.50
+            return rel
+
+        if has_verified_award and rel.confidence >= 0.75:
+            # Promote candidate to ACTIVE/CORE with verified evidence
+            rel.status = CompanyWatchlistStatus.CORE.value
+            rel.confidence = min(0.95, rel.confidence + 0.15)
+            logger.info(
+                "[PROMOTION GATE] Promoted %s to ACTIVE/CORE for Samudra Manthan: %s",
+                rel.company,
+                event_title[:60],
+            )
+        return rel
+
+    @classmethod
+    def build_relationship_graph_node(
+        cls,
+        rel: CompanySchemeRelationship,
+        project_or_block: Optional[str] = None,
+        contract_or_tender: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Construct structured Company-Scheme Relationship Graph node: Scheme -> Project/Block -> Contract -> Company -> Stock."""
+        return {
+            "scheme": rel.scheme_id,
+            "project_or_block": project_or_block or "National Offshore Acreage",
+            "contract_or_tender": contract_or_tender or "Upstream Framework",
+            "company": rel.company,
+            "symbol": rel.symbol,
+            "relationship_type": rel.relationship_type,
+            "status": rel.status,
+            "evidence": rel.evidence,
+            "confidence": rel.confidence,
+        }
 
     @classmethod
     def discover_from_event(
@@ -245,11 +343,16 @@ class DynamicBeneficiaryDiscovery:
                     confidence=0.80,
                     status=CompanyWatchlistStatus.CANDIDATE.value,
                 )
+
+                # Evaluate promotion gate
+                rel = cls.evaluate_candidate_promotion(rel, event_title=title, event_content=content)
                 discovered.append(rel)
+
                 logger.info(
-                    "[DYNAMIC DISCOVERY] Candidate identified for Samudra Manthan: %s (%s) from '%s'",
+                    "[DYNAMIC DISCOVERY] Candidate identified for Samudra Manthan: %s (%s) status=%s from '%s'",
                     meta["name"],
                     meta["symbol"],
+                    rel.status,
                     title[:50],
                 )
 
@@ -263,3 +366,94 @@ class DynamicBeneficiaryDiscovery:
         source: str = "Tender / Filing",
     ) -> List[CompanySchemeRelationship]:
         return cls.discover_from_event(title=event_title, content=content, source=source)
+
+    @classmethod
+    def discover_from_normalized_event(
+        cls,
+        event: Any,
+    ) -> List[CompanySchemeRelationship]:
+        """Convenience method accepting NormalizedSchemeEvent."""
+        title = getattr(event, "title", "")
+        content = getattr(event, "content", "")
+        source = getattr(event, "source_id", "Event")
+        return cls.discover_from_event(title=title, content=content, source=source)
+
+
+OFFSHORE_CANDIDATE_REGISTRY = DynamicBeneficiaryDiscovery.OFFSHORE_CANDIDATE_REGISTRY
+
+
+def evaluate_candidate_promotion(
+    company_or_rel: Any,
+    events_or_title: Any = None,
+    content: str = "",
+) -> Any:
+    """
+    Evaluates candidate promotion.
+    Supports:
+    1. evaluate_candidate_promotion(rel: CompanySchemeRelationship, event_title, event_content) -> CompanySchemeRelationship
+    2. evaluate_candidate_promotion(company_name: str, events: List[NormalizedSchemeEvent]) -> bool
+    """
+    if isinstance(company_or_rel, CompanySchemeRelationship):
+        return DynamicBeneficiaryDiscovery.evaluate_candidate_promotion(
+            company_or_rel,
+            event_title=str(events_or_title or ""),
+            event_content=content,
+        )
+
+    company_name = str(company_or_rel).upper()
+    events = events_or_title if isinstance(events_or_title, list) else []
+    for ev in events:
+        title = getattr(ev, "title", "")
+        body = getattr(ev, "content", "")
+        combined = f"{title} {body}".upper()
+        companies_upper = [c.upper() for c in getattr(ev, "companies", [])]
+
+        if company_name in combined or any(company_name in c for c in companies_upper):
+            contracts = getattr(ev, "contracts", [])
+            has_contract = bool(contracts)
+            has_award_kw = any(
+                w in combined.lower()
+                for w in ("awarded", "secures", "won", "bags", "letter of award", "loa", "charter hire", "work order")
+            )
+            if has_contract or has_award_kw:
+                return True
+    return False
+
+
+def build_relationship_graph_node(
+    event_or_rel: Any,
+    project_or_block: Optional[str] = None,
+    contract_or_tender: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Constructs relationship graph node for either CompanySchemeRelationship or NormalizedSchemeEvent."""
+    if isinstance(event_or_rel, CompanySchemeRelationship):
+        return DynamicBeneficiaryDiscovery.build_relationship_graph_node(
+            event_or_rel, project_or_block, contract_or_tender
+        )
+
+    return {
+        "scheme": getattr(event_or_rel, "scheme_id", "samudra_manthan"),
+        "companies": list(getattr(event_or_rel, "companies", [])),
+        "projects": list(getattr(event_or_rel, "projects", [])),
+        "contracts": list(getattr(event_or_rel, "contracts", [])),
+        "water_depth": getattr(event_or_rel, "water_depth", "unknown"),
+        "relevance_reason": getattr(event_or_rel, "relevance_reason", ""),
+        "importance": getattr(event_or_rel, "importance", "medium"),
+    }
+
+
+def discover_from_normalized_event(event: Any) -> List[Dict[str, Any]]:
+    """Discovers candidates from a NormalizedSchemeEvent and returns serializable dicts."""
+    rels = DynamicBeneficiaryDiscovery.discover_from_normalized_event(event)
+    return [
+        {
+            "name": r.company,
+            "symbol": r.symbol,
+            "status": r.status,
+            "role": r.relationship_type,
+            "confidence": r.confidence,
+            "evidence": r.evidence,
+        }
+        for r in rels
+    ]
+
