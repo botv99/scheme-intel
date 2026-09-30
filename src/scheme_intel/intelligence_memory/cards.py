@@ -522,14 +522,21 @@ def render_stock_prompt_card(command: str = "/stock") -> str:
     )
 
 
-def render_watchlist_card(companies: Dict[str, CompanyIntelligence], is_stale: bool = False) -> str:
+def render_watchlist_card(
+    companies: Dict[str, CompanyIntelligence] | List[CompanyIntelligence],
+    is_stale: bool = False,
+    scheme_name: Optional[str] = None,
+) -> str:
     """Format watchlist overview card."""
+    header_name = (scheme_name or "GOBARdhan").upper()
     lines = [
-        "📋 *GOBARDHAN SCHEME WATCHLIST*",
+        f"📋 *{header_name} SCHEME WATCHLIST*",
         "",
     ]
     seen = set()
-    for sym, comp in companies.items():
+    items = companies.values() if isinstance(companies, dict) else companies
+    for comp in items:
+        sym = comp.symbol or comp.short_symbol
         base = sym.split(".")[0]
         if base in seen:
             continue
@@ -540,7 +547,7 @@ def render_watchlist_card(companies: Dict[str, CompanyIntelligence], is_stale: b
 
     lines.extend([
         "",
-        "Use `/stock <symbol>` (e.g. `/stock GAIL`) to view full intelligence.",
+        "Use `/stock <symbol>` (e.g. `/stock GAIL` or `/stock ONGC`) to view full intelligence.",
     ])
     return "\n".join(lines)
 
@@ -571,11 +578,12 @@ def get_terminal_inline_keyboard() -> Dict[str, Any]:
     }
 
 
-def render_unknown_stock(symbol: str) -> str:
+def render_unknown_stock(symbol: str, scheme_id: Optional[str] = None) -> str:
+    scheme_label = f"the active {scheme_id.replace('_', ' ').title()}" if scheme_id else "the active Scheme-Intel"
     return (
         "🏷️ *Stock Not Found*\n\n"
-        f"I don't recognize `{symbol.upper()}` in the active Scheme-Intel watchlist.\n\n"
-        f"`{symbol.upper()}` is not currently in the active Scheme-Intel watchlist.\n\n"
+        f"I don't recognize `{symbol.upper()}` in {scheme_label} watchlist.\n\n"
+        f"`{symbol.upper()}` is not currently in {scheme_label} research universe / watchlist.\n\n"
         "Use /watchlist or /schemes to see monitored companies."
     )
 

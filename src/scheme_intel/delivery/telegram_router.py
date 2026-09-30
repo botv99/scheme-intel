@@ -17,6 +17,9 @@ from .request_store import RequestStore, RequestStatus, ExecutionPath, TelegramR
 from ..intelligence_memory.models import SnapshotHealthStatus
 from ..intelligence_memory.resolver import IntentResolver, IntentType, ResolvedIntent
 from ..intelligence_memory.retrieval import FastIntelligenceRetriever
+from ..licensing.service import EntitlementService
+from ..licensing.session import SessionStore
+from ..schemes.registry import SchemeRegistry
 from ..intelligence_memory.cards import (
     render_stock_card,
     render_why_card,
@@ -58,12 +61,16 @@ class TelegramMessageRouter:
         allowed_user_ids: Optional[Set[str]] = None,
         allowed_chat_ids: Optional[Set[str]] = None,
         research_cooldown_seconds: int = 60,
+        session_store: Optional[SessionStore] = None,
+        entitlement_service: Optional[EntitlementService] = None,
     ):
         self.retriever = retriever or FastIntelligenceRetriever(auto_build_if_missing=False)
         self.research_queue = research_queue or ResearchQueue()
         self.request_store = request_store or RequestStore()
         self.dispatcher = dispatcher or GitHubWorkflowDispatcher()
         self.research_cooldown_seconds = research_cooldown_seconds
+        self.session_store = session_store or SessionStore()
+        self.entitlement_service = entitlement_service or EntitlementService()
 
         # User security filters
         self.allowed_user_ids = allowed_user_ids
@@ -124,14 +131,88 @@ class TelegramMessageRouter:
             self.request_store.mark_failed(effective_req_id, "Unauthorized user/chat")
             return "⛔ This Telegram account/chat is not authorized to use Scheme-Intel. (Unauthorized)"
 
-        # 2. Intent & Execution Path Resolution
-        intent: ResolvedIntent = IntentResolver.resolve(raw_text)
-        logger.info("[TELEGRAM] Query resolved: '%s' -> intent=%s, symbol=%s", raw_text, intent.intent_type.value, intent.symbol or "none")
+        # 2. Determine User Session & Active Scheme
+        effective_uid = str(user_id or chat_id or "default_user")
+        active_scheme = self.session_store.get_active_scheme(effective_uid, default_scheme="gobardhan")
+
+        # 3. Intent & Execution Path Resolution
+        intent: ResolvedIntent = IntentResolver.resolve(raw_text, active_scheme=active_scheme)
+        logger.info("[TELEGRAM] Query resolved: '%s' -> intent=%s, symbol=%s, scheme=%s", raw_text, intent.intent_type.value, intent.symbol or "none", active_scheme)
         logger.info("[TELEGRAM] Execution path: %s", intent.execution_path.value)
         if intent.symbol:
             logger.info("[TELEGRAM] Snapshot lookup=%s", intent.symbol)
 
-        # 3. Persistent Request Logging BEFORE Processing
+        # 4. Handle Scheme Switch Intent
+        if intent.intent_type == IntentType.SWITCH_SCHEME:
+            target = (intent.scheme_id or "").strip().lower()
+            if not target:
+                response = (
+                    "⚠️ Please specify a scheme to switch to.\n"
+                    "Example: `/switch samudra_manthan` or `/switch gobardhan`.\n\n"
+                    "Use `/schemes` to view registered schemes."
+                )
+                self.request_store.mark_completed(effective_req_id, response)
+                return response
+
+            if target not in SchemeRegistry.list_scheme_ids():
+                response = render_unknown_scheme(target)
+                self.request_store.mark_completed(effective_req_id, response)
+                return response
+
+            # Hard licensing gate before switching
+            authorized, reason = self.entitlement_service.authorize_access(
+                scheme_id=target,
+                user_id=user_id,
+                chat_id=chat_id,
+            )
+            if not authorized:
+                logger.warning("[TELEGRAM] User %s switch to %s blocked: %s", effective_uid, target, reason)
+                response = f"⛔ *ACCESS DENIED*\n\nYou do not have an active license for scheme `{target}`.\n_{reason}_"
+                self.request_store.mark_completed(effective_req_id, response)
+                return response
+
+            # Persist session switch
+            cid = self.entitlement_service.resolve_customer(user_id=user_id, chat_id=chat_id)
+            self.session_store.set_active_scheme(effective_uid, target, customer_id=cid)
+            scfg = SchemeRegistry.get(target)
+            s_name = scfg.name if scfg else target
+            response = (
+                f"🔄 *Active Scheme Switched*\n\n"
+                f"Active scheme is now set to *{s_name}* (`{target}`).\n\n"
+                f"All subsequent watchlist, stock, setup, and research queries will now use this scheme scope."
+            )
+            self.request_store.mark_completed(effective_req_id, response)
+            return response
+
+        # 5. Hard Commercial Entitlement Gate Before Scheme Data Retrieval
+        if intent.intent_type not in (
+            IntentType.START,
+            IntentType.HELP,
+            IntentType.HEALTH_CHECK,
+            IntentType.SCHEMES,
+            IntentType.UNKNOWN,
+            IntentType.STOCK_WHY_PROMPT,
+            IntentType.STOCK_WHAT_PROMPT,
+            IntentType.STOCK_WHEN_PROMPT,
+            IntentType.STOCK_PROMPT,
+        ):
+            # For explicit scheme lookup (/scheme <id>), check the requested scheme; for others, check active_scheme
+            check_scheme = intent.scheme_id if intent.intent_type == IntentType.SCHEME_LOOKUP else active_scheme
+            check_feat = "research" if (intent.execution_path == ExecutionPath.RESEARCH or intent.intent_type == IntentType.RESEARCH_REQUEST) else None
+
+            authorized, reason = self.entitlement_service.authorize_access(
+                scheme_id=check_scheme,
+                user_id=user_id,
+                chat_id=chat_id,
+                feature=check_feat,
+            )
+            if not authorized:
+                logger.warning("[AUTH] Blocked access to %s for user %s: %s", check_scheme, effective_uid, reason)
+                response = f"⛔ *ACCESS DENIED*\n\nYou do not have an active license for scheme `{check_scheme}`.\n_{reason}_"
+                self.request_store.mark_completed(effective_req_id, response)
+                return response
+
+        # 6. Persistent Request Logging BEFORE Processing
         self.request_store.log_request(
             raw_query=raw_text,
             user_id=user_id,
@@ -144,15 +225,15 @@ class TelegramMessageRouter:
             request_id=effective_req_id,
         )
 
-        # 4. Route Message by Execution Path
+        # 7. Route Message by Execution Path
         if intent.execution_path == ExecutionPath.RESEARCH or intent.intent_type == IntentType.RESEARCH_REQUEST:
-            return self._handle_research(intent, user_id=user_id, chat_id=chat_id, request_id=effective_req_id)
+            return self._handle_research(intent, user_id=user_id, chat_id=chat_id, request_id=effective_req_id, active_scheme=active_scheme)
 
         if intent.execution_path == ExecutionPath.WORKFLOW or intent.intent_type == IntentType.COMPLEX_QUERY:
-            return self._handle_workflow_query(intent, user_id=user_id, chat_id=chat_id, request_id=effective_req_id)
+            return self._handle_workflow_query(intent, user_id=user_id, chat_id=chat_id, request_id=effective_req_id, active_scheme=active_scheme)
 
         # Default: Path A (FAST)
-        response = self._handle_fast_query(intent)
+        response = self._handle_fast_query(intent, active_scheme=active_scheme)
         self.request_store.mark_completed(effective_req_id, response)
         return response
 
@@ -162,6 +243,7 @@ class TelegramMessageRouter:
         user_id: Optional[str] = None,
         chat_id: Optional[str] = None,
         request_id: Optional[str] = None,
+        active_scheme: str = "gobardhan",
     ) -> str:
         """
         Handle Path B (Complex / Natural Language query):
@@ -195,7 +277,7 @@ class TelegramMessageRouter:
             user_id=user_id,
             normalized_query=intent.normalized_query,
             intent=intent.intent_type.value,
-            scheme_id=intent.scheme_id,
+            scheme_id=intent.scheme_id or active_scheme,
             symbol=intent.symbol,
         )
 
@@ -218,6 +300,7 @@ class TelegramMessageRouter:
         user_id: Optional[str] = None,
         chat_id: Optional[str] = None,
         request_id: Optional[str] = None,
+        active_scheme: str = "gobardhan",
     ) -> str:
         """Enqueue asynchronous research task and return immediate acknowledgement."""
         question = intent.parameters.get("question", "").strip()
@@ -235,7 +318,7 @@ class TelegramMessageRouter:
         self._user_last_research[uid] = now
 
         # Enqueue job in persistent storage
-        scheme_id = intent.scheme_id or "gobardhan"
+        scheme_id = intent.scheme_id or active_scheme or "gobardhan"
         job = self.research_queue.enqueue_job(
             question=question,
             user_id=str(user_id) if user_id else None,
@@ -253,9 +336,9 @@ class TelegramMessageRouter:
 
         return format_research_acknowledgement(job.job_id, question=question)
 
-    def _handle_fast_query(self, intent: ResolvedIntent) -> str:
+    def _handle_fast_query(self, intent: ResolvedIntent, active_scheme: str = "gobardhan") -> str:
         """Execute fast, structured memory retrieval from loaded snapshot (<100ms)."""
-        status, snapshot, status_msg = self.retriever.get_status()
+        status, snapshot, status_msg = self.retriever.get_status(scheme_id=active_scheme)
 
         if intent.intent_type == IntentType.START:
             return render_start_card()
@@ -293,14 +376,18 @@ class TelegramMessageRouter:
         is_stale = (status == SnapshotHealthStatus.STALE)
 
         if intent.intent_type == IntentType.WATCHLIST:
-            return render_watchlist_card(snapshot.companies, is_stale=is_stale)
+            target_scheme = intent.scheme_id or active_scheme
+            companies = self.retriever.get_watchlist(scheme_id=target_scheme)
+            scfg = SchemeRegistry.get(target_scheme)
+            s_name = scfg.name if scfg else target_scheme
+            return render_watchlist_card(companies, is_stale=is_stale, scheme_name=s_name)
 
         if intent.intent_type == IntentType.SCHEMES:
             schemes = self.retriever.list_schemes()
             return render_schemes_list_card(schemes)
 
         if intent.intent_type == IntentType.SCHEME_LOOKUP:
-            scheme_id = intent.scheme_id or "gobardhan"
+            scheme_id = intent.scheme_id or active_scheme
             scheme = self.retriever.get_scheme(scheme_id)
             if not scheme:
                 return render_unknown_scheme(scheme_id)
@@ -308,9 +395,9 @@ class TelegramMessageRouter:
 
         if intent.intent_type in (IntentType.STOCK_LOOKUP, IntentType.STOCK_WHY, IntentType.STOCK_WHAT, IntentType.STOCK_WHEN):
             target_symbol = intent.symbol or intent.parameters.get("unresolved_symbol", "")
-            comp = self.retriever.get_company(target_symbol)
+            comp = self.retriever.get_company(target_symbol, scheme_id=active_scheme)
             if not comp:
-                return render_unknown_stock(target_symbol or "query")
+                return render_unknown_stock(target_symbol or "query", scheme_id=active_scheme)
 
             if intent.intent_type == IntentType.STOCK_WHY:
                 return render_why_card(comp, is_stale=is_stale)
@@ -322,19 +409,21 @@ class TelegramMessageRouter:
                 return render_stock_card(comp, is_stale=is_stale)
 
         if intent.intent_type == IntentType.SETUPS_LOOKUP:
-            setups = self.retriever.get_qualified_setups()
-            return render_setups_card(setups, is_stale=is_stale, updated_str=snapshot.generated_at)
+            target_scheme = intent.scheme_id or active_scheme
+            setups = self.retriever.get_qualified_setups(scheme_id=target_scheme)
+            return render_setups_card(setups, is_stale=is_stale, updated_str=snapshot.generated_at if snapshot else "")
 
         if intent.intent_type == IntentType.WAITING_LOOKUP:
-            waiting = self.retriever.get_waiting_setups()
+            target_scheme = intent.scheme_id or active_scheme
+            waiting = self.retriever.get_waiting_setups(scheme_id=target_scheme)
             return render_waiting_card(waiting, is_stale=is_stale)
 
         if intent.intent_type == IntentType.OUTCOMES_LOOKUP or intent.intent_type == IntentType.PERFORMANCE_LOOKUP:
-            perf = self.retriever.get_performance()
+            perf = self.retriever.get_performance(scheme_id=active_scheme)
             return render_performance_card(perf, is_stale=is_stale)
 
         if intent.intent_type == IntentType.BENCHMARK_LOOKUP:
-            bench = self.retriever.get_benchmark()
+            bench = self.retriever.get_benchmark(scheme_id=active_scheme)
             return render_benchmark_card(bench, is_stale=is_stale)
 
         # Default fallback for unmapped queries - NEVER echo user input

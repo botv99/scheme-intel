@@ -43,19 +43,27 @@ class IntelligenceSnapshotBuilder:
         self.db = db or Stage2Database()
         self.store = store or IntelligenceStore()
 
-    def build(self, stage2_result: Optional[Dict[str, Any]] = None) -> IntelligenceSnapshot:
+    def build(
+        self,
+        stage2_result: Optional[Dict[str, Any]] = None,
+        scheme_id: Optional[str] = None,
+    ) -> IntelligenceSnapshot:
         """
         Construct a fresh IntelligenceSnapshot combining scheme metadata, setup intelligence,
         forward performance metrics, and Nifty 50 benchmark comparison.
+        If scheme_id is provided, snapshot is strictly isolated to that scheme.
         """
         now_utc = datetime.now(timezone.utc).isoformat()
         snapshot_id = f"SNAP-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}"
 
-        # 1. Load active schemes from SchemeRegistry
-        active_schemes = SchemeRegistry.get_active_schemes()
-        if not active_schemes:
-            # Fallback to default GOBARdhan if registry is empty
-            active_schemes = [SchemeRegistry.get_active()]
+        # 1. Load targeted or active schemes from SchemeRegistry
+        if scheme_id:
+            target_scheme = SchemeRegistry.get(scheme_id)
+            active_schemes = [target_scheme] if target_scheme else [SchemeRegistry.get_active()]
+        else:
+            active_schemes = SchemeRegistry.get_active_schemes()
+            if not active_schemes:
+                active_schemes = [SchemeRegistry.get_active()]
 
         scheme_ids = [s.id for s in active_schemes]
         schemes_dict: Dict[str, SchemeIntelligence] = {}
@@ -442,7 +450,27 @@ class IntelligenceSnapshotBuilder:
         )
         return snapshot
 
-    def build_and_save(self, stage2_result: Optional[Dict[str, Any]] = None) -> Path:
-        """Build snapshot and atomically persist to disk."""
-        snapshot = self.build(stage2_result=stage2_result)
-        return self.store.save(snapshot)
+    def build_and_save(
+        self,
+        stage2_result: Optional[Dict[str, Any]] = None,
+        scheme_id: Optional[str] = None,
+        also_save_to_root: bool = False,
+    ) -> Path:
+        """Build snapshot and atomically persist to disk under scheme namespace."""
+        snapshot = self.build(stage2_result=stage2_result, scheme_id=scheme_id)
+        if scheme_id:
+            store = IntelligenceStore.get_store_for_scheme(scheme_id)
+            root_compat = also_save_to_root or (scheme_id.lower() == "gobardhan")
+            return store.save(snapshot, also_save_to_root=root_compat)
+        return self.store.save(snapshot, also_save_to_root=True)
+
+    def build_all_schemes(self, stage2_result: Optional[Dict[str, Any]] = None) -> Dict[str, Path]:
+        """Build and save isolated snapshots for all registered enabled schemes."""
+        saved_paths: Dict[str, Path] = {}
+        for scheme in SchemeRegistry.get_active_schemes():
+            saved_paths[scheme.id] = self.build_and_save(
+                stage2_result=stage2_result,
+                scheme_id=scheme.id,
+                also_save_to_root=(scheme.id.lower() == "gobardhan"),
+            )
+        return saved_paths

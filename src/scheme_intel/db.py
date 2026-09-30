@@ -207,6 +207,7 @@ class SchemeIntelDB:
             "affected_business_segment": "TEXT",
             "related_scheme": "TEXT",
             "related_sector": "TEXT",
+            "scheme_id": "TEXT DEFAULT 'gobardhan'",
         }
         setup_cols = {
             "sma100": "REAL",
@@ -221,6 +222,7 @@ class SchemeIntelDB:
             "swing_high": "REAL",
             "swing_low": "REAL",
             "rs_nifty": "REAL",
+            "scheme_id": "TEXT DEFAULT 'gobardhan'",
         }
         # Check existing columns in catalysts
         cursor = conn.execute("PRAGMA table_info(catalysts)")
@@ -241,6 +243,22 @@ class SchemeIntelDB:
                     conn.execute(f"ALTER TABLE setups ADD COLUMN {col} {col_type}")
                 except sqlite3.OperationalError:
                     pass
+
+        # Ensure scheme_id in runs table
+        cursor = conn.execute("PRAGMA table_info(runs)")
+        existing_runs = {row["name"] for row in cursor.fetchall()}
+        if "scheme_id" not in existing_runs:
+            try:
+                conn.execute("ALTER TABLE runs ADD COLUMN scheme_id TEXT DEFAULT 'gobardhan'")
+            except sqlite3.OperationalError:
+                pass
+
+        try:
+            from .storage.migrations import apply_migrations
+            apply_migrations(conn)
+        except Exception as e:
+            logger.debug("apply_migrations notice in db.py: %s", e)
+
         conn.commit()
 
     # ------------------------------------------------------------------

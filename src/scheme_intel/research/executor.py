@@ -16,6 +16,8 @@ from .formatter import format_research_result, format_research_failure
 from .orchestrator import ResearchOrchestrator, ResearchProvenance, search_internet_for_research
 from ..schemes.registry import SchemeRegistry
 from ..schemes.models import SchemeConfig
+from ..intelligence_memory.store import IntelligenceStore
+from ..intelligence_memory.memory_store import SchemeMemoryFactStore
 from ..stage2.providers.manager import LLMProviderManager
 from ..stage2.providers.base import ProviderResponse, AllProvidersExhaustedError
 from ..logger import get_logger
@@ -35,9 +37,14 @@ class ResearchExecutor:
         self,
         provider_manager: Optional[LLMProviderManager] = None,
         orchestrator: Optional[ResearchOrchestrator] = None,
+        memory_store: Optional[SchemeMemoryFactStore] = None,
+        memory_fact_store: Optional[SchemeMemoryFactStore] = None,
+        intelligence_store: Optional[Any] = None,
     ):
         self.provider_manager = provider_manager or LLMProviderManager()
         self.orchestrator = orchestrator or ResearchOrchestrator(provider_manager=self.provider_manager)
+        self.memory_store = memory_fact_store or memory_store or SchemeMemoryFactStore()
+        self.intelligence_store = intelligence_store
         self.last_provenance: Optional[ResearchProvenance] = None
         self.providers_attempted: List[str] = []
         self.providers_successful: List[str] = []
@@ -88,22 +95,43 @@ class ResearchExecutor:
         except Exception as e:
             logger.debug("Internet search in executor encountered error: %s", e)
 
-        # 1. Search latest intelligence snapshot (data/intelligence/latest.json)
-        snap_path = REPO_ROOT / "data" / "intelligence" / "latest.json"
-        if snap_path.exists():
-            try:
-                snap_json = json.loads(snap_path.read_text(encoding="utf-8"))
-                for sym, comp in snap_json.get("companies", {}).items():
-                    name = comp.get("name", "").lower()
-                    short_s = comp.get("short_symbol", "").lower()
-                    if short_s in q_lower or name in q_lower:
-                        company_data[sym] = comp
-                        for c in comp.get("catalysts", []):
-                            catalysts.append(f"{comp.get('short_symbol')}: {c}")
-                        if comp.get("catalyst") and comp.get("catalyst") not in catalysts:
-                            catalysts.append(f"{comp.get('short_symbol')}: {comp.get('catalyst')}")
-            except Exception as e:
-                logger.debug("Error reading snapshot for research: %s", e)
+        # 1. Search scheme-isolated snapshot (data/intelligence/{scheme_id}/latest.json)
+        try:
+            scheme_store = IntelligenceStore.get_store_for_scheme(scheme.id)
+            snap = scheme_store.load()
+            if not snap:
+                snap = IntelligenceStore().load()
+            if snap:
+                for sym, comp in snap.companies.items():
+                    # Reject companies that do not belong to this scheme
+                    if not scheme.is_company_in_universe(sym):
+                        continue
+                    name = (comp.name or "").lower()
+                    short_s = (comp.short_symbol or "").lower()
+                    if short_s in q_lower or name in q_lower or sym.lower() in q_lower:
+                        company_data[sym] = comp.model_dump()
+                        for c in comp.catalysts:
+                            catalysts.append(f"{comp.short_symbol}: {c}")
+                        if comp.catalyst and comp.catalyst not in catalysts:
+                            catalysts.append(f"{comp.short_symbol}: {comp.catalyst}")
+        except Exception as e:
+            logger.debug("Error reading scheme snapshot for research: %s", e)
+
+        # 1b. Query scheme-isolated durable memory facts
+        try:
+            mem_facts = self.memory_store.query_facts(scheme_id=scheme.id, limit=5)
+            for mf in mem_facts:
+                ev_dict = {
+                    "source": f"Memory ({mf.source or scheme.name})",
+                    "title": f"Fact [{mf.entity}]: {mf.event_text[:100]}",
+                    "url": "",
+                    "date": mf.timestamp[:10],
+                    "snippet": mf.event_text[:250],
+                }
+                evidence_items.append(ev_dict)
+                sources.append(ev_dict)
+        except Exception as e:
+            logger.debug("Error querying durable memory for research: %s", e)
 
         # 2. Search data/ingested.json (news & exchange filings)
         ingested_path = REPO_ROOT / "data" / "ingested.json"
@@ -170,6 +198,27 @@ class ResearchExecutor:
         """
         logger.info("Executing deep research job %s: '%s'", job.job_id, job.question)
         scheme = SchemeRegistry.get(job.scheme_id) or SchemeRegistry.get_active()
+        q_upper = (job.question or "").strip().upper()
+
+        # Hard scheme boundary check: reject out-of-universe company queries
+        for other_scheme in SchemeRegistry.list_schemes():
+            if other_scheme.id.lower() == scheme.id.lower():
+                continue
+            for other_stock in other_scheme.watchlist:
+                terms = [other_stock.name.upper(), other_stock.symbol.upper(), other_stock.symbol.split(".")[0].upper()] + [a.upper() for a in other_stock.aliases]
+                for term in terms:
+                    import re
+                    if len(term) >= 3 and re.search(rf"\b{re.escape(term)}\b", q_upper):
+                        if not scheme.is_company_in_universe(term):
+                            logger.info(
+                                "[RESEARCH ISOLATION] Query '%s' for '%s' rejected: not in %s universe",
+                                job.question[:40],
+                                other_stock.name,
+                                scheme.name,
+                            )
+                            msg = f"⚠️ *Universe Isolation Notice*\n\n{other_stock.name} is not currently in the {scheme.name} research universe."
+                            return msg, []
+
         dossier = self.gather_evidence(job.question, scheme)
 
         # Extract primary company metrics if any stock was referenced

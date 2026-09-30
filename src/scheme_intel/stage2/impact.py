@@ -78,12 +78,23 @@ def score_catalyst_impact(
         for t in terms if t and len(t.strip()) >= 2
     )
 
+    active_keywords = POLICY_SECTOR_KEYWORDS
+    stock_scheme_id = getattr(stock, "scheme_id", None)
+    if stock_scheme_id:
+        try:
+            from ..schemes.registry import SchemeRegistry
+            scfg = SchemeRegistry.get(stock_scheme_id)
+            if scfg and scfg.keywords:
+                active_keywords = scfg.keywords
+        except Exception:
+            pass
+
     is_official_filing = (
         news.source_tier in (1, 2) or
         any(x in news.source.lower() for x in ["filing", "announcement", "exchange", "bse", "nse", "pib", "ministry"])
     )
     is_policy_catalyst = (
-        any(pk in full_text for pk in POLICY_SECTOR_KEYWORDS) or
+        any(pk in full_text for pk in active_keywords) or
         any(ik in full_text for ik in INDIRECT_KEYWORDS)
     )
     matches_sector = any(s.lower() in full_text for s in stock.sectors)

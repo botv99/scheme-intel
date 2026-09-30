@@ -1,4 +1,4 @@
-"""Daily market-data ingestion layer (screener.in, NSE, BSE, financial media)."""
+"""Daily market-data ingestion layer (screener.in, NSE, BSE, financial media, multi-scheme feeds)."""
 
 from .models import (
     PriceSnapshot,
@@ -6,7 +6,10 @@ from .models import (
     Announcement,
     MediaArticle,
     IngestionResult,
+    NormalizedSchemeEvent,
+    SchemeIngestionBatch,
 )
+from .coordinator import SchemeIngestionCoordinator, SchemeBoundaryViolationError
 
 __all__ = [
     "PriceSnapshot",
@@ -14,4 +17,8 @@ __all__ = [
     "Announcement",
     "MediaArticle",
     "IngestionResult",
+    "NormalizedSchemeEvent",
+    "SchemeIngestionBatch",
+    "SchemeIngestionCoordinator",
+    "SchemeBoundaryViolationError",
 ]

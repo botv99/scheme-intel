@@ -7,6 +7,8 @@ data/scheme_intel.db
 data/scheme_intel.db-wal
 data/scheme_intel.db-shm
 data/telegram_requests.db*
+data/intelligence/history/
+data/memory/
 .env
 .env.*
 !.env.example

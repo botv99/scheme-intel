@@ -104,3 +104,42 @@ class IngestionResult:
 
     def to_dict(self) -> dict:
         return asdict(self)
+
+
+@dataclass
+class NormalizedSchemeEvent:
+    """
+    Standardized cross-scheme intelligence event.
+    Explicitly carries scheme_id to prevent cross-scheme contamination.
+    """
+    event_id: str
+    scheme_id: str
+    source_id: str
+    title: str
+    content: str
+    event_type: str = "POLICY_ANNOUNCEMENT"
+    summary: str = ""
+    published_at: Optional[str] = None
+    retrieved_at: Optional[str] = None
+    entities: list[str] = field(default_factory=list)
+    evidence: list[dict] = field(default_factory=list)
+    importance: str = "MEDIUM"
+    confidence: float = 1.0
+    url: str = ""
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass
+class SchemeIngestionBatch:
+    """Ingestion batch for a specific scheme execution."""
+    scheme_id: str
+    run_id: str
+    timestamp: str
+    events: list[NormalizedSchemeEvent] = field(default_factory=list)
+    source_health: dict[str, str] = field(default_factory=dict)
+    errors: list[dict] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        return asdict(self)

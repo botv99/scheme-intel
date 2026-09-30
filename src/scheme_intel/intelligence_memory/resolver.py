@@ -29,6 +29,7 @@ class IntentType(str, Enum):
     HEALTH_CHECK = "HEALTH_CHECK"
     SCHEMES = "SCHEMES"
     SCHEME_LOOKUP = "SCHEME_LOOKUP"
+    SWITCH_SCHEME = "SWITCH_SCHEME"
     WATCHLIST = "WATCHLIST"
     STOCK_LOOKUP = "STOCK_LOOKUP"
     STOCK_WHY = "STOCK_WHY"
@@ -64,6 +65,7 @@ class ResolvedIntent(BaseModel):
 
 
 GLOBAL_STOCK_ALIASES: Dict[str, Dict[str, Any]] = {
+    # GOBARdhan
     "TRUALT": {"symbol": "TRUALT.NS", "short": "TRUALT", "name": "TruAlt Bioenergy", "scheme": "gobardhan"},
     "TRUALT.NS": {"symbol": "TRUALT.NS", "short": "TRUALT", "name": "TruAlt Bioenergy", "scheme": "gobardhan"},
     "TRUALT BIOENERGY": {"symbol": "TRUALT.NS", "short": "TRUALT", "name": "TruAlt Bioenergy", "scheme": "gobardhan"},
@@ -93,6 +95,23 @@ GLOBAL_STOCK_ALIASES: Dict[str, Dict[str, Any]] = {
     "IONEXCHANG": {"symbol": "IONEXCHANG.NS", "short": "IONEXCHANG", "name": "Ion Exchange", "scheme": "gobardhan"},
     "IONEXCHANG.NS": {"symbol": "IONEXCHANG.NS", "short": "IONEXCHANG", "name": "Ion Exchange", "scheme": "gobardhan"},
     "ION EXCHANGE": {"symbol": "IONEXCHANG.NS", "short": "IONEXCHANG", "name": "Ion Exchange", "scheme": "gobardhan"},
+
+    # Samudra Manthan
+    "ONGC": {"symbol": "ONGC.NS", "short": "ONGC", "name": "Oil and Natural Gas Corporation", "scheme": "samudra_manthan"},
+    "ONGC.NS": {"symbol": "ONGC.NS", "short": "ONGC", "name": "Oil and Natural Gas Corporation", "scheme": "samudra_manthan"},
+    "OIL": {"symbol": "OIL.NS", "short": "OIL", "name": "Oil India Limited", "scheme": "samudra_manthan"},
+    "OIL.NS": {"symbol": "OIL.NS", "short": "OIL", "name": "Oil India Limited", "scheme": "samudra_manthan"},
+    "OIL INDIA": {"symbol": "OIL.NS", "short": "OIL", "name": "Oil India Limited", "scheme": "samudra_manthan"},
+    "RELIANCE": {"symbol": "RELIANCE.NS", "short": "RELIANCE", "name": "Reliance Industries", "scheme": "samudra_manthan"},
+    "RELIANCE.NS": {"symbol": "RELIANCE.NS", "short": "RELIANCE", "name": "Reliance Industries", "scheme": "samudra_manthan"},
+    "RIL": {"symbol": "RELIANCE.NS", "short": "RELIANCE", "name": "Reliance Industries", "scheme": "samudra_manthan"},
+    "VEDL": {"symbol": "VEDL.NS", "short": "VEDL", "name": "Vedanta Limited", "scheme": "samudra_manthan"},
+    "VEDL.NS": {"symbol": "VEDL.NS", "short": "VEDL", "name": "Vedanta Limited", "scheme": "samudra_manthan"},
+    "VEDANTA": {"symbol": "VEDL.NS", "short": "VEDL", "name": "Vedanta Limited", "scheme": "samudra_manthan"},
+    "JINDAL DRILLING": {"symbol": "JINDCOT.NS", "short": "JINDCOT", "name": "Jindal Drilling & Industries", "scheme": "samudra_manthan"},
+    "JINDCOT": {"symbol": "JINDCOT.NS", "short": "JINDCOT", "name": "Jindal Drilling & Industries", "scheme": "samudra_manthan"},
+    "SEAMEC": {"symbol": "SEAMECLTD.NS", "short": "SEAMECLTD", "name": "SEAMEC Limited", "scheme": "samudra_manthan"},
+    "DOLPHIN": {"symbol": "DOLPHIN.NS", "short": "DOLPHIN", "name": "Dolphin Offshore Enterprises", "scheme": "samudra_manthan"},
 }
 
 STOCK_SLASH_SHORTCUTS: Dict[str, str] = {
@@ -109,6 +128,15 @@ STOCK_SLASH_SHORTCUTS: Dict[str, str] = {
     "/ioc": "IOC",
     "/iocl": "IOC",
     "/ionexchang": "IONEXCHANG",
+    "/ongc": "ONGC",
+    "/oil": "OIL",
+    "/reliance": "RELIANCE",
+    "/ril": "RELIANCE",
+    "/vedl": "VEDL",
+    "/vedanta": "VEDL",
+    "/jindcot": "JINDCOT",
+    "/seamec": "SEAMEC",
+    "/dolphin": "DOLPHIN",
 }
 
 
@@ -283,7 +311,7 @@ class IntentResolver:
         return False
 
     @classmethod
-    def resolve(cls, message: str) -> ResolvedIntent:
+    def resolve(cls, message: str, active_scheme: Optional[str] = None) -> ResolvedIntent:
         """
         Parse user Telegram message into a ResolvedIntent with execution_path:
         - FAST: Answered instantly (<100ms) from local snapshot. Zero GitHub Actions.
@@ -292,11 +320,13 @@ class IntentResolver:
         """
         raw = (message or "").strip()
         normalized = cls.normalize_query(raw)
+        effective_scheme = (active_scheme or "gobardhan").strip().lower()
 
         if not raw:
             return ResolvedIntent(
                 intent_type=IntentType.UNKNOWN,
                 execution_path=ExecutionPath.FAST,
+                scheme_id=effective_scheme,
                 raw_query=raw,
                 normalized_query=normalized,
             )
@@ -309,7 +339,7 @@ class IntentResolver:
         # 1. Explicit Slash Commands (FAST & RESEARCH)
         # ====================================================
         if first_token.startswith("/"):
-            # Stock shortcuts: /trualt, /praj, etc.
+            # Stock shortcuts: /trualt, /praj, /ongc, etc.
             if first_token in STOCK_SLASH_SHORTCUTS:
                 alias_key = STOCK_SLASH_SHORTCUTS[first_token]
                 stock_match = cls.resolve_stock(alias_key)
@@ -327,22 +357,48 @@ class IntentResolver:
                     )
 
             if first_token in ("/start",):
-                return ResolvedIntent(intent_type=IntentType.START, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+                return ResolvedIntent(intent_type=IntentType.START, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
 
             if first_token in ("/help",):
-                return ResolvedIntent(intent_type=IntentType.HELP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+                return ResolvedIntent(intent_type=IntentType.HELP, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
 
             if first_token in ("/health", "/status"):
-                return ResolvedIntent(intent_type=IntentType.HEALTH_CHECK, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+                return ResolvedIntent(intent_type=IntentType.HEALTH_CHECK, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
+
+            if first_token in ("/switch",):
+                target = remainder.strip().lower()
+                target_scheme = target
+                scheme = cls.resolve_scheme(target) if target else None
+                if scheme:
+                    target_scheme = scheme.id
+                return ResolvedIntent(
+                    intent_type=IntentType.SWITCH_SCHEME,
+                    execution_path=ExecutionPath.FAST,
+                    scheme_id=target_scheme,
+                    raw_query=raw,
+                    normalized_query=normalized,
+                    parameters={"target_scheme": target_scheme},
+                )
 
             if first_token in ("/schemes",):
-                return ResolvedIntent(intent_type=IntentType.SCHEMES, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+                return ResolvedIntent(intent_type=IntentType.SCHEMES, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
 
             if first_token in ("/watchlist",):
-                return ResolvedIntent(intent_type=IntentType.WATCHLIST, execution_path=ExecutionPath.FAST, scheme_id="gobardhan", raw_query=raw, normalized_query=normalized)
+                target_scheme = effective_scheme
+                if remainder:
+                    scheme = cls.resolve_scheme(remainder)
+                    if scheme:
+                        target_scheme = scheme.id
+                return ResolvedIntent(
+                    intent_type=IntentType.WATCHLIST,
+                    execution_path=ExecutionPath.FAST,
+                    scheme_id=target_scheme,
+                    raw_query=raw,
+                    normalized_query=normalized,
+                )
 
-            if first_token in ("/scheme",):
-                scheme_target = remainder or "gobardhan"
+            if first_token in ("/scheme", "/snapshot"):
+                scheme_target = remainder or effective_scheme
                 scheme = cls.resolve_scheme(scheme_target)
                 return ResolvedIntent(
                     intent_type=IntentType.SCHEME_LOOKUP,
@@ -352,24 +408,54 @@ class IntentResolver:
                     normalized_query=normalized,
                 )
 
-            if first_token in ("/setups",):
-                return ResolvedIntent(intent_type=IntentType.SETUPS_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+            if first_token in ("/setups", "/trades"):
+                return ResolvedIntent(
+                    intent_type=IntentType.SETUPS_LOOKUP,
+                    execution_path=ExecutionPath.FAST,
+                    scheme_id=effective_scheme,
+                    raw_query=raw,
+                    normalized_query=normalized,
+                )
 
             if first_token in ("/waiting",):
-                return ResolvedIntent(intent_type=IntentType.WAITING_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+                return ResolvedIntent(
+                    intent_type=IntentType.WAITING_LOOKUP,
+                    execution_path=ExecutionPath.FAST,
+                    scheme_id=effective_scheme,
+                    raw_query=raw,
+                    normalized_query=normalized,
+                )
 
             if first_token in ("/outcomes",):
-                return ResolvedIntent(intent_type=IntentType.OUTCOMES_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+                return ResolvedIntent(
+                    intent_type=IntentType.OUTCOMES_LOOKUP,
+                    execution_path=ExecutionPath.FAST,
+                    scheme_id=effective_scheme,
+                    raw_query=raw,
+                    normalized_query=normalized,
+                )
 
             if first_token in ("/performance",):
-                return ResolvedIntent(intent_type=IntentType.PERFORMANCE_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+                return ResolvedIntent(
+                    intent_type=IntentType.PERFORMANCE_LOOKUP,
+                    execution_path=ExecutionPath.FAST,
+                    scheme_id=effective_scheme,
+                    raw_query=raw,
+                    normalized_query=normalized,
+                )
 
             if first_token in ("/benchmark",):
-                return ResolvedIntent(intent_type=IntentType.BENCHMARK_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+                return ResolvedIntent(
+                    intent_type=IntentType.BENCHMARK_LOOKUP,
+                    execution_path=ExecutionPath.FAST,
+                    scheme_id=effective_scheme,
+                    raw_query=raw,
+                    normalized_query=normalized,
+                )
 
             if first_token in ("/research",):
                 question = remainder
-                scheme_id = "gobardhan"
+                scheme_id = effective_scheme
                 for s in SchemeRegistry.list_schemes():
                     if s.id.lower() in question.lower() or s.name.lower() in question.lower():
                         scheme_id = s.id
@@ -554,33 +640,34 @@ class IntentResolver:
                 normalized_query=normalized,
             )
 
-        if "setup" in lowered:
-            return ResolvedIntent(intent_type=IntentType.SETUPS_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+        if "setup" in lowered or "trade" in lowered:
+            return ResolvedIntent(intent_type=IntentType.SETUPS_LOOKUP, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
 
         if "waiting" in lowered or "wait" in lowered:
-            return ResolvedIntent(intent_type=IntentType.WAITING_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+            return ResolvedIntent(intent_type=IntentType.WAITING_LOOKUP, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
 
         if "performance" in lowered or "win rate" in lowered or "expectancy" in lowered:
-            return ResolvedIntent(intent_type=IntentType.PERFORMANCE_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+            return ResolvedIntent(intent_type=IntentType.PERFORMANCE_LOOKUP, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
 
         if "benchmark" in lowered or "nifty" in lowered:
-            return ResolvedIntent(intent_type=IntentType.BENCHMARK_LOOKUP, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+            return ResolvedIntent(intent_type=IntentType.BENCHMARK_LOOKUP, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
 
         if "schemes" in lowered or "list schemes" in lowered:
-            return ResolvedIntent(intent_type=IntentType.SCHEMES, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
+            return ResolvedIntent(intent_type=IntentType.SCHEMES, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
 
         if "watchlist" in lowered:
-            return ResolvedIntent(intent_type=IntentType.WATCHLIST, execution_path=ExecutionPath.FAST, scheme_id="gobardhan", raw_query=raw, normalized_query=normalized)
+            return ResolvedIntent(intent_type=IntentType.WATCHLIST, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
 
-        if "gobardhan" in lowered:
-            return ResolvedIntent(intent_type=IntentType.SCHEME_LOOKUP, execution_path=ExecutionPath.FAST, scheme_id="gobardhan", raw_query=raw, normalized_query=normalized)
+        for s in SchemeRegistry.list_schemes():
+            if s.id.lower() in lowered or s.name.lower() in lowered:
+                return ResolvedIntent(intent_type=IntentType.SCHEME_LOOKUP, execution_path=ExecutionPath.FAST, scheme_id=s.id, raw_query=raw, normalized_query=normalized)
 
         # Fallback question -> WORKFLOW
         if "?" in raw or any(q in lowered for q in ("who", "where", "how", "tell me", "explain", "analyze")):
             return ResolvedIntent(
                 intent_type=IntentType.COMPLEX_QUERY,
                 execution_path=ExecutionPath.WORKFLOW,
-                scheme_id="gobardhan",
+                scheme_id=effective_scheme,
                 raw_query=raw,
                 normalized_query=normalized,
             )

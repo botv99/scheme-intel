@@ -40,6 +40,9 @@ class SnapshotSyncer:
         effective_repo = repo or os.getenv("GITHUB_REPOSITORY") or os.getenv("SCHEME_INTEL_REPO", DEFAULT_REPO)
         effective_branch = branch or os.getenv("SNAPSHOT_SYNC_BRANCH", DEFAULT_BRANCH)
 
+        self.repo = effective_repo
+        self.branch = effective_branch
+
         self.sync_url = (
             sync_url
             or os.getenv("SNAPSHOT_SYNC_URL")
@@ -62,16 +65,28 @@ class SnapshotSyncer:
         self.last_sync_status: str = "NEVER"
         self.last_error: Optional[str] = None
 
-    def sync_once(self) -> bool:
+    def sync_once(self, scheme_id: Optional[str] = None) -> bool:
         """
         Perform a single non-blocking check against the remote repository snapshot.
         Atomically updates the local store only if the remote snapshot is valid and newer.
+        If scheme_id is provided, syncs that scheme's specific snapshot namespace.
         """
         if not self.enabled:
             logger.debug("[SNAPSHOT_SYNC] Sync is disabled by configuration.")
             return False
 
-        logger.debug("[SNAPSHOT_SYNC] Checking for updated snapshot from: %s", self.sync_url)
+        effective_store = (
+            IntelligenceStore.get_store_for_scheme(scheme_id)
+            if scheme_id
+            else self.store
+        )
+        url = (
+            f"https://raw.githubusercontent.com/{self.repo}/{self.branch}/data/intelligence/{scheme_id}/latest.json"
+            if scheme_id
+            else self.sync_url
+        )
+
+        logger.debug("[SNAPSHOT_SYNC] Checking for updated snapshot from: %s", url)
         headers = {
             "User-Agent": "Scheme-Intel-Sync/1.0",
         }
@@ -80,13 +95,13 @@ class SnapshotSyncer:
             headers["Authorization"] = f"Bearer {gh_token}"
 
         try:
-            resp = requests.get(self.sync_url, headers=headers, timeout=15)
+            resp = requests.get(url, headers=headers, timeout=15)
             if resp.status_code != 200:
                 self.last_sync_status = f"HTTP_{resp.status_code}"
                 logger.debug(
                     "[SNAPSHOT_SYNC] Remote repository returned HTTP %d for snapshot: %s",
                     resp.status_code,
-                    self.sync_url,
+                    url,
                 )
                 return False
 
@@ -94,7 +109,7 @@ class SnapshotSyncer:
             self.last_sync_time = time.time()
 
             # Compare against current local snapshot
-            local_status, local_snap, _ = self.store.load_with_status()
+            local_status, local_snap, _ = effective_store.load_with_status()
             should_update = False
 
             if local_status in (SnapshotHealthStatus.MISSING, SnapshotHealthStatus.INVALID) or not local_snap:
@@ -111,12 +126,13 @@ class SnapshotSyncer:
                     )
 
             if should_update:
-                self.store.save(remote_snapshot)
+                effective_store.save(remote_snapshot)
                 self.last_sync_status = "UPDATED"
                 self.last_error = None
                 logger.info(
-                    "[SNAPSHOT_SYNC] Successfully synchronized new snapshot: %s (age: %s)",
+                    "[SNAPSHOT_SYNC] Successfully synchronized new snapshot: %s (scheme: %s, age: %s)",
                     remote_snapshot.snapshot_id,
+                    scheme_id or "default",
                     remote_snapshot.get_age_display(),
                 )
                 return True
@@ -128,8 +144,16 @@ class SnapshotSyncer:
         except Exception as e:
             self.last_sync_status = "FAILED"
             self.last_error = str(e)
-            logger.warning("[SNAPSHOT_SYNC] Snapshot sync check failed: %s", e)
+            logger.warning("[SNAPSHOT_SYNC] Snapshot sync check failed for %s: %s", scheme_id or "root", e)
             return False
+
+    def sync_all(self) -> dict[str, bool]:
+        """Synchronize root snapshot and all registered scheme snapshot namespaces."""
+        from ..schemes.registry import SchemeRegistry
+        results = {"root": self.sync_once()}
+        for sid in SchemeRegistry.list_scheme_ids():
+            results[sid] = self.sync_once(scheme_id=sid)
+        return results
 
     def run_forever(self, interval_seconds: Optional[float] = None) -> None:
         """Continuously sync snapshot at interval until stop() is called."""

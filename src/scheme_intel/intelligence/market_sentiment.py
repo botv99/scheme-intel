@@ -397,26 +397,53 @@ class MarketSentimentEngine:
         positive_factors = []
         negative_factors = []
         neutral_uncertain_factors = []
-        channels = [
-            "Domestic capital expenditure allocation & central subsidy release",
-            "Crude oil pricing vs compressed biogas (CBG) procurement parity",
-            "Domestic banking credit availability for infrastructure projects",
-        ]
+        norm_sid = (scheme_id or "").strip().lower()
+        if norm_sid == "samudra_manthan":
+            channels = [
+                "Upstream exploration capex allocation & DGH block award clearance",
+                "Benchmark Brent crude pricing impact on deepwater project economics and upstream IRR",
+                "Global offshore drilling rig availability and charter dayrates",
+                "USD/INR exchange rate impact on imported subsea equipment and exploration contracts",
+            ]
+            if indian_sentiment.classification == SentimentClassification.BULLISH:
+                positive_factors.append("Constructive domestic capital environment supports substantial upstream offshore capex.")
+                positive_factors.append("National energy security priorities accelerate fast-track environmental and block clearances.")
+            elif indian_sentiment.classification == SentimentClassification.BEARISH:
+                negative_factors.append("Domestic market uncertainty may constrain debt syndication for high-risk frontier wells.")
+            else:
+                neutral_uncertain_factors.append("Domestic sentiment steady; drilling schedules governed by seasonal monsoon windows.")
 
-        if indian_sentiment.classification == SentimentClassification.BULLISH:
-            positive_factors.append("Constructive domestic equity breadth supports capital raising for project capex.")
-            positive_factors.append("Sustained budgetary policy focus on renewable energy transition.")
-        elif indian_sentiment.classification == SentimentClassification.BEARISH:
-            negative_factors.append("Broader domestic market volatility may induce temporary execution delays in private capex.")
-        else:
-            neutral_uncertain_factors.append("Domestic sentiment is range-bound; commercial execution remains volume-driven.")
+            if global_sentiment.crude_oil and any(k in str(global_sentiment.crude_oil).lower() for k in ("up", "+", "high", "rise")):
+                positive_factors.append("Firm Brent crude benchmarks improve upstream project NPV and incentivize deepwater drilling.")
+            elif global_sentiment.crude_oil and any(k in str(global_sentiment.crude_oil).lower() for k in ("down", "-", "drop", "low")):
+                negative_factors.append("Softening benchmark crude prices reduce E&P cash generation for multi-year offshore campaigns.")
 
-        if global_sentiment.classification == SentimentClassification.BEARISH:
-            negative_factors.append("Global risk-off tone could limit international technology partnership velocity.")
-        elif global_sentiment.classification == SentimentClassification.BULLISH:
-            positive_factors.append("Global risk-on conditions enhance foreign institutional interest in Indian green transition.")
+            if global_sentiment.classification == SentimentClassification.BEARISH:
+                negative_factors.append("Global risk aversion tightens international subsea EPC and specialist drilling vessel supply.")
+            elif global_sentiment.classification == SentimentClassification.BULLISH:
+                positive_factors.append("Global exploration cycle tailwinds support deepwater rig mobilization into Indian waters.")
+            else:
+                neutral_uncertain_factors.append("Global offshore service costs and rig dayrates remain stable across Indian basins.")
         else:
-            neutral_uncertain_factors.append("Global commodity price range maintains steady feedstock parity without acute inflation.")
+            channels = [
+                "Domestic capital expenditure allocation & central subsidy release",
+                "Crude oil pricing vs compressed biogas (CBG) procurement parity",
+                "Domestic banking credit availability for infrastructure projects",
+            ]
+            if indian_sentiment.classification == SentimentClassification.BULLISH:
+                positive_factors.append("Constructive domestic equity breadth supports capital raising for project capex.")
+                positive_factors.append("Sustained budgetary policy focus on renewable energy transition.")
+            elif indian_sentiment.classification == SentimentClassification.BEARISH:
+                negative_factors.append("Broader domestic market volatility may induce temporary execution delays in private capex.")
+            else:
+                neutral_uncertain_factors.append("Domestic sentiment is range-bound; commercial execution remains volume-driven.")
+
+            if global_sentiment.classification == SentimentClassification.BEARISH:
+                negative_factors.append("Global risk-off tone could limit international technology partnership velocity.")
+            elif global_sentiment.classification == SentimentClassification.BULLISH:
+                positive_factors.append("Global risk-on conditions enhance foreign institutional interest in Indian green transition.")
+            else:
+                neutral_uncertain_factors.append("Global commodity price range maintains steady feedstock parity without acute inflation.")
 
         # Directional impact synthesis
         pos_weight = len(positive_factors)
@@ -537,3 +564,30 @@ class MarketSentimentEngine:
             evidence=evidence,
             timestamp=now_iso,
         )
+
+    @classmethod
+    def analyze_scheme_transmission(
+        cls,
+        scheme_id: str,
+        macro_inputs: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Convenience method for retrieving and analyzing transmission channels for a scheme."""
+        norm_sid = (scheme_id or "").strip().lower()
+        if norm_sid == "samudra_manthan":
+            channels = [
+                {"factor": "Benchmark Brent Crude Pricing", "channel": "Deepwater project economics and upstream IRR"},
+                {"factor": "Offshore Rig Dayrate & Availability", "channel": "Global drilling rig charter costs and mobilization"},
+                {"factor": "USD/INR Exchange Rate", "channel": "Imported subsea equipment and exploration contracts"},
+                {"factor": "DGH Block Award Clearance", "channel": "Upstream exploration capex allocation"},
+            ]
+        else:
+            channels = [
+                {"factor": "Domestic Capital Expenditure", "channel": "Central subsidy release and plant commissioning"},
+                {"factor": "Crude Oil vs CBG Parity", "channel": "Compressed biogas procurement economics"},
+                {"factor": "Banking Credit Availability", "channel": "Project financing for waste-to-energy plants"},
+            ]
+        return {
+            "scheme_id": norm_sid,
+            "transmission_channels": channels,
+            "macro_inputs": macro_inputs or {},
+        }

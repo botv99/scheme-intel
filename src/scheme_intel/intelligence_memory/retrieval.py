@@ -52,51 +52,96 @@ class FastIntelligenceRetriever:
             except Exception:
                 self.freshness_threshold_hours = 26.0
 
-    def get_status(self, force_reload: bool = False) -> Tuple[SnapshotHealthStatus, Optional[IntelligenceSnapshot], str]:
+    def get_status(self, force_reload: bool = False, scheme_id: Optional[str] = None) -> Tuple[SnapshotHealthStatus, Optional[IntelligenceSnapshot], str]:
         """Determine health status: READY, STALE, MISSING, or INVALID."""
+        if self.store and self.store.snapshot_path != DEFAULT_SNAPSHOT_PATH:
+            return self.store.load_with_status(
+                force_reload=force_reload,
+                max_age_hours=self.freshness_threshold_hours,
+            )
+
+        if scheme_id:
+            store = IntelligenceStore.get_store_for_scheme(scheme_id)
+            status, snap, msg = store.load_with_status(
+                force_reload=force_reload,
+                max_age_hours=self.freshness_threshold_hours,
+            )
+            if status != SnapshotHealthStatus.MISSING or not self.store:
+                return status, snap, msg
+
         return self.store.load_with_status(
             force_reload=force_reload,
             max_age_hours=self.freshness_threshold_hours,
         )
 
-    def get_snapshot(self) -> Optional[IntelligenceSnapshot]:
+    def get_snapshot(self, scheme_id: Optional[str] = None) -> Optional[IntelligenceSnapshot]:
         """
         Fetch current snapshot from in-memory cache or disk.
-        Does NOT build on missing unless auto_build_if_missing is explicitly enabled.
+        If scheme_id is provided, loads the scheme-specific snapshot.
         """
+        if self.store and self.store.snapshot_path != DEFAULT_SNAPSHOT_PATH:
+            snap = self.store.load()
+            if snap:
+                return snap
+
+        if scheme_id:
+            store = IntelligenceStore.get_store_for_scheme(scheme_id)
+            snapshot = store.load()
+            if snapshot:
+                return snapshot
+
         snapshot = self.store.load()
         if not snapshot and self.auto_build_if_missing:
             logger.info("auto_build_if_missing enabled: Building initial snapshot...")
             try:
-                self.builder.build_and_save()
+                self.builder.build_and_save(scheme_id=scheme_id)
                 snapshot = self.store.load()
             except Exception as e:
                 logger.error("Failed building initial snapshot: %s", e)
         return snapshot
 
-    def get_company(self, symbol_or_short: str) -> Optional[CompanyIntelligence]:
-        """Fetch company intelligence by ticker, short symbol, or name."""
-        snapshot = self.get_snapshot()
+    def get_company(self, symbol_or_short: str, scheme_id: Optional[str] = None) -> Optional[CompanyIntelligence]:
+        """Fetch company intelligence by ticker, short symbol, or name within optional scheme scope."""
+        snapshot = self.get_snapshot(scheme_id=scheme_id)
         if not snapshot:
             return None
+
+        # Verify scheme membership if scheme_id is specified
+        if scheme_id:
+            from ..schemes.registry import SchemeRegistry
+            scfg = SchemeRegistry.get(scheme_id)
+            if scfg and not scfg.is_company_in_universe(symbol_or_short):
+                # Hard isolation: company is NOT in this scheme's universe!
+                return None
+
         key = symbol_or_short.strip().upper()
         # 1. Exact dictionary key match
         if key in snapshot.companies:
-            return snapshot.companies[key]
+            comp = snapshot.companies[key]
+            if not scheme_id or (comp.scheme_id and comp.scheme_id.lower() == scheme_id.lower()):
+                return comp
 
         # 2. Sans-suffix match (e.g. TRUALT.NS -> TRUALT)
         base_sym = key.split(".")[0]
         if base_sym in snapshot.companies:
-            return snapshot.companies[base_sym]
+            comp = snapshot.companies[base_sym]
+            if not scheme_id or (comp.scheme_id and comp.scheme_id.lower() == scheme_id.lower()):
+                return comp
 
         # 3. Add-suffix match (e.g. TRUALT -> TRUALT.NS or TRUALT.BO)
         if f"{base_sym}.NS" in snapshot.companies:
-            return snapshot.companies[f"{base_sym}.NS"]
+            comp = snapshot.companies[f"{base_sym}.NS"]
+            if not scheme_id or (comp.scheme_id and comp.scheme_id.lower() == scheme_id.lower()):
+                return comp
         if f"{base_sym}.BO" in snapshot.companies:
-            return snapshot.companies[f"{base_sym}.BO"]
+            comp = snapshot.companies[f"{base_sym}.BO"]
+            if not scheme_id or (comp.scheme_id and comp.scheme_id.lower() == scheme_id.lower()):
+                return comp
 
         # 4. Search across all stored company records
         for comp in snapshot.companies.values():
+            if scheme_id and comp.scheme_id and comp.scheme_id.lower() != scheme_id.lower():
+                continue
             if comp.short_symbol.upper() == base_sym or comp.symbol.upper() == key:
                 return comp
             if comp.name.upper() == key or comp.name.upper().startswith(base_sym):
@@ -104,9 +149,19 @@ class FastIntelligenceRetriever:
 
         return None
 
+    def get_watchlist(self, scheme_id: Optional[str] = None) -> List[CompanyIntelligence]:
+        """Fetch all companies for the active scheme watchlist."""
+        snapshot = self.get_snapshot(scheme_id=scheme_id)
+        if not snapshot:
+            return []
+        if not scheme_id:
+            return list(snapshot.companies.values())
+        norm_sid = scheme_id.strip().lower()
+        return [c for c in snapshot.companies.values() if (c.scheme_id or "").lower() == norm_sid]
+
     def get_scheme(self, scheme_id: str) -> Optional[SchemeIntelligence]:
         """Fetch scheme intelligence by scheme ID."""
-        snapshot = self.get_snapshot()
+        snapshot = self.get_snapshot(scheme_id=scheme_id)
         if not snapshot:
             return None
         return snapshot.schemes.get(scheme_id.strip().lower())
@@ -118,44 +173,50 @@ class FastIntelligenceRetriever:
             return []
         return list(snapshot.schemes.values())
 
-    def get_qualified_setups(self) -> List[CompanyIntelligence]:
-        """Fetch list of companies currently in QUALIFIED_SETUP status."""
-        snapshot = self.get_snapshot()
+    def get_qualified_setups(self, scheme_id: Optional[str] = None) -> List[CompanyIntelligence]:
+        """Fetch list of companies currently in QUALIFIED_SETUP status for scheme."""
+        snapshot = self.get_snapshot(scheme_id=scheme_id)
         if not snapshot:
             return []
         results = []
         seen = set()
+        norm_sid = scheme_id.strip().lower() if scheme_id else None
         for sym in snapshot.qualified_setups:
             comp = snapshot.companies.get(sym)
             if comp and comp.symbol not in seen:
+                if norm_sid and comp.scheme_id and comp.scheme_id.lower() != norm_sid:
+                    continue
                 seen.add(comp.symbol)
                 results.append(comp)
         return results
 
-    def get_waiting_setups(self) -> List[CompanyIntelligence]:
-        """Fetch list of companies currently in WAIT status."""
-        snapshot = self.get_snapshot()
+    def get_waiting_setups(self, scheme_id: Optional[str] = None) -> List[CompanyIntelligence]:
+        """Fetch list of companies currently in WAIT status for scheme."""
+        snapshot = self.get_snapshot(scheme_id=scheme_id)
         if not snapshot:
             return []
         results = []
         seen = set()
+        norm_sid = scheme_id.strip().lower() if scheme_id else None
         for sym in snapshot.waiting_setups:
             comp = snapshot.companies.get(sym)
             if comp and comp.symbol not in seen:
+                if norm_sid and comp.scheme_id and comp.scheme_id.lower() != norm_sid:
+                    continue
                 seen.add(comp.symbol)
                 results.append(comp)
         return results
 
-    def get_performance(self) -> PerformanceIntelligence:
+    def get_performance(self, scheme_id: Optional[str] = None) -> PerformanceIntelligence:
         """Fetch forward performance intelligence."""
-        snapshot = self.get_snapshot()
+        snapshot = self.get_snapshot(scheme_id=scheme_id)
         if not snapshot:
             return PerformanceIntelligence()
         return snapshot.performance
 
-    def get_benchmark(self) -> BenchmarkIntelligence:
+    def get_benchmark(self, scheme_id: Optional[str] = None) -> BenchmarkIntelligence:
         """Fetch Nifty 50 benchmark comparative intelligence."""
-        snapshot = self.get_snapshot()
+        snapshot = self.get_snapshot(scheme_id=scheme_id)
         if not snapshot:
             return BenchmarkIntelligence()
         return snapshot.benchmark
