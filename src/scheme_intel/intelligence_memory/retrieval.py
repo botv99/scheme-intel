@@ -169,9 +169,22 @@ class FastIntelligenceRetriever:
     def list_schemes(self) -> List[SchemeIntelligence]:
         """List all active schemes in snapshot."""
         snapshot = self.get_snapshot()
-        if not snapshot:
-            return []
-        return list(snapshot.schemes.values())
+        if snapshot and snapshot.schemes:
+            return list(snapshot.schemes.values())
+        from ..schemes.registry import SchemeRegistry
+        from .models import SchemeIntelligence
+        return [
+            SchemeIntelligence(
+                scheme_id=s.id,
+                name=s.name,
+                description=s.description,
+                ministry=", ".join(s.ministries) if s.ministries else "",
+                status="ACTIVE" if s.enabled else "INACTIVE",
+                total_watchlist_stocks=len(s.watchlist),
+                important_sources=[src.name for src in s.sources[:3]],
+            )
+            for s in SchemeRegistry.list_schemes()
+        ]
 
     def get_qualified_setups(self, scheme_id: Optional[str] = None) -> List[CompanyIntelligence]:
         """Fetch list of companies currently in QUALIFIED_SETUP status for scheme."""

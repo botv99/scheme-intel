@@ -76,8 +76,9 @@ class SchemeMemoryFactStore:
     def record_fact(
         self,
         scheme_id: str,
-        entity_or_text: str,
+        entity_or_text: str = "",
         event_text: Optional[str] = None,
+        entity: Optional[str] = None,
         timestamp: Optional[str] = None,
         importance: str = "MEDIUM",
         source: str = "",
@@ -93,7 +94,10 @@ class SchemeMemoryFactStore:
         if not norm_scheme:
             raise ValueError("scheme_id is mandatory for recording durable memory facts (fail-closed).")
 
-        if event_text is None:
+        if entity is not None:
+            clean_entity = entity.strip()
+            clean_text = (event_text if event_text is not None else entity_or_text).strip()
+        elif event_text is None:
             clean_entity = "GLOBAL"
             clean_text = entity_or_text.strip()
         else:
@@ -193,6 +197,13 @@ class SchemeMemoryFactStore:
             for r in rows
         ]
         return results
+
+    def count_facts(self, scheme_id: str) -> int:
+        """Count total stored facts for a specific scheme."""
+        norm_scheme = (scheme_id or "").strip().lower()
+        with self._lock, self._get_connection() as conn:
+            cur = conn.execute("SELECT COUNT(*) FROM scheme_memory_events WHERE scheme_id = ?", (norm_scheme,))
+            return cur.fetchone()[0]
 
     def clear_scheme_memory(self, scheme_id: str) -> None:
         """Clear memory for a single scheme without affecting other schemes."""

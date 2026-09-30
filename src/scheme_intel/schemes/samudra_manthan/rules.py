@@ -195,11 +195,21 @@ class DynamicBeneficiaryDiscovery:
         discovered: List[CompanySchemeRelationship] = []
         combined = f"{title} {content}".upper()
 
-        # Check Core E&P Operators
+        # Check Core E&P Operators using word boundaries to prevent generic keywords (e.g. drillships matching RIL)
         from .watchlist import SAMUDRA_MANTHAN_CORE_STOCKS
         for stock in SAMUDRA_MANTHAN_CORE_STOCKS:
             names_to_check = [stock.name.upper(), stock.symbol.upper(), stock.symbol.split(".")[0].upper()] + [a.upper() for a in stock.aliases]
-            if any(n in combined for n in names_to_check):
+            matched = False
+            for n in names_to_check:
+                if len(n) <= 3:
+                    if re.search(rf"\b{re.escape(n)}\b", combined):
+                        matched = True
+                        break
+                else:
+                    if re.search(rf"\b{re.escape(n)}\b", combined) or n in combined:
+                        matched = True
+                        break
+            if matched:
                 rel = CompanySchemeRelationship(
                     company=stock.name,
                     symbol=stock.symbol,
@@ -213,7 +223,18 @@ class DynamicBeneficiaryDiscovery:
                 discovered.append(rel)
 
         for key, meta in cls.OFFSHORE_CANDIDATE_REGISTRY.items():
-            if key in combined:
+            if re.search(rf"\b{re.escape(key)}\b", combined):
+                # Ensure companies cannot become candidates without verified offshore/tender context
+                has_offshore_context = any(
+                    k in combined.lower() for k in (
+                        "offshore", "rig", "drill", "subsea", "vessel", "oalp",
+                        "deepwater", "tender", "contract", "charter", "exploration",
+                        "dgh", "mopng", "hydrocarbon", "block", "marine", "epc"
+                    )
+                )
+                if not has_offshore_context:
+                    continue
+
                 rel = CompanySchemeRelationship(
                     company=meta["name"],
                     symbol=meta["symbol"],

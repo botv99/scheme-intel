@@ -133,7 +133,11 @@ class TelegramMessageRouter:
 
         # 2. Determine User Session & Active Scheme
         effective_uid = str(user_id or chat_id or "default_user")
-        active_scheme = self.session_store.get_active_scheme(effective_uid, default_scheme="gobardhan")
+        licensed_schemes = self.entitlement_service.get_licensed_schemes(user_id=user_id, chat_id=chat_id)
+        default_for_user = "gobardhan"
+        if licensed_schemes and "gobardhan" not in licensed_schemes:
+            default_for_user = licensed_schemes[0]
+        active_scheme = self.session_store.get_active_scheme(effective_uid, default_scheme=default_for_user)
 
         # 3. Intent & Execution Path Resolution
         intent: ResolvedIntent = IntentResolver.resolve(raw_text, active_scheme=active_scheme)
@@ -233,7 +237,7 @@ class TelegramMessageRouter:
             return self._handle_workflow_query(intent, user_id=user_id, chat_id=chat_id, request_id=effective_req_id, active_scheme=active_scheme)
 
         # Default: Path A (FAST)
-        response = self._handle_fast_query(intent, active_scheme=active_scheme)
+        response = self._handle_fast_query(intent, active_scheme=active_scheme, user_id=user_id, chat_id=chat_id)
         self.request_store.mark_completed(effective_req_id, response)
         return response
 
@@ -336,7 +340,13 @@ class TelegramMessageRouter:
 
         return format_research_acknowledgement(job.job_id, question=question)
 
-    def _handle_fast_query(self, intent: ResolvedIntent, active_scheme: str = "gobardhan") -> str:
+    def _handle_fast_query(
+        self,
+        intent: ResolvedIntent,
+        active_scheme: str = "gobardhan",
+        user_id: Optional[str] = None,
+        chat_id: Optional[str] = None,
+    ) -> str:
         """Execute fast, structured memory retrieval from loaded snapshot (<100ms)."""
         status, snapshot, status_msg = self.retriever.get_status(scheme_id=active_scheme)
 
@@ -383,7 +393,13 @@ class TelegramMessageRouter:
             return render_watchlist_card(companies, is_stale=is_stale, scheme_name=s_name)
 
         if intent.intent_type == IntentType.SCHEMES:
-            schemes = self.retriever.list_schemes()
+            licensed_ids = self.entitlement_service.get_licensed_schemes(user_id=user_id, chat_id=chat_id)
+            if not licensed_ids:
+                return "⛔ *ACCESS DENIED*\n\nYou do not have an active license for any scheme. Please contact your administrator."
+            schemes = [
+                s for s in self.retriever.list_schemes()
+                if getattr(s, "scheme_id", getattr(s, "id", None)) in licensed_ids
+            ]
             return render_schemes_list_card(schemes)
 
         if intent.intent_type == IntentType.SCHEME_LOOKUP:

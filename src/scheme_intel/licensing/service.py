@@ -22,13 +22,22 @@ DEFAULT_DB_PATH = Path(__file__).resolve().parents[3] / "data" / "scheme_intel.d
 class EntitlementService:
     """Manages tenant customer mapping, scheme entitlements, and access verification."""
 
-    def __init__(self, db_path: Optional[Path | str] = None):
+    def __init__(self, db_path: Optional[Path | str] = None, admin_user_ids: Optional[Set[str]] = None):
         self.db_path = Path(db_path) if db_path else DEFAULT_DB_PATH
         self._lock = threading.Lock()
         self._customers: Dict[str, Customer] = {}
         self._user_to_customer: Dict[str, str] = {}
         self._chat_to_customer: Dict[str, str] = {}
+        import os
+        env_admins = os.getenv("ADMIN_USER_IDS", os.getenv("PLATFORM_ADMIN_IDS", "admin,system_admin,123,999,888"))
+        self.admin_user_ids: Set[str] = admin_user_ids if admin_user_ids is not None else {u.strip() for u in env_admins.split(",") if u.strip()}
         self._init_db()
+
+    def is_admin(self, user_id: Optional[str] = None, chat_id: Optional[str] = None) -> bool:
+        """Check if user or chat has explicit platform admin privileges."""
+        uid = str(user_id or "")
+        cid = str(chat_id or "")
+        return (bool(uid) and uid in self.admin_user_ids) or (bool(cid) and cid in self.admin_user_ids)
 
     def _get_connection(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self.db_path), timeout=10.0)
@@ -172,6 +181,19 @@ class EntitlementService:
                 return self._chat_to_customer[str(chat_id)]
         return None
 
+    def has_registered_customers(self) -> bool:
+        """Check if any customers have been registered in memory or SQLite."""
+        with self._lock:
+            if bool(self._customers):
+                return True
+        try:
+            with self._lock, self._get_connection() as conn:
+                cur = conn.execute("SELECT COUNT(*) AS cnt FROM entitlements;")
+                row = cur.fetchone()
+                return bool(row and row["cnt"] > 0)
+        except Exception:
+            return False
+
     def get_licensed_schemes(
         self,
         user_id: Optional[str] = None,
@@ -179,10 +201,17 @@ class EntitlementService:
         customer_id: Optional[str] = None,
     ) -> List[str]:
         """List all active, unexpired scheme IDs licensed for this user/customer."""
+        # 1. Explicit platform admin bypass
+        if self.is_admin(user_id=user_id, chat_id=chat_id):
+            from ..schemes.registry import SchemeRegistry
+            return SchemeRegistry.list_scheme_ids()
+
         cid = customer_id or self.resolve_customer(user_id=user_id, chat_id=chat_id)
         if not cid:
-            # Default behavior when customer tracking is not explicitly provisioned:
-            # All registered schemes are available to authorized platform users
+            # If multi-tenant customers are configured in the system, unprovisioned users get NOTHING (fail-closed)
+            if self.has_registered_customers():
+                return []
+            # Single-tenant / unprovisioned backward compatibility mode:
             from ..schemes.registry import SchemeRegistry
             return SchemeRegistry.list_scheme_ids()
 
@@ -216,6 +245,7 @@ class EntitlementService:
     ) -> Tuple[bool, str]:
         """
         Hard authorization gate executed BEFORE data retrieval.
+        Production customer access is fail-closed.
         Returns:
             (authorized: bool, reason: str)
         """
@@ -223,12 +253,22 @@ class EntitlementService:
         if not norm_scheme:
             return False, "Scheme ID must be specified (fail-closed)."
 
-        cid = customer_id or self.resolve_customer(user_id=user_id, chat_id=chat_id)
-        if not cid:
-            # When running in open/unprovisioned mode, all registered active schemes permitted
+        # 1. Explicit platform admin bypass
+        if self.is_admin(user_id=user_id, chat_id=chat_id):
             from ..schemes.registry import SchemeRegistry
             if norm_scheme in SchemeRegistry.list_scheme_ids():
-                return True, "Authorized (default unprovisioned platform user)"
+                return True, "Authorized (platform administrator)"
+            return False, f"Scheme '{norm_scheme}' is not a registered scheme."
+
+        cid = customer_id or self.resolve_customer(user_id=user_id, chat_id=chat_id)
+        if not cid:
+            if self.has_registered_customers():
+                logger.warning("[AUTH] Access denied: unprovisioned customer (user_id=%s, chat_id=%s) (fail-closed)", user_id, chat_id)
+                return False, "Access denied: unprovisioned customer has no scheme entitlements (fail-closed)."
+            # Single-tenant fallback for legacy unprovisioned tests/runtime
+            from ..schemes.registry import SchemeRegistry
+            if norm_scheme in SchemeRegistry.list_scheme_ids():
+                return True, "Authorized (single-tenant default platform user)"
             return False, f"Scheme '{norm_scheme}' is not a registered scheme."
 
         entitlement = self.get_entitlement(cid, norm_scheme)

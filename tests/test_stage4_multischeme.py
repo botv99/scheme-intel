@@ -162,6 +162,8 @@ class TestStage4IsolationAndRetrieval:
         """1. Active Gobardhan -> query Gobardhan stock -> data returned."""
         session_store = SessionStore(db_path=temp_db)
         entitlement_service = EntitlementService(db_path=temp_db)
+        entitlement_service.register_customer("cust_101", user_ids=["user_101"])
+        entitlement_service.grant_entitlement("cust_101", "gobardhan", enabled=True)
         retriever = FastIntelligenceRetriever(store=sample_snapshots["gobardhan_store"])
         router = TelegramMessageRouter(
             retriever=retriever,
@@ -170,7 +172,7 @@ class TestStage4IsolationAndRetrieval:
         )
 
         session_store.set_active_scheme("user_101", "gobardhan")
-        reply = router.route_message("/stock TRUALT", user_101 := "user_101")
+        reply = router.route_message("/stock TRUALT", user_id="user_101")
 
         assert "TRUALT" in reply
         assert "TruAlt Bioenergy" in reply
@@ -181,6 +183,8 @@ class TestStage4IsolationAndRetrieval:
         """2. Active Samudra -> query ONGC -> Samudra data returned."""
         session_store = SessionStore(db_path=temp_db)
         entitlement_service = EntitlementService(db_path=temp_db)
+        entitlement_service.register_customer("cust_102", user_ids=["user_102"])
+        entitlement_service.grant_entitlement("cust_102", "samudra_manthan", enabled=True)
         retriever = FastIntelligenceRetriever(store=sample_snapshots["samudra_store"])
         router = TelegramMessageRouter(
             retriever=retriever,
@@ -200,6 +204,8 @@ class TestStage4IsolationAndRetrieval:
         """3. Active Samudra -> query Praj Industries -> out of universe notice, no Gobardhan research leaked."""
         session_store = SessionStore(db_path=temp_db)
         entitlement_service = EntitlementService(db_path=temp_db)
+        entitlement_service.register_customer("cust_103", user_ids=["user_103"])
+        entitlement_service.grant_entitlement("cust_103", "samudra_manthan", enabled=True)
         retriever = FastIntelligenceRetriever(store=sample_snapshots["samudra_store"])
         router = TelegramMessageRouter(
             retriever=retriever,
@@ -221,6 +227,8 @@ class TestStage4IsolationAndRetrieval:
         """4. Active Gobardhan -> query ONGC -> out of universe notice, no Samudra research leaked."""
         session_store = SessionStore(db_path=temp_db)
         entitlement_service = EntitlementService(db_path=temp_db)
+        entitlement_service.register_customer("cust_104", user_ids=["user_104"])
+        entitlement_service.grant_entitlement("cust_104", "gobardhan", enabled=True)
         retriever = FastIntelligenceRetriever(store=sample_snapshots["gobardhan_store"])
         router = TelegramMessageRouter(
             retriever=retriever,
@@ -346,6 +354,11 @@ class TestStage4IsolationAndRetrieval:
         """Concurrent sessions: User A on Samudra does NOT affect User B on Gobardhan."""
         session_store = SessionStore(db_path=temp_db)
         entitlement_service = EntitlementService(db_path=temp_db)
+        entitlement_service.register_customer("cust_A", user_ids=["user_A"])
+        entitlement_service.grant_entitlement("cust_A", "samudra_manthan", enabled=True)
+        entitlement_service.grant_entitlement("cust_A", "gobardhan", enabled=True)
+        entitlement_service.register_customer("cust_B", user_ids=["user_B"])
+        entitlement_service.grant_entitlement("cust_B", "gobardhan", enabled=True)
         retriever = FastIntelligenceRetriever(store=sample_snapshots["gobardhan_store"])
         router = TelegramMessageRouter(
             retriever=retriever,

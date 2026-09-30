@@ -198,6 +198,7 @@ class Stage2Database:
         date: Optional[str] = None,
         status: Optional[str] = None,
         symbol: Optional[str] = None,
+        scheme_id: Optional[str] = None,
     ) -> List[TradeSetup]:
         """List setups with optional filtering."""
         query = "SELECT * FROM stage2_setups WHERE 1=1"
@@ -211,6 +212,9 @@ class Stage2Database:
         if symbol:
             query += " AND symbol = ?"
             params.append(symbol)
+        if scheme_id:
+            query += " AND scheme_id = ?"
+            params.append(scheme_id)
 
         query += " ORDER BY created_at DESC;"
 

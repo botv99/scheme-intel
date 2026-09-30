@@ -544,9 +544,12 @@ class SchemeIntelDB:
         rows = conn.execute(query, params).fetchall()
         return [dict(r) for r in rows]
 
-    def get_all_setups(self) -> list[dict]:
+    def get_all_setups(self, scheme_id: Optional[str] = None) -> list[dict]:
         conn = self.connect()
-        rows = conn.execute("SELECT * FROM setups ORDER BY id DESC").fetchall()
+        if scheme_id:
+            rows = conn.execute("SELECT * FROM setups WHERE scheme_id = ? ORDER BY id DESC", (scheme_id,)).fetchall()
+        else:
+            rows = conn.execute("SELECT * FROM setups ORDER BY id DESC").fetchall()
         return [dict(r) for r in rows]
 
     def count_runs(self) -> int:

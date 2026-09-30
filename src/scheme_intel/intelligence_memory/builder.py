@@ -77,7 +77,7 @@ class IntelligenceSnapshotBuilder:
             for s in stage2_result["setups"]:
                 latest_setups_by_symbol[s.stock.symbol.upper()] = s
         else:
-            db_setups = self.db.list_setups()
+            db_setups = self.db.list_setups(scheme_id=scheme_id if scheme_id else None)
             # Group by symbol, keeping the latest one
             for s in db_setups:
                 sym_upper = s.stock.symbol.upper()
