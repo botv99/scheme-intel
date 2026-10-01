@@ -1,98 +1,97 @@
 # Scheme-Intel Forward Performance & Validation Report
 
-**Generated At:** 2026-09-30T22:03:38.660123+00:00 UTC
-**Data Period:** 2026-09-24 → 2026-10-01
-**Data Sufficiency Status:** `INSUFFICIENT_SAMPLE` — *Insufficient sample (5 completed trades; minimum 30 required for statistical validity)*
+**Generated At:** 2026-10-01T01:26:56.431798+00:00 UTC
+**Data Period:** 2026-10-01 → 2026-10-01
+**Data Sufficiency Status:** `INSUFFICIENT_SAMPLE` — *Insufficient sample (0 completed trades; minimum 30 required for statistical validity)*
 **Strategy Validation Status:** `INSUFFICIENT DATA`
 
 ---
 
 ## 1. Setup Lifecycle Sample
-- **Total Setups Recorded:** 28
-- **Qualified Setups:** 5
-- **Waiting Setups:** 13
-- **Rejected Setups (Hard Risk Veto / No Trade):** 10
-- **Triggered Entries:** 8
-- **Untriggered Setups:** 20 *(never counted as losses)*
-- **Currently Active (Open) Trades:** 3
-- **Completed Trades:** 5
-- **Expired Positions:** 4
+- **Total Setups Recorded:** 7
+- **Qualified Setups:** 1
+- **Waiting Setups:** 3
+- **Rejected Setups (Hard Risk Veto / No Trade):** 3
+- **Triggered Entries:** 0
+- **Untriggered Setups:** 7 *(never counted as losses)*
+- **Currently Active (Open) Trades:** 0
+- **Completed Trades:** 0
+- **Expired Positions:** 0
 
 ---
 
 ## 2. Outcome Statistics
-- **Completed Triggered Trades:** 5
+- **Completed Triggered Trades:** 0
 - **Target 1 Hits (Wins):** 0
-- **Stop Loss Hits (Losses):** 1
-- **Expired at Max Age:** 4
-- **Win Rate:** 0.0% *(wins / completed trades)*
-- **Loss Rate:** 20.0%
-- **Expiry Rate:** 80.0%
+- **Stop Loss Hits (Losses):** 0
+- **Expired at Max Age:** 0
+- **Win Rate:** N/A *(wins / completed trades)*
+- **Loss Rate:** N/A
+- **Expiry Rate:** N/A
 
 ---
 
 ## 3. Return & P&L Metrics
-- **Average Realized P&L:** -0.32%
-- **Median Realized P&L:** +0.00%
-- **Cumulative Realized P&L:** -1.61%
+- **Average Realized P&L:** N/A
+- **Median Realized P&L:** N/A
+- **Cumulative Realized P&L:** +0.00%
 - **Average Winning Trade:** N/A
-- **Average Losing Trade:** -1.61%
-- **Largest Winner:** +0.00%
-- **Largest Loser:** -1.61%
-- **Profit Factor:** 0.0 *(gross profits / gross losses)*
+- **Average Losing Trade:** N/A
+- **Largest Winner:** N/A
+- **Largest Loser:** N/A
+- **Profit Factor:** N/A *(gross profits / gross losses)*
 - **Expectancy:** N/A per triggered trade
-- **Standard Deviation of Returns:** 0.72%
+- **Standard Deviation of Returns:** N/A
 
 ---
 
 ## 4. MFE & MAE Excursions
-- **Average MFE (Max Favorable Excursion):** +1.32%
-- **Median MFE:** +0.93%
-- **Maximum MFE Observed:** +5.23%
-- **Average MAE (Max Adverse Excursion):** -3.19%
-- **Median MAE:** -4.06%
-- **Maximum Adverse Excursion (Worst Dip):** -6.02%
+- **Average MFE (Max Favorable Excursion):** N/A
+- **Median MFE:** N/A
+- **Maximum MFE Observed:** N/A
+- **Average MAE (Max Adverse Excursion):** N/A
+- **Median MAE:** N/A
+- **Maximum Adverse Excursion (Worst Dip):** N/A
 
 ### Excursion Distributions
 | MFE Bucket | Trades | MAE Bucket | Trades |
 | :--- | :--- | :--- | :--- |
-| <0% | 0 | 0 to -1% | 2 |
-| 0–2% | 7 | -1 to -3% | 1 |
-| 2–5% | 0 | -3 to -5% | 4 |
-| 5–10% | 1 | <-5% | 1 |
+| <0% | 0 | 0 to -1% | 0 |
+| 0–2% | 0 | -1 to -3% | 0 |
+| 2–5% | 0 | -3 to -5% | 0 |
+| 5–10% | 0 | <-5% | 0 |
 | >10% | 0 |  |  |
 
 ---
 
 ## 5. Holding Period Analytics
-- **Overall Holding Period:** Avg 4.2 days | Median 5 days (Min 1.0 days - Max 5.0 days)
+- **Overall Holding Period:** Avg N/A | Median N/A (Min N/A - Max N/A)
 - **Winning Trades:** Avg N/A
-- **Losing Trades:** Avg 1 days
-- **Expired Trades:** Avg 5 days
+- **Losing Trades:** Avg N/A
+- **Expired Trades:** Avg N/A
 
 ---
 
 ## 6. Breakdown by Archetype
 | Archetype | Setups | Trig | Comp | Win Rate | Avg P&L | Expectancy | PF | Avg MFE | Avg MAE | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| Breakout | 3 | 1 | 0 | N/A | N/A | N/A | N/A | +5.2% | -4.7% | `INSUFFICIENT_SAMPLE` |
-| Breakout Anticipation | 4 | 4 | 4 | 0.0% | +0.00% | +0.00% | N/A | +0.8% | -2.5% | `INSUFFICIENT_SAMPLE` |
+| Breakout Anticipation | 2 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
 | Momentum Continuation | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| Pullback | 1 | 1 | 1 | 0.0% | -1.61% | -1.61% | 0.00 | +0.8% | -6.0% | `INSUFFICIENT_SAMPLE` |
-| Unspecified | 19 | 2 | 0 | N/A | N/A | N/A | N/A | +0.5% | -2.4% | `INSUFFICIENT_SAMPLE` |
+| Pullback | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| Unspecified | 3 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
 
 ---
 
 ## 7. Breakdown by Stock Symbol
 | Symbol | Setups | Trig | Comp | Win Rate | Avg P&L | Expectancy | Avg MFE | Avg MAE | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| GAIL.NS | 4 | 1 | 0 | N/A | N/A | N/A | +0.1% | -1.3% | `INSUFFICIENT_SAMPLE` |
-| IOC.NS | 4 | 3 | 2 | 0.0% | +0.00% | +0.00% | +1.1% | -1.3% | `INSUFFICIENT_SAMPLE` |
-| KIRLPNU.NS | 4 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| ORGANICREC.BO | 4 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| PRAJIND.NS | 4 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| TRUALT.NS | 4 | 3 | 2 | 0.0% | +0.00% | +0.00% | +2.1% | -4.8% | `INSUFFICIENT_SAMPLE` |
-| WABAG.NS | 4 | 1 | 1 | 0.0% | -1.61% | -1.61% | +0.8% | -6.0% | `INSUFFICIENT_SAMPLE` |
+| GAIL.NS | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| IOC.NS | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| KIRLPNU.NS | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| ORGANICREC.BO | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| PRAJIND.NS | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| TRUALT.NS | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| WABAG.NS | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
 
 ---
 
@@ -100,8 +99,8 @@
 *(Observational measurement only. Does not imply causation.)*
 | Provider | Setups | Trig | Comp | Win Rate | Avg P&L | Expectancy | Avg MFE | Avg MAE | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| Deterministic Fallback | 19 | 2 | 0 | N/A | N/A | N/A | +0.5% | -2.4% | `INSUFFICIENT_SAMPLE` |
-| Mock | 9 | 6 | 5 | 0.0% | -0.32% | -0.32% | +1.6% | -3.5% | `INSUFFICIENT_SAMPLE` |
+| Deterministic Fallback | 4 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| Groq | 3 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
 
 ---
 
@@ -111,8 +110,8 @@
 | 0–20 | 0 | 0 | 0 | N/A | N/A | N/A |
 | 21–40 | 0 | 0 | 0 | N/A | N/A | N/A |
 | 41–60 | 0 | 0 | 0 | N/A | N/A | N/A |
-| 61–80 | 5 | 2 | 2 | 0.0% | +0.00% | +0.00% |
-| 81–100 | 4 | 4 | 3 | 0.0% | -0.54% | -0.54% |
+| 61–80 | 1 | 0 | 0 | N/A | N/A | N/A |
+| 81–100 | 3 | 0 | 0 | N/A | N/A | N/A |
 
 ---
 
@@ -120,48 +119,20 @@
 ### Rolling Forward Windows
 | Window Name | Trades | Start Date | End Date | Win Rate | Avg P&L | Expectancy | PF | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| Rolling 20 Trades | 5 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| Rolling 50 Trades | 5 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| Rolling 100 Trades | 5 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-
-### Out-of-Sample Partition Comparison
-- **Chronological Split Date:** 2026-09-29
-- **Historical (In-Sample):** 2 trades | Win Rate: N/A% | Avg P&L: N/A% | Exp: N/A%
-- **Forward (Out-of-Sample):** 3 trades | Win Rate: N/A% | Avg P&L: -0.54% | Exp: -0.54% (`INSUFFICIENT_SAMPLE`)
+| Rolling 20 Trades | 0 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| Rolling 50 Trades | 0 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| Rolling 100 Trades | 0 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
 
 ---
 
 ## 11. Baseline Benchmark Comparison (NIFTY 50)
-- **Status:** `ACTIVE`
-- **Trades Evaluated:** 5 / 5
-- **Average Strategy Return:** -0.32%
-- **Average Benchmark Return (Nifty 50):** +0.00%
-- **Average Excess Return (Alpha):** -0.32%
-- **Median Excess Return:** +0.00%
-- **Cumulative Excess Return:** -1.61%
-
-### Trade-by-Trade Benchmark Comparison
-| Setup ID | Symbol | Entry Date | Exit Date | Strategy P&L | Nifty Return | Excess Return |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| SETUP-WABAG_NS-20260930 | WABAG.NS | 2026-09-30 | 2026-09-30 | -1.61% | +0.00% | -1.61% |
-| SETUP-IOC_NS-20260928 | IOC.NS | 2026-09-28 | 2026-09-30 | +0.00% | +0.00% | +0.00% |
-| SETUP-TRUALT_NS-20260928 | TRUALT.NS | 2026-09-28 | 2026-09-30 | +0.00% | +0.00% | +0.00% |
-| SETUP-IOC_NS-20260925 | IOC.NS | 2026-09-25 | 2026-09-28 | +0.00% | +0.00% | +0.00% |
-| SETUP-TRUALT_NS-20260925 | TRUALT.NS | 2026-09-25 | 2026-09-28 | +0.00% | +0.00% | +0.00% |
+- **Status:** `UNAVAILABLE — 0 completed trades`
+- **Details:** UNAVAILABLE — 0 completed trades
 
 ---
 
 ## 12. Data Integrity Checks
-- **Audit Status:** `WARN`
+- **Audit Status:** `PASS`
 - **Checks Performed:** 10
-- **Issues Detected:** 8
-
-**Integrity Warnings:**
-- ⚠️ Setup SETUP-WABAG_NS-20260930: entry_date (2026-09-30) is earlier than setup_date (2026-10-01)
-- ⚠️ Setup SETUP-TRUALT_NS-20260930: entry_date (2026-09-30) is earlier than setup_date (2026-10-01)
-- ⚠️ Setup SETUP-IOC_NS-20260930: entry_date (2026-09-30) is earlier than setup_date (2026-10-01)
-- ⚠️ Setup SETUP-TRUALT_NS-20260928: entry_date (2026-09-28) is earlier than setup_date (2026-09-29)
-- ⚠️ Setup SETUP-IOC_NS-20260928: entry_date (2026-09-28) is earlier than setup_date (2026-09-29)
-- ⚠️ Setup SETUP-TRUALT_NS-20260925: entry_date (2026-09-25) is earlier than setup_date (2026-09-28)
-- ⚠️ Setup SETUP-IOC_NS-20260925: entry_date (2026-09-25) is earlier than setup_date (2026-09-28)
-- ⚠️ Setup SETUP-GAIL_NS-20260925: entry_date (2026-09-25) is earlier than setup_date (2026-09-28)
+- **Issues Detected:** 0
+- ✅ Zero schema violations, orphan records, or date inversions detected.
