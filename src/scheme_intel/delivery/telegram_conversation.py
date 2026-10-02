@@ -45,28 +45,67 @@ def check_webhook_conflict(token: str) -> Optional[str]:
 
 
 def register_bot_commands(token: str) -> bool:
-    """Register bot command menu via Telegram setMyCommands API."""
+    """
+    Register bot command menu via Telegram setMyCommands API and verify with getMyCommands.
+    Includes /schemes for scheme-scoped navigation.
+    """
     if not token:
+        logger.warning("[TELEGRAM] Cannot register bot commands: token is empty.")
         return False
+
     commands = [
         {"command": "start", "description": "Terminal main menu & shortcuts"},
         {"command": "help", "description": "Command guide & query examples"},
+        {"command": "schemes", "description": "Select and switch intelligence scheme"},
         {"command": "stock", "description": "Stock intelligence card (/stock <SYM>)"},
         {"command": "setups", "description": "Today's qualified setups"},
         {"command": "watchlist", "description": "Monitored scheme watchlist"},
         {"command": "research", "description": "Deep policy research (/research <Q>)"},
     ]
+
     try:
-        url = f"https://api.telegram.org/bot{token}/setMyCommands"
-        resp = requests.post(url, json={"commands": commands}, timeout=10)
-        if resp.status_code == 200 and resp.json().get("ok"):
-            logger.info("[TELEGRAM] Successfully registered %d bot commands with Telegram API.", len(commands))
-            return True
-        else:
-            logger.warning("[TELEGRAM] Failed registering bot commands: %s", resp.text[:150])
+        set_url = f"https://api.telegram.org/bot{token}/setMyCommands"
+        resp = requests.post(set_url, json={"commands": commands}, timeout=10)
+
+        # 1. verify HTTP success and ok: true
+        if resp.status_code != 200 or not resp.json().get("ok"):
+            err_details = mask_telegram_token(resp.text[:300], token)
+            logger.error(
+                "[TELEGRAM] Failed registering bot commands via setMyCommands (HTTP %s): %s",
+                resp.status_code,
+                err_details,
+            )
+            return False
+
+        # 2. Log registered command names in the exact format required
+        cmd_names = ", ".join(c["command"] for c in commands)
+        logger.info("[TELEGRAM] Registered bot commands:\n%s", cmd_names)
+
+        # 3. Post-registration verification via getMyCommands
+        try:
+            get_url = f"https://api.telegram.org/bot{token}/getMyCommands"
+            get_resp = requests.get(get_url, timeout=10)
+            if get_resp.status_code == 200 and get_resp.json().get("ok"):
+                active_cmds = get_resp.json().get("result", [])
+                active_names = [c.get("command") for c in active_cmds if isinstance(c, dict)]
+                if "schemes" in active_names:
+                    logger.info("[TELEGRAM] Verified getMyCommands confirmed 'schemes' is active on Telegram.")
+                else:
+                    logger.warning("[TELEGRAM] getMyCommands did not return 'schemes' in command list: %s", active_names)
+            else:
+                logger.warning(
+                    "[TELEGRAM] getMyCommands verification check failed (HTTP %s): %s",
+                    get_resp.status_code,
+                    mask_telegram_token(get_resp.text[:150], token),
+                )
+        except Exception as verify_err:
+            logger.debug("[TELEGRAM] Optional getMyCommands verification probe error: %s", mask_telegram_token(str(verify_err), token))
+
+        return True
+
     except Exception as e:
-        logger.warning("[TELEGRAM] Error registering bot commands: %s", e)
-    return False
+        logger.error("[TELEGRAM] Error registering bot commands: %s", mask_telegram_token(str(e), token))
+        return False
 
 
 def answer_callback_query(token: str, callback_query_id: str) -> bool:

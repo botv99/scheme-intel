@@ -218,15 +218,34 @@ class TestWebhookConflictDetection:
                     mock_poll.assert_not_called()
 
     def test_bot_commands_registration_called(self):
-        with patch("requests.post") as mock_post:
+        with patch("requests.post") as mock_post, patch("requests.get") as mock_get:
             mock_post.return_value.status_code = 200
             mock_post.return_value.json.return_value = {"ok": True}
+            mock_get.return_value.status_code = 200
+            mock_get.return_value.json.return_value = {
+                "ok": True,
+                "result": [
+                    {"command": "start", "description": "Terminal main menu & shortcuts"},
+                    {"command": "help", "description": "Command guide & query examples"},
+                    {"command": "schemes", "description": "Select and switch intelligence scheme"},
+                    {"command": "stock", "description": "Stock intelligence card (/stock <SYM>)"},
+                    {"command": "setups", "description": "Today's qualified setups"},
+                    {"command": "watchlist", "description": "Monitored scheme watchlist"},
+                    {"command": "research", "description": "Deep policy research (/research <Q>)"},
+                ],
+            }
             success = register_bot_commands("mock_token")
             assert success is True
             assert mock_post.called
             payload = mock_post.call_args[1]["json"]
-            assert any(c["command"] == "stock" for c in payload["commands"])
-            assert any(c["command"] == "setups" for c in payload["commands"])
+            commands = payload["commands"]
+            assert any(c["command"] == "schemes" for c in commands)
+            schemes_cmd = next(c for c in commands if c["command"] == "schemes")
+            assert schemes_cmd["description"] != ""
+            assert any(c["command"] == "stock" for c in commands)
+            assert any(c["command"] == "setups" for c in commands)
+            assert any(c["command"] == "watchlist" for c in commands)
+            assert any(c["command"] == "research" for c in commands)
 
 
 # ===========================================================================

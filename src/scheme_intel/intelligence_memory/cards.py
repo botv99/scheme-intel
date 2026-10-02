@@ -499,6 +499,7 @@ def render_start_card() -> str:
         "🤖 *SCHEME-INTEL TERMINAL*\n\n"
         "📊 *Intelligence Terminal*\n\n"
         "*Quick Commands:*\n"
+        "• `/schemes` — Select and switch intelligence scheme\n"
         "• `/stock <symbol>` — Full stock intelligence card\n"
         "• `/setups` — Current qualified setups\n"
         "• `/watchlist` — Monitored companies\n"
@@ -716,27 +717,24 @@ def render_research_prompt_card(scheme_cfg: Optional[Any] = None, scheme_id: Opt
     return "\n".join(lines)
 
 
-def get_terminal_inline_keyboard() -> Dict[str, Any]:
+def get_terminal_inline_keyboard(active_scheme: Optional[str] = None) -> Dict[str, Any]:
     """Generate structured interactive inline keyboard buttons for Telegram."""
+    sid = (active_scheme or "gobardhan").strip().lower()
     return {
         "inline_keyboard": [
             [
-                {"text": "TRUALT", "callback_data": "/stock TRUALT"},
-                {"text": "PRAJ", "callback_data": "/stock PRAJ"},
-                {"text": "WABAG", "callback_data": "/stock WABAG"},
+                {"text": "📊 SCHEMES", "callback_data": "/schemes"},
             ],
             [
-                {"text": "IONEXCHANG", "callback_data": "/stock IONEXCHANG"},
-                {"text": "KIRLPNU", "callback_data": "/stock KIRLPNU"},
-                {"text": "GAIL", "callback_data": "/stock GAIL"},
-                {"text": "IOC", "callback_data": "/stock IOC"},
+                {"text": "📋 WATCHLIST", "callback_data": f"scheme_action:watchlist:{sid}"},
+                {"text": "📈 TRADES", "callback_data": f"scheme_action:trades:{sid}"},
             ],
             [
-                {"text": "SETUPS", "callback_data": "/setups"},
-                {"text": "WATCHLIST", "callback_data": "/watchlist"},
+                {"text": "🧠 RESEARCH", "callback_data": f"scheme_action:research:{sid}"},
+                {"text": "📰 INTELLIGENCE", "callback_data": f"scheme_action:intelligence:{sid}"},
             ],
             [
-                {"text": "HELP", "callback_data": "/help"},
+                {"text": "❓ HELP", "callback_data": "/help"},
             ],
         ]
     }

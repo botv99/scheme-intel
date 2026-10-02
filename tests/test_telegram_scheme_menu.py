@@ -15,8 +15,10 @@ from __future__ import annotations
 import json
 import pytest
 from pathlib import Path
+from unittest.mock import patch, MagicMock
 
 from scheme_intel.delivery.telegram_router import TelegramMessageRouter, RouterResponse
+from scheme_intel.delivery.telegram_conversation import register_bot_commands
 from scheme_intel.licensing.service import EntitlementService
 from scheme_intel.licensing.session import SessionStore
 from scheme_intel.schemes.registry import SchemeRegistry
@@ -398,3 +400,121 @@ class TestTelegramSchemeMenuFlow:
         prompt = render_research_prompt_card(scheme_cfg=sam_cfg, scheme_id="samudra_manthan")
         assert "SAMUDRA MANTHAN RESEARCH" in prompt
         assert "deepwater" in prompt.lower()
+
+    def test_register_bot_commands_payload_has_schemes(self):
+        """Verify register_bot_commands sends schemes command with non-empty description and verifies via getMyCommands."""
+        with patch("requests.post") as mock_post, patch("requests.get") as mock_get:
+            mock_post.return_value.status_code = 200
+            mock_post.return_value.json.return_value = {"ok": True}
+            mock_get.return_value.status_code = 200
+            mock_get.return_value.json.return_value = {
+                "ok": True,
+                "result": [
+                    {"command": "start", "description": "Terminal main menu & shortcuts"},
+                    {"command": "help", "description": "Command guide & query examples"},
+                    {"command": "schemes", "description": "Select and switch intelligence scheme"},
+                    {"command": "stock", "description": "Stock intelligence card (/stock <SYM>)"},
+                    {"command": "setups", "description": "Today's qualified setups"},
+                    {"command": "watchlist", "description": "Monitored scheme watchlist"},
+                    {"command": "research", "description": "Deep policy research (/research <Q>)"},
+                ]
+            }
+
+            success = register_bot_commands("fake_token_123")
+            assert success is True
+            assert mock_post.called
+
+            # Validate payload
+            payload = mock_post.call_args[1]["json"]
+            commands = payload.get("commands", [])
+            assert len(commands) == 7
+
+            schemes_entry = next((c for c in commands if c.get("command") == "schemes"), None)
+            assert schemes_entry is not None, "Command 'schemes' missing in setMyCommands payload!"
+            assert schemes_entry["description"] != "", "Description for 'schemes' must not be empty!"
+            assert "scheme" in schemes_entry["description"].lower()
+
+            # Confirm getMyCommands verification was called
+            assert mock_get.called
+
+    def test_start_message_renders_schemes_path(self, menu_db, menu_snapshots):
+        """Verify /start output gives a clear, visible path to Schemes with inline button."""
+        session_store = SessionStore(db_path=menu_db)
+        entitlement_service = EntitlementService(db_path=menu_db)
+        retriever = FastIntelligenceRetriever(store=menu_snapshots["sam_store"])
+        router = TelegramMessageRouter(
+            retriever=retriever,
+            session_store=session_store,
+            entitlement_service=entitlement_service,
+        )
+
+        start_res = router.route_message("/start", user_id="user_test")
+        assert "SCHEME-INTEL" in start_res
+        assert "/schemes" in start_res
+        assert isinstance(start_res, RouterResponse)
+        assert start_res.reply_markup is not None
+
+        # Check inline buttons
+        all_buttons = [
+            btn for row in start_res.reply_markup["inline_keyboard"] for btn in row
+        ]
+        schemes_btn = next((b for b in all_buttons if "SCHEMES" in b["text"]), None)
+        assert schemes_btn is not None, "Explicit '📊 SCHEMES' button missing on /start!"
+        assert schemes_btn["callback_data"] in ("/schemes", "scheme_action:switch_scheme")
+
+    def test_full_user_flow_start_to_isolated_watchlists(self, menu_db, menu_snapshots):
+        """
+        Verify end-to-end user path:
+        /start -> /schemes -> select Samudra -> Samudra menu -> Watchlist (ONLY Samudra)
+        -> Switch Scheme -> Gobardhan -> Watchlist (ONLY Gobardhan)
+        """
+        session_store = SessionStore(db_path=menu_db)
+        entitlement_service = EntitlementService(db_path=menu_db)
+        entitlement_service.register_customer("cust_flow", user_ids=["flow_user"])
+        entitlement_service.grant_entitlement("cust_flow", "gobardhan", enabled=True)
+        entitlement_service.grant_entitlement("cust_flow", "samudra_manthan", enabled=True)
+
+        retriever = FastIntelligenceRetriever(store=menu_snapshots["sam_store"])
+        router = TelegramMessageRouter(
+            retriever=retriever,
+            session_store=session_store,
+            entitlement_service=entitlement_service,
+        )
+
+        # 1. /start: Schemes accessible
+        start_res = router.route_message("/start", user_id="flow_user")
+        assert "SCHEME-INTEL" in start_res
+
+        # 2. /schemes: Scheme selection prompt
+        schemes_res = router.route_message("/schemes", user_id="flow_user")
+        assert "Select Scheme" in schemes_res
+        assert "scheme_select:samudra_manthan" in [
+            b["callback_data"] for row in schemes_res.reply_markup["inline_keyboard"] for b in row
+        ]
+
+        # 3. Select Samudra
+        sam_select = router.route_message("scheme_select:samudra_manthan", user_id="flow_user")
+        assert "SAMUDRA MANTHAN" in sam_select
+        assert session_store.get_active_scheme("flow_user") == "samudra_manthan"
+
+        # 4. Watchlist -> ONLY Samudra stocks
+        sam_watchlist = router.route_message("/watchlist", user_id="flow_user")
+        assert "SAMUDRA MANTHAN SCHEME WATCHLIST" in sam_watchlist
+        assert "ONGC" in sam_watchlist
+        assert "OIL" in sam_watchlist
+        assert "TRUALT" not in sam_watchlist
+        assert "PRAJ" not in sam_watchlist
+
+        # 5. Switch Scheme -> Gobardhan
+        router.retriever = FastIntelligenceRetriever(store=menu_snapshots["gob_store"])
+        gob_select = router.route_message("scheme_select:gobardhan", user_id="flow_user")
+        assert "GOBARDHAN" in gob_select
+        assert session_store.get_active_scheme("flow_user") == "gobardhan"
+
+        # 6. Watchlist -> ONLY Gobardhan stocks
+        gob_watchlist = router.route_message("/watchlist", user_id="flow_user")
+        assert "GOBARDHAN SCHEME WATCHLIST" in gob_watchlist
+        assert "TRUALT" in gob_watchlist
+        assert "GAIL" in gob_watchlist
+        assert "ONGC" not in gob_watchlist
+        assert "OIL" not in gob_watchlist

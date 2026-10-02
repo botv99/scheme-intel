@@ -143,6 +143,7 @@ class TestDeepResearchPipeline:
             assert "stock" in cmd_names
             assert "setups" in cmd_names
             assert "watchlist" in cmd_names
+            assert "schemes" in cmd_names
             assert "start" in cmd_names
             assert "help" in cmd_names
-            assert len(cmd_names) == 6
+            assert len(cmd_names) == 7

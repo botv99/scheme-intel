@@ -430,8 +430,15 @@ class TelegramMessageRouter:
             text = render_start_card()
             markup = {
                 "inline_keyboard": [
-                    [{"text": "📊 SCHEMES", "callback_data": "scheme_action:switch_scheme"}],
-                    [{"text": f"📋 {active_scheme.replace('_', ' ').title()} Menu", "callback_data": f"scheme_action:menu:{active_scheme}"}],
+                    [{"text": "📊 SCHEMES", "callback_data": "/schemes"}],
+                    [
+                        {"text": "📋 WATCHLIST", "callback_data": f"scheme_action:watchlist:{active_scheme}"},
+                        {"text": "📈 TRADES", "callback_data": f"scheme_action:trades:{active_scheme}"},
+                    ],
+                    [
+                        {"text": "🧠 RESEARCH", "callback_data": f"scheme_action:research:{active_scheme}"},
+                        {"text": "📰 INTELLIGENCE", "callback_data": f"scheme_action:intelligence:{active_scheme}"},
+                    ],
                 ]
             }
             return RouterResponse(text, reply_markup=markup)
