@@ -1,7 +1,7 @@
 {
-  "snapshot_id": "SNAP-20261001-012734",
+  "snapshot_id": "SNAP-20261002-014803",
   "schema_version": "1.0",
-  "generated_at": "2026-10-01T01:27:34.270940+00:00",
+  "generated_at": "2026-10-02T01:48:03.086495+00:00",
   "pipeline_run_id": null,
   "scheme_id": null,
   "scheme_ids": [
@@ -29,7 +29,7 @@
         "Ministry of New and Renewable Energy",
         "Ministry of Jal Shakti"
       ],
-      "last_update": "2026-10-01T01:27:34.270940+00:00",
+      "last_update": "2026-10-02T01:48:03.086495+00:00",
       "source_health": {
         "pib_mopng": "OK",
         "gobardhan_portal": "OK",
@@ -76,7 +76,7 @@
         "PIB National Energy & Infrastructure",
         "Prime Minister's Office Press Releases"
       ],
-      "last_update": "2026-10-01T01:27:34.270940+00:00",
+      "last_update": "2026-10-02T01:48:03.086495+00:00",
       "source_health": {
         "dgh_portal": "OK",
         "pib_mopng_samudra": "OK",
@@ -240,7 +240,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "PRAJIND": {
       "symbol": "PRAJIND.NS",
@@ -357,7 +357,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "TRUALT.NS": {
       "symbol": "TRUALT.NS",
@@ -431,15 +431,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 468.65,
-      "change_pct": 2.24,
-      "volume": 396825,
+      "price": 444.3,
+      "change_pct": -5.2,
+      "volume": 290950,
       "volume_change_pct": null,
-      "avg_volume": 269466,
+      "avg_volume": 285923,
       "trend": "NEUTRAL",
       "support": 400.0,
       "resistance": 472.5,
-      "rsi": 73.6,
+      "rsi": 61.2,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -453,7 +453,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "TRUALT": {
       "symbol": "TRUALT.NS",
@@ -527,15 +527,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 468.65,
-      "change_pct": 2.24,
-      "volume": 396825,
+      "price": 444.3,
+      "change_pct": -5.2,
+      "volume": 290950,
       "volume_change_pct": null,
-      "avg_volume": 269466,
+      "avg_volume": 285923,
       "trend": "NEUTRAL",
       "support": 400.0,
       "resistance": 472.5,
-      "rsi": 73.6,
+      "rsi": 61.2,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -549,7 +549,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "IONEXCHANG.NS": {
       "symbol": "IONEXCHANG.NS",
@@ -644,15 +644,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 410.2,
-      "change_pct": -3.0,
-      "volume": 190265,
+      "price": 411.15,
+      "change_pct": 0.23,
+      "volume": 230496,
       "volume_change_pct": null,
-      "avg_volume": 639284,
+      "avg_volume": 637665,
       "trend": "NEUTRAL",
-      "support": 362.85,
+      "support": 380.15,
       "resistance": 461.0,
-      "rsi": 34.8,
+      "rsi": 36.3,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -666,7 +666,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "IONEXCHANG": {
       "symbol": "IONEXCHANG.NS",
@@ -761,15 +761,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 410.2,
-      "change_pct": -3.0,
-      "volume": 190265,
+      "price": 411.15,
+      "change_pct": 0.23,
+      "volume": 230496,
       "volume_change_pct": null,
-      "avg_volume": 639284,
+      "avg_volume": 637665,
       "trend": "NEUTRAL",
-      "support": 362.85,
+      "support": 380.15,
       "resistance": 461.0,
-      "rsi": 34.8,
+      "rsi": 36.3,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -783,7 +783,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "WABAG.NS": {
       "symbol": "WABAG.NS",
@@ -878,15 +878,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 2061.4,
-      "change_pct": -1.55,
-      "volume": 394972,
+      "price": 2004.9,
+      "change_pct": -2.74,
+      "volume": 398624,
       "volume_change_pct": null,
-      "avg_volume": 661836,
+      "avg_volume": 666862,
       "trend": "NEUTRAL",
       "support": 1956.8,
       "resistance": 2319.0,
-      "rsi": 38.8,
+      "rsi": 29.3,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -900,7 +900,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "WABAG": {
       "symbol": "WABAG.NS",
@@ -995,15 +995,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 2061.4,
-      "change_pct": -1.55,
-      "volume": 394972,
+      "price": 2004.9,
+      "change_pct": -2.74,
+      "volume": 398624,
       "volume_change_pct": null,
-      "avg_volume": 661836,
+      "avg_volume": 666862,
       "trend": "NEUTRAL",
       "support": 1956.8,
       "resistance": 2319.0,
-      "rsi": 38.8,
+      "rsi": 29.3,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -1017,7 +1017,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "KIRLPNU.NS": {
       "symbol": "KIRLPNU.NS",
@@ -1112,15 +1112,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 684.4,
-      "change_pct": 0.85,
-      "volume": 133945,
+      "price": 676.7,
+      "change_pct": -1.13,
+      "volume": 75891,
       "volume_change_pct": null,
-      "avg_volume": 142079,
+      "avg_volume": 142959,
       "trend": "BEARISH",
       "support": 669.6,
       "resistance": 772.8,
-      "rsi": 25.6,
+      "rsi": 28.4,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -1134,7 +1134,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "KIRLPNU": {
       "symbol": "KIRLPNU.NS",
@@ -1229,15 +1229,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 684.4,
-      "change_pct": 0.85,
-      "volume": 133945,
+      "price": 676.7,
+      "change_pct": -1.13,
+      "volume": 75891,
       "volume_change_pct": null,
-      "avg_volume": 142079,
+      "avg_volume": 142959,
       "trend": "BEARISH",
       "support": 669.6,
       "resistance": 772.8,
-      "rsi": 25.6,
+      "rsi": 28.4,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -1251,7 +1251,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "GAIL.NS": {
       "symbol": "GAIL.NS",
@@ -1346,15 +1346,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 170.55,
-      "change_pct": 0.3,
-      "volume": 12187561,
+      "price": 171.22,
+      "change_pct": 0.39,
+      "volume": 6882008,
       "volume_change_pct": null,
-      "avg_volume": 5867569,
+      "avg_volume": 6197922,
       "trend": "BEARISH",
       "support": 168.43,
       "resistance": 177.3,
-      "rsi": 37.3,
+      "rsi": 42.1,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -1368,7 +1368,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "GAIL": {
       "symbol": "GAIL.NS",
@@ -1463,15 +1463,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 170.55,
-      "change_pct": 0.3,
-      "volume": 12187561,
+      "price": 171.22,
+      "change_pct": 0.39,
+      "volume": 6882008,
       "volume_change_pct": null,
-      "avg_volume": 5867569,
+      "avg_volume": 6197922,
       "trend": "BEARISH",
       "support": 168.43,
       "resistance": 177.3,
-      "rsi": 37.3,
+      "rsi": 42.1,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -1485,7 +1485,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "IOC.NS": {
       "symbol": "IOC.NS",
@@ -1580,15 +1580,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 134.93,
-      "change_pct": 2.74,
-      "volume": 9545086,
+      "price": 131.34,
+      "change_pct": -2.66,
+      "volume": 12239747,
       "volume_change_pct": null,
-      "avg_volume": 7231159,
+      "avg_volume": 7296958,
       "trend": "BEARISH",
       "support": 131.02,
       "resistance": 139.3,
-      "rsi": 50.0,
+      "rsi": 42.5,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -1602,7 +1602,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "IOC": {
       "symbol": "IOC.NS",
@@ -1697,15 +1697,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 134.93,
-      "change_pct": 2.74,
-      "volume": 9545086,
+      "price": 131.34,
+      "change_pct": -2.66,
+      "volume": 12239747,
       "volume_change_pct": null,
-      "avg_volume": 7231159,
+      "avg_volume": 7296958,
       "trend": "BEARISH",
       "support": 131.02,
       "resistance": 139.3,
-      "rsi": 50.0,
+      "rsi": 42.5,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -1719,7 +1719,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "ONGC.NS": {
       "symbol": "ONGC.NS",
@@ -1743,15 +1743,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 225.8,
-      "change_pct": -1.83,
-      "volume": 11131417,
+      "price": 222.37,
+      "change_pct": -1.52,
+      "volume": 13099985,
       "volume_change_pct": null,
-      "avg_volume": 9750815,
+      "avg_volume": 9653691,
       "trend": "BEARISH",
-      "support": 223.6,
+      "support": 220.6,
       "resistance": 243.16,
-      "rsi": 32.7,
+      "rsi": 34.1,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -1765,7 +1765,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "ONGC": {
       "symbol": "ONGC.NS",
@@ -1789,15 +1789,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 225.8,
-      "change_pct": -1.83,
-      "volume": 11131417,
+      "price": 222.37,
+      "change_pct": -1.52,
+      "volume": 13099985,
       "volume_change_pct": null,
-      "avg_volume": 9750815,
+      "avg_volume": 9653691,
       "trend": "BEARISH",
-      "support": 223.6,
+      "support": 220.6,
       "resistance": 243.16,
-      "rsi": 32.7,
+      "rsi": 34.1,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -1811,7 +1811,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "OIL.NS": {
       "symbol": "OIL.NS",
@@ -1857,7 +1857,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "OIL": {
       "symbol": "OIL.NS",
@@ -1903,7 +1903,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "RELIANCE.NS": {
       "symbol": "RELIANCE.NS",
@@ -1927,15 +1927,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 1187.0,
-      "change_pct": 0.42,
-      "volume": 16376789,
+      "price": 1167.7,
+      "change_pct": -1.63,
+      "volume": 16771221,
       "volume_change_pct": null,
-      "avg_volume": 11352072,
+      "avg_volume": 11496019,
       "trend": "BEARISH",
-      "support": 1181.7,
+      "support": 1160.8,
       "resistance": 1333.0,
-      "rsi": 26.5,
+      "rsi": 26.1,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -1949,7 +1949,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "RELIANCE": {
       "symbol": "RELIANCE.NS",
@@ -1973,15 +1973,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 1187.0,
-      "change_pct": 0.42,
-      "volume": 16376789,
+      "price": 1167.7,
+      "change_pct": -1.63,
+      "volume": 16771221,
       "volume_change_pct": null,
-      "avg_volume": 11352072,
+      "avg_volume": 11496019,
       "trend": "BEARISH",
-      "support": 1181.7,
+      "support": 1160.8,
       "resistance": 1333.0,
-      "rsi": 26.5,
+      "rsi": 26.1,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -1995,7 +1995,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "VEDL.NS": {
       "symbol": "VEDL.NS",
@@ -2019,15 +2019,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 259.0,
-      "change_pct": -0.38,
-      "volume": 8639213,
+      "price": 252.05,
+      "change_pct": -2.68,
+      "volume": 10131800,
       "volume_change_pct": null,
-      "avg_volume": 6625631,
+      "avg_volume": 6678563,
       "trend": "BEARISH",
-      "support": 252.5,
+      "support": 247.25,
       "resistance": 275.75,
-      "rsi": 41.1,
+      "rsi": 39.9,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -2041,7 +2041,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     },
     "VEDL": {
       "symbol": "VEDL.NS",
@@ -2065,15 +2065,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 259.0,
-      "change_pct": -0.38,
-      "volume": 8639213,
+      "price": 252.05,
+      "change_pct": -2.68,
+      "volume": 10131800,
       "volume_change_pct": null,
-      "avg_volume": 6625631,
+      "avg_volume": 6678563,
       "trend": "BEARISH",
-      "support": 252.5,
+      "support": 247.25,
       "resistance": 275.75,
-      "rsi": 41.1,
+      "rsi": 39.9,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -2087,7 +2087,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-01T01:27:34.270940+00:00"
+      "updated_at": "2026-10-02T01:48:03.086495+00:00"
     }
   },
   "qualified_setups": [],
@@ -2116,17 +2116,17 @@
     "reason": null
   },
   "indian_sentiment": {
-    "classification": "NEUTRAL",
-    "score": -3.2,
+    "classification": "BEARISH",
+    "score": -22.3,
     "confidence": "LOW",
     "nifty_direction": "UNAVAILABLE",
     "sensex_direction": null,
     "breadth": {
-      "advances": 10,
-      "declines": 12,
+      "advances": 4,
+      "declines": 18,
       "unchanged": 0,
-      "advance_decline_ratio": 0.83,
-      "positive_breadth_pct": 45.5
+      "advance_decline_ratio": 0.22,
+      "positive_breadth_pct": 18.2
     },
     "sector_rotation": [
       "Bio-Energy and Capital Goods domestic capex cycle active",
@@ -2144,7 +2144,7 @@
       "Water Infrastructure",
       "Capital Goods"
     ],
-    "timestamp": "2026-10-01T01:27:35.655465+00:00",
+    "timestamp": "2026-10-02T01:48:04.381398+00:00",
     "evidence": [],
     "methodology": "Deterministic composite: Nifty trend/return weight (40%) + Watchlist breadth (35%) + News/Policy sentiment balance (25%)."
   },
@@ -2169,14 +2169,14 @@
     "evidence": [
       "Baseline macro indicators within historical variance"
     ],
-    "timestamp": "2026-10-01T01:27:35.655509+00:00",
+    "timestamp": "2026-10-02T01:48:04.381434+00:00",
     "methodology": "Deterministic evaluation of reported international indices, commodities, and risk proxies. Missing indicators are explicitly marked None without synthetic fabrication."
   },
   "scheme_impacts": {
     "gobardhan": {
       "scheme_id": "gobardhan",
       "scheme_name": "GOBARdhan (Galvanizing Organic Bio-Agro Resources Dhan)",
-      "indian_sentiment": "NEUTRAL",
+      "indian_sentiment": "BEARISH",
       "global_sentiment": "NEUTRAL",
       "affected_sectors": [
         "Bio-Energy",
@@ -2203,26 +2203,25 @@
         "Core policy mandates remain statutorily locked."
       ],
       "negative_factors": [
-        "Execution bottlenecks at state-level permitting remain constant."
+        "Broader domestic market volatility may induce temporary execution delays in private capex."
       ],
       "neutral_uncertain_factors": [
-        "Domestic sentiment is range-bound; commercial execution remains volume-driven.",
         "Global commodity price range maintains steady feedstock parity without acute inflation."
       ],
-      "estimated_directional_impact": "NEUTRAL",
+      "estimated_directional_impact": "NEGATIVE",
       "confidence": "MEDIUM",
       "supporting_evidence": [
-        "Indian Sentiment: NEUTRAL (Score: -3.2)",
+        "Indian Sentiment: BEARISH (Score: -22.3)",
         "Global Sentiment: NEUTRAL (Score: +0.0)",
         "Active Policy Sectors: Bio-Energy, Engineering, Bio-Energy"
       ],
-      "timestamp": "2026-10-01T01:27:35.655544+00:00",
+      "timestamp": "2026-10-02T01:48:04.381465+00:00",
       "disclaimer": "Analytical interpretation of macro conditions and scheme policy channels. Not an investment recommendation or trade instruction."
     },
     "samudra_manthan": {
       "scheme_id": "samudra_manthan",
       "scheme_name": "Samudra Manthan (National Offshore Exploration Scheme)",
-      "indian_sentiment": "NEUTRAL",
+      "indian_sentiment": "BEARISH",
       "global_sentiment": "NEUTRAL",
       "affected_sectors": [
         "Upstream Oil & Gas",
@@ -2248,20 +2247,19 @@
         "Core policy mandates remain statutorily locked."
       ],
       "negative_factors": [
-        "Execution bottlenecks at state-level permitting remain constant."
+        "Domestic market uncertainty may constrain debt syndication for high-risk frontier wells."
       ],
       "neutral_uncertain_factors": [
-        "Domestic sentiment steady; drilling schedules governed by seasonal monsoon windows.",
         "Global offshore service costs and rig dayrates remain stable across Indian basins."
       ],
-      "estimated_directional_impact": "NEUTRAL",
+      "estimated_directional_impact": "NEGATIVE",
       "confidence": "MEDIUM",
       "supporting_evidence": [
-        "Indian Sentiment: NEUTRAL (Score: -3.2)",
+        "Indian Sentiment: BEARISH (Score: -22.3)",
         "Global Sentiment: NEUTRAL (Score: +0.0)",
         "Active Policy Sectors: Upstream Oil & Gas, Offshore Exploration, Deepwater Drilling"
       ],
-      "timestamp": "2026-10-01T01:27:35.655585+00:00",
+      "timestamp": "2026-10-02T01:48:04.381497+00:00",
       "disclaimer": "Analytical interpretation of macro conditions and scheme policy channels. Not an investment recommendation or trade instruction."
     }
   },
@@ -2271,634 +2269,634 @@
       "short_symbol": "PRAJIND",
       "name": "Praj Industries",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Overhead technical supply / resistance requires volume confirmation."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-01T01:27:35.655606+00:00"
+      "timestamp": "2026-10-02T01:48:04.381512+00:00"
     },
     "PRAJIND": {
       "stock": "PRAJIND",
       "short_symbol": "PRAJIND",
       "name": "Praj Industries",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Overhead technical supply / resistance requires volume confirmation."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-01T01:27:35.655630+00:00"
+      "timestamp": "2026-10-02T01:48:04.381532+00:00"
     },
     "TRUALT.NS": {
       "stock": "TRUALT.NS",
       "short_symbol": "TRUALT",
       "name": "TruAlt Bioenergy",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Working capital cycle length."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: NEUTRAL"
       ],
-      "timestamp": "2026-10-01T01:27:35.655643+00:00"
+      "timestamp": "2026-10-02T01:48:04.381542+00:00"
     },
     "TRUALT": {
       "stock": "TRUALT",
       "short_symbol": "TRUALT",
       "name": "TruAlt Bioenergy",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Working capital cycle length."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: NEUTRAL"
       ],
-      "timestamp": "2026-10-01T01:27:35.655658+00:00"
+      "timestamp": "2026-10-02T01:48:04.381553+00:00"
     },
     "IONEXCHANG.NS": {
       "stock": "IONEXCHANG.NS",
       "short_symbol": "IONEXCHANG",
       "name": "Ion Exchange",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Working capital cycle length."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: NEUTRAL"
       ],
-      "timestamp": "2026-10-01T01:27:35.655668+00:00"
+      "timestamp": "2026-10-02T01:48:04.381560+00:00"
     },
     "IONEXCHANG": {
       "stock": "IONEXCHANG",
       "short_symbol": "IONEXCHANG",
       "name": "Ion Exchange",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Working capital cycle length."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: NEUTRAL"
       ],
-      "timestamp": "2026-10-01T01:27:35.655678+00:00"
+      "timestamp": "2026-10-02T01:48:04.381567+00:00"
     },
     "WABAG.NS": {
       "stock": "WABAG.NS",
       "short_symbol": "WABAG",
       "name": "VA Tech Wabag",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Working capital cycle length."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: NEUTRAL"
       ],
-      "timestamp": "2026-10-01T01:27:35.655690+00:00"
+      "timestamp": "2026-10-02T01:48:04.381573+00:00"
     },
     "WABAG": {
       "stock": "WABAG",
       "short_symbol": "WABAG",
       "name": "VA Tech Wabag",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Working capital cycle length."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: NEUTRAL"
       ],
-      "timestamp": "2026-10-01T01:27:35.655699+00:00"
+      "timestamp": "2026-10-02T01:48:04.381581+00:00"
     },
     "KIRLPNU.NS": {
       "stock": "KIRLPNU.NS",
       "short_symbol": "KIRLPNU",
       "name": "Kirloskar Pneumatic",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Overhead technical supply / resistance requires volume confirmation."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-01T01:27:35.655708+00:00"
+      "timestamp": "2026-10-02T01:48:04.381587+00:00"
     },
     "KIRLPNU": {
       "stock": "KIRLPNU",
       "short_symbol": "KIRLPNU",
       "name": "Kirloskar Pneumatic",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Overhead technical supply / resistance requires volume confirmation."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-01T01:27:35.655716+00:00"
+      "timestamp": "2026-10-02T01:48:04.381593+00:00"
     },
     "GAIL.NS": {
       "stock": "GAIL.NS",
       "short_symbol": "GAIL",
       "name": "GAIL (India)",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Overhead technical supply / resistance requires volume confirmation."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-01T01:27:35.655725+00:00"
+      "timestamp": "2026-10-02T01:48:04.381600+00:00"
     },
     "GAIL": {
       "stock": "GAIL",
       "short_symbol": "GAIL",
       "name": "GAIL (India)",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Overhead technical supply / resistance requires volume confirmation."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-01T01:27:35.655734+00:00"
+      "timestamp": "2026-10-02T01:48:04.381606+00:00"
     },
     "IOC.NS": {
       "stock": "IOC.NS",
       "short_symbol": "IOC",
       "name": "Indian Oil Corporation",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Overhead technical supply / resistance requires volume confirmation."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-01T01:27:35.655743+00:00"
+      "timestamp": "2026-10-02T01:48:04.381613+00:00"
     },
     "IOC": {
       "stock": "IOC",
       "short_symbol": "IOC",
       "name": "Indian Oil Corporation",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Overhead technical supply / resistance requires volume confirmation."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-01T01:27:35.655752+00:00"
+      "timestamp": "2026-10-02T01:48:04.381619+00:00"
     },
     "ONGC.NS": {
       "stock": "ONGC.NS",
       "short_symbol": "ONGC",
       "name": "Oil and Natural Gas Corporation",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Overhead technical supply / resistance requires volume confirmation."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-01T01:27:35.655760+00:00"
+      "timestamp": "2026-10-02T01:48:04.381625+00:00"
     },
     "ONGC": {
       "stock": "ONGC",
       "short_symbol": "ONGC",
       "name": "Oil and Natural Gas Corporation",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Overhead technical supply / resistance requires volume confirmation."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-01T01:27:35.655768+00:00"
+      "timestamp": "2026-10-02T01:48:04.381631+00:00"
     },
     "OIL.NS": {
       "stock": "OIL.NS",
       "short_symbol": "OIL",
       "name": "Oil India Limited",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Working capital cycle length."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: NEUTRAL"
       ],
-      "timestamp": "2026-10-01T01:27:35.655805+00:00"
+      "timestamp": "2026-10-02T01:48:04.381637+00:00"
     },
     "OIL": {
       "stock": "OIL",
       "short_symbol": "OIL",
       "name": "Oil India Limited",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Working capital cycle length."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: NEUTRAL"
       ],
-      "timestamp": "2026-10-01T01:27:35.655815+00:00"
+      "timestamp": "2026-10-02T01:48:04.381643+00:00"
     },
     "RELIANCE.NS": {
       "stock": "RELIANCE.NS",
       "short_symbol": "RELIANCE",
       "name": "Reliance Industries",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Overhead technical supply / resistance requires volume confirmation."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-01T01:27:35.655823+00:00"
+      "timestamp": "2026-10-02T01:48:04.381670+00:00"
     },
     "RELIANCE": {
       "stock": "RELIANCE",
       "short_symbol": "RELIANCE",
       "name": "Reliance Industries",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Overhead technical supply / resistance requires volume confirmation."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-01T01:27:35.655832+00:00"
+      "timestamp": "2026-10-02T01:48:04.381679+00:00"
     },
     "VEDL.NS": {
       "stock": "VEDL.NS",
       "short_symbol": "VEDL",
       "name": "Vedanta Limited",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Overhead technical supply / resistance requires volume confirmation."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-01T01:27:35.655840+00:00"
+      "timestamp": "2026-10-02T01:48:04.381685+00:00"
     },
     "VEDL": {
       "stock": "VEDL",
       "short_symbol": "VEDL",
       "name": "Vedanta Limited",
       "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEUTRAL",
+      "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
       "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
       ],
       "negative_drivers": [
-        "Potential project execution delays."
+        "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
         "Overhead technical supply / resistance requires volume confirmation."
       ],
       "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Neutral / Wait condition prevailing",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
       "confidence": "MEDIUM",
       "evidence": [
-        "Indian Market: NEUTRAL",
+        "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-01T01:27:35.655849+00:00"
+      "timestamp": "2026-10-02T01:48:04.381691+00:00"
     }
   },
   "market_and_global_sentiment": {
     "section_title": "MARKET & GLOBAL SENTIMENT",
     "indian_market": {
-      "classification": "NEUTRAL",
-      "score": -3.2,
+      "classification": "BEARISH",
+      "score": -22.3,
       "confidence": "LOW",
       "key_drivers": [
         "UNAVAILABLE"
       ],
       "evidence": [],
       "breadth": {
-        "advances": 10,
-        "declines": 12,
+        "advances": 4,
+        "declines": 18,
         "unchanged": 0,
-        "advance_decline_ratio": 0.83,
-        "positive_breadth_pct": 45.5
+        "advance_decline_ratio": 0.22,
+        "positive_breadth_pct": 18.2
       },
       "sector_rotation": [
         "Bio-Energy and Capital Goods domestic capex cycle active",
@@ -2920,30 +2918,28 @@
     "scheme_impact": {
       "gobardhan": {
         "scheme_name": "GOBARdhan (Galvanizing Organic Bio-Agro Resources Dhan)",
-        "scheme_level_implications": "NEUTRAL",
+        "scheme_level_implications": "NEGATIVE",
         "positive_factors": [
           "Core policy mandates remain statutorily locked."
         ],
         "negative_factors": [
-          "Execution bottlenecks at state-level permitting remain constant."
+          "Broader domestic market volatility may induce temporary execution delays in private capex."
         ],
         "uncertainties": [
-          "Domestic sentiment is range-bound; commercial execution remains volume-driven.",
           "Global commodity price range maintains steady feedstock parity without acute inflation."
         ],
         "confidence": "MEDIUM"
       },
       "samudra_manthan": {
         "scheme_name": "Samudra Manthan (National Offshore Exploration Scheme)",
-        "scheme_level_implications": "NEUTRAL",
+        "scheme_level_implications": "NEGATIVE",
         "positive_factors": [
           "Core policy mandates remain statutorily locked."
         ],
         "negative_factors": [
-          "Execution bottlenecks at state-level permitting remain constant."
+          "Domestic market uncertainty may constrain debt syndication for high-risk frontier wells."
         ],
         "uncertainties": [
-          "Domestic sentiment steady; drilling schedules governed by seasonal monsoon windows.",
           "Global offshore service costs and rig dayrates remain stable across Indian basins."
         ],
         "confidence": "MEDIUM"
@@ -2955,198 +2951,198 @@
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "PRAJIND": {
         "relevant_stock": "PRAJIND",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "TRUALT.NS": {
         "relevant_stock": "TRUALT.NS",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "TRUALT": {
         "relevant_stock": "TRUALT",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "IONEXCHANG.NS": {
         "relevant_stock": "IONEXCHANG.NS",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "IONEXCHANG": {
         "relevant_stock": "IONEXCHANG",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "WABAG.NS": {
         "relevant_stock": "WABAG.NS",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "WABAG": {
         "relevant_stock": "WABAG",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "KIRLPNU.NS": {
         "relevant_stock": "KIRLPNU.NS",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "KIRLPNU": {
         "relevant_stock": "KIRLPNU",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "GAIL.NS": {
         "relevant_stock": "GAIL.NS",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "GAIL": {
         "relevant_stock": "GAIL",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "IOC.NS": {
         "relevant_stock": "IOC.NS",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "IOC": {
         "relevant_stock": "IOC",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "ONGC.NS": {
         "relevant_stock": "ONGC.NS",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "ONGC": {
         "relevant_stock": "ONGC",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "OIL.NS": {
         "relevant_stock": "OIL.NS",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "OIL": {
         "relevant_stock": "OIL",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "RELIANCE.NS": {
         "relevant_stock": "RELIANCE.NS",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "RELIANCE": {
         "relevant_stock": "RELIANCE",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "VEDL.NS": {
         "relevant_stock": "VEDL.NS",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       },
       "VEDL": {
         "relevant_stock": "VEDL",
         "sector_effect": "NEUTRAL",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
-        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
+        "company_specific_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
         "confidence": "MEDIUM",
-        "estimated_impact": "Neutral / Wait condition prevailing"
+        "estimated_impact": "Moderate headwind (Market volatility overhang)"
       }
     }
   },
