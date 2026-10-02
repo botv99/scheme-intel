@@ -18,6 +18,7 @@ GOBARDHAN_CONFIG = SchemeConfig(
     name="GOBARdhan (Galvanizing Organic Bio-Agro Resources Dhan)",
     enabled=True,
     description="Government umbrella initiative covering CBG, Bio-CNG, SATAT, and organic bio-fertilizer commercialization.",
+    focus="Bio-energy / CBG / SATAT",
     ministries=[
         "Ministry of Petroleum and Natural Gas (MoPNG)",
         "Ministry of New and Renewable Energy (MNRE)",

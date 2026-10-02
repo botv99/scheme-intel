@@ -44,9 +44,12 @@ class IntentType(str, Enum):
     PERFORMANCE_LOOKUP = "PERFORMANCE_LOOKUP"
     BENCHMARK_LOOKUP = "BENCHMARK_LOOKUP"
     RESEARCH_REQUEST = "RESEARCH_REQUEST"
+    RESEARCH_PROMPT = "RESEARCH_PROMPT"
     COMPLEX_QUERY = "COMPLEX_QUERY"
     STOCK_PROMPT = "STOCK_PROMPT"
     STOCK_UNKNOWN = "STOCK_UNKNOWN"
+    SCHEME_MENU = "SCHEME_MENU"
+    INTELLIGENCE_LOOKUP = "INTELLIGENCE_LOOKUP"
     UNKNOWN = "UNKNOWN"
 
 
@@ -331,6 +334,39 @@ class IntentResolver:
                 normalized_query=normalized,
             )
 
+        # ====================================================
+        # 0. Telegram Button Callbacks & Scheme Routing
+        # ====================================================
+        if raw.startswith("scheme_select:"):
+            target_scheme = raw.split(":", 1)[1].strip().lower()
+            return ResolvedIntent(
+                intent_type=IntentType.SWITCH_SCHEME,
+                execution_path=ExecutionPath.FAST,
+                scheme_id=target_scheme,
+                raw_query=raw,
+                normalized_query=normalized,
+                parameters={"target_scheme": target_scheme},
+            )
+
+        if raw.startswith("scheme_action:"):
+            parts = raw.split(":")
+            action = parts[1].strip().lower() if len(parts) > 1 else ""
+            action_scheme = parts[2].strip().lower() if len(parts) > 2 else effective_scheme
+            if action == "watchlist":
+                return ResolvedIntent(intent_type=IntentType.WATCHLIST, execution_path=ExecutionPath.FAST, scheme_id=action_scheme, raw_query=raw, normalized_query=normalized)
+            if action in ("trades", "setups"):
+                return ResolvedIntent(intent_type=IntentType.SETUPS_LOOKUP, execution_path=ExecutionPath.FAST, scheme_id=action_scheme, raw_query=raw, normalized_query=normalized)
+            if action == "research":
+                return ResolvedIntent(intent_type=IntentType.RESEARCH_PROMPT, execution_path=ExecutionPath.FAST, scheme_id=action_scheme, raw_query=raw, normalized_query=normalized)
+            if action in ("intelligence", "news"):
+                return ResolvedIntent(intent_type=IntentType.INTELLIGENCE_LOOKUP, execution_path=ExecutionPath.FAST, scheme_id=action_scheme, raw_query=raw, normalized_query=normalized)
+            if action in ("snapshot", "scheme"):
+                return ResolvedIntent(intent_type=IntentType.SCHEME_LOOKUP, execution_path=ExecutionPath.FAST, scheme_id=action_scheme, raw_query=raw, normalized_query=normalized)
+            if action in ("switch_scheme", "switch", "schemes"):
+                return ResolvedIntent(intent_type=IntentType.SCHEMES, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
+            if action in ("menu", "back"):
+                return ResolvedIntent(intent_type=IntentType.SCHEME_MENU, execution_path=ExecutionPath.FAST, scheme_id=action_scheme, raw_query=raw, normalized_query=normalized)
+
         parts = raw.split(maxsplit=1)
         first_token = parts[0].lower().split("@")[0]
         remainder = parts[1].strip() if len(parts) > 1 else ""
@@ -358,6 +394,9 @@ class IntentResolver:
 
             if first_token in ("/start",):
                 return ResolvedIntent(intent_type=IntentType.START, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
+
+            if first_token in ("/menu",):
+                return ResolvedIntent(intent_type=IntentType.SCHEME_MENU, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
 
             if first_token in ("/help",):
                 return ResolvedIntent(intent_type=IntentType.HELP, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
@@ -408,6 +447,15 @@ class IntentResolver:
                     normalized_query=normalized,
                 )
 
+            if first_token in ("/intelligence", "/news"):
+                return ResolvedIntent(
+                    intent_type=IntentType.INTELLIGENCE_LOOKUP,
+                    execution_path=ExecutionPath.FAST,
+                    scheme_id=effective_scheme,
+                    raw_query=raw,
+                    normalized_query=normalized,
+                )
+
             if first_token in ("/setups", "/trades"):
                 return ResolvedIntent(
                     intent_type=IntentType.SETUPS_LOOKUP,
@@ -454,6 +502,14 @@ class IntentResolver:
                 )
 
             if first_token in ("/research",):
+                if not remainder:
+                    return ResolvedIntent(
+                        intent_type=IntentType.RESEARCH_PROMPT,
+                        execution_path=ExecutionPath.FAST,
+                        scheme_id=effective_scheme,
+                        raw_query=raw,
+                        normalized_query=normalized,
+                    )
                 question = remainder
                 scheme_id = effective_scheme
                 for s in SchemeRegistry.list_schemes():
@@ -580,7 +636,23 @@ class IntentResolver:
         # ====================================================
         lowered = normalized
 
-        # Words without slash
+        # Words without slash & Button Clicks
+        clean_action = re.sub(r"[^\w\s]", "", lowered).strip()
+        if clean_action in ("menu", "back", "main menu"):
+            return ResolvedIntent(intent_type=IntentType.SCHEME_MENU, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
+        if clean_action in ("switch scheme", "switch schemes"):
+            return ResolvedIntent(intent_type=IntentType.SCHEMES, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
+        if clean_action in ("intelligence", "news"):
+            return ResolvedIntent(intent_type=IntentType.INTELLIGENCE_LOOKUP, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
+        if clean_action in ("research",):
+            return ResolvedIntent(intent_type=IntentType.RESEARCH_PROMPT, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
+        if clean_action in ("snapshot", "scheme snapshot"):
+            return ResolvedIntent(intent_type=IntentType.SCHEME_LOOKUP, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
+        if clean_action in ("watchlist", "view watchlist"):
+            return ResolvedIntent(intent_type=IntentType.WATCHLIST, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
+        if clean_action in ("trades", "trade", "setups", "setup"):
+            return ResolvedIntent(intent_type=IntentType.SETUPS_LOOKUP, execution_path=ExecutionPath.FAST, scheme_id=effective_scheme, raw_query=raw, normalized_query=normalized)
+
         if first_token in ("start",):
             return ResolvedIntent(intent_type=IntentType.START, execution_path=ExecutionPath.FAST, raw_query=raw, normalized_query=normalized)
         if first_token in ("help",):

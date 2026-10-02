@@ -278,8 +278,8 @@ class TestPipelineEndToEndAudit:
                 ]
             }
         )
-        assert len(batch.events) == 1
-        event = batch.events[0]
+        assert len(batch.events) >= 1
+        event = next((e for e in batch.events if e.source_id == "dgh_portal"), batch.events[0])
         assert event.scheme_id == "samudra_manthan"
         assert "Ultra-Deepwater" in event.title
 

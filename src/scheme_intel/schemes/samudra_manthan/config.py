@@ -82,6 +82,7 @@ SAMUDRA_MANTHAN_CONFIG = SchemeConfig(
     name="Samudra Manthan (National Offshore Exploration Scheme)",
     enabled=True,
     description="Government umbrella initiative covering deepwater and ultra-deepwater oil and gas exploration, OALP block development, seismic surveys, and offshore drilling.",
+    focus="Offshore / Deepwater / Ultra-Deepwater E&P",
     ministries=[
         "Ministry of Petroleum and Natural Gas (MoPNG)",
         "Directorate General of Hydrocarbons (DGH)",

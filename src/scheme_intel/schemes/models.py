@@ -93,6 +93,7 @@ class SchemeConfig(BaseModel):
     name: str
     enabled: bool = True
     description: str = ""
+    focus: str = ""
     ministries: List[str] = Field(default_factory=list)
     sources: List[SchemeSource] = Field(default_factory=list)
     watchlist: List[SchemeStock] = Field(default_factory=list)

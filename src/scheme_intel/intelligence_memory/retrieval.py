@@ -150,14 +150,40 @@ class FastIntelligenceRetriever:
         return None
 
     def get_watchlist(self, scheme_id: Optional[str] = None) -> List[CompanyIntelligence]:
-        """Fetch all companies for the active scheme watchlist."""
-        snapshot = self.get_snapshot(scheme_id=scheme_id)
-        if not snapshot:
-            return []
+        """Fetch all companies for the active scheme watchlist with strict data-layer isolation."""
         if not scheme_id:
-            return list(snapshot.companies.values())
+            snapshot = self.get_snapshot()
+            return list(snapshot.companies.values()) if snapshot else []
+
         norm_sid = scheme_id.strip().lower()
-        return [c for c in snapshot.companies.values() if (c.scheme_id or "").lower() == norm_sid]
+        from ..schemes.registry import SchemeRegistry
+        scfg = SchemeRegistry.get(norm_sid)
+        if not scfg:
+            return []
+
+        # 1. First attempt to retrieve from loaded snapshot
+        snapshot = self.get_snapshot(scheme_id=norm_sid)
+        if snapshot and snapshot.companies:
+            matched = [c for c in snapshot.companies.values() if (c.scheme_id or "").lower() == norm_sid]
+            if matched:
+                return matched
+
+        # 2. Authoritative fallback directly from SchemeRegistry watchlist definition
+        if scfg.watchlist:
+            return [
+                CompanyIntelligence(
+                    symbol=s.symbol,
+                    short_symbol=s.symbol.split(".")[0],
+                    name=s.name,
+                    scheme_id=scfg.id,
+                    scheme_name=scfg.name,
+                    status=s.status,
+                    relevance="High" if s.status == "CORE" else "Candidate",
+                )
+                for s in scfg.watchlist
+            ]
+
+        return []
 
     def get_scheme(self, scheme_id: str) -> Optional[SchemeIntelligence]:
         """Fetch scheme intelligence by scheme ID."""

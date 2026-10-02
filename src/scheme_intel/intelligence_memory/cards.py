@@ -12,6 +12,7 @@ from .models import (
     SchemeIntelligence,
     PerformanceIntelligence,
     BenchmarkIntelligence,
+    IntelligenceSnapshot,
 )
 
 
@@ -528,13 +529,17 @@ def render_watchlist_card(
     scheme_name: Optional[str] = None,
 ) -> str:
     """Format watchlist overview card."""
-    header_name = (scheme_name or "GOBARdhan").upper()
+    header_name = (scheme_name or "GOBARdhan").split("(")[0].strip().upper()
     lines = [
         f"📋 *{header_name} SCHEME WATCHLIST*",
         "",
     ]
     seen = set()
-    items = companies.values() if isinstance(companies, dict) else companies
+    items = list(companies.values()) if isinstance(companies, dict) else list(companies)
+    if not items:
+        lines.append("No watchlist companies are currently configured for this scheme.")
+        return "\n".join(lines)
+
     for comp in items:
         sym = comp.symbol or comp.short_symbol
         base = sym.split(".")[0]
@@ -545,10 +550,169 @@ def render_watchlist_card(
         status_str = f"`{comp.status}`" if comp.status else "`WATCH`"
         lines.append(f"• *{base}* ({comp.name}) — {price_str} | {status_str}")
 
+    sample_stock = "ONGC" if "samudra" in (scheme_name or "").lower() else "GAIL"
     lines.extend([
         "",
-        "Use `/stock <symbol>` (e.g. `/stock GAIL` or `/stock ONGC`) to view full intelligence.",
+        f"Use `/stock <symbol>` (e.g. `/stock {sample_stock}`) to view full intelligence.",
     ])
+    return "\n".join(lines)
+
+
+def render_scheme_header_menu(scheme_cfg: Any, switched: bool = False) -> str:
+    """Format post-selection scheme dashboard menu card with emoji, name, and focus."""
+    sid = getattr(scheme_cfg, "id", getattr(scheme_cfg, "scheme_id", ""))
+    sname = getattr(scheme_cfg, "name", sid)
+    sfocus = getattr(scheme_cfg, "focus", "")
+    sdesc = getattr(scheme_cfg, "description", "")
+
+    emoji = "🌊" if "samudra" in sid.lower() else "🌱" if "gobar" in sid.lower() else "🏛️"
+
+    lines = []
+    if switched:
+        lines.extend([
+            "🔄 *Active Scheme Switched*",
+            "",
+        ])
+    lines.append(f"{emoji} *{sname.upper()}*")
+    if sfocus:
+        lines.append(f"*Focus:* {sfocus}")
+    if sdesc:
+        lines.append(f"_{sdesc}_")
+    lines.extend([
+        "",
+        "Select an intelligence action below:",
+    ])
+    return "\n".join(lines)
+
+
+def get_scheme_inline_keyboard(scheme_id: str) -> Dict[str, Any]:
+    """Generate structured interactive inline keyboard for the active scheme's menu."""
+    return {
+        "inline_keyboard": [
+            [
+                {"text": "📋 WATCHLIST", "callback_data": f"scheme_action:watchlist:{scheme_id}"},
+                {"text": "📈 TRADES", "callback_data": f"scheme_action:trades:{scheme_id}"},
+            ],
+            [
+                {"text": "🧠 RESEARCH", "callback_data": f"scheme_action:research:{scheme_id}"},
+                {"text": "📰 INTELLIGENCE", "callback_data": f"scheme_action:intelligence:{scheme_id}"},
+            ],
+            [
+                {"text": "📊 SNAPSHOT", "callback_data": f"scheme_action:snapshot:{scheme_id}"},
+                {"text": "🔄 SWITCH SCHEME", "callback_data": "scheme_action:switch_scheme"},
+            ],
+        ]
+    }
+
+
+def render_schemes_select_menu(licensed_schemes: List[Any]) -> str:
+    """Format scheme selector prompt listing authorized schemes."""
+    lines = [
+        "📊 *SCHEMES — SUPPORTED POLICY SCHEMES*",
+        "",
+        "*Select Scheme*",
+        "Choose an authorized scheme below to activate:",
+        "",
+    ]
+    for s in licensed_schemes:
+        sid = getattr(s, "id", getattr(s, "scheme_id", ""))
+        name = getattr(s, "name", sid)
+        emoji = "🌊" if "samudra" in sid.lower() else "🌱" if "gobar" in sid.lower() else "🏛️"
+        lines.append(f"• {emoji} *{name}* (`{sid}`)")
+    lines.extend([
+        "",
+        "Tap a scheme button below or type `/switch <scheme_id>`:",
+    ])
+    return "\n".join(lines)
+
+
+def get_schemes_inline_keyboard(licensed_schemes: List[Any]) -> Dict[str, Any]:
+    """Generate keyboard containing only schemes the user is entitled to."""
+    keyboard: List[List[Dict[str, str]]] = []
+    for s in licensed_schemes:
+        sid = getattr(s, "id", getattr(s, "scheme_id", ""))
+        raw_name = getattr(s, "name", sid)
+        display_name = raw_name.split("(")[0].strip()
+        emoji = "🌊 " if "samudra" in sid.lower() else "🌱 " if "gobar" in sid.lower() else "🏛️ "
+        keyboard.append([
+            {"text": f"{emoji}{display_name}", "callback_data": f"scheme_select:{sid}"}
+        ])
+    return {"inline_keyboard": keyboard}
+
+
+def get_back_and_switch_inline_keyboard(scheme_id: Optional[str] = None) -> Dict[str, Any]:
+    """Generate Back & Switch Scheme navigation buttons."""
+    back_cb = f"scheme_action:menu:{scheme_id}" if scheme_id else "scheme_action:menu"
+    return {
+        "inline_keyboard": [
+            [
+                {"text": "⬅️ Back", "callback_data": back_cb},
+                {"text": "🔄 Switch Scheme", "callback_data": "scheme_action:switch_scheme"},
+            ]
+        ]
+    }
+
+
+def render_intelligence_card(
+    scheme_id: str,
+    snapshot: Optional[IntelligenceSnapshot] = None,
+    scheme_cfg: Optional[Any] = None,
+) -> str:
+    """Render latest scheme intelligence, news, and developments."""
+    name = (getattr(scheme_cfg, "name", None) or scheme_id).upper()
+    lines = [
+        f"📰 *{name} INTELLIGENCE*",
+        "",
+    ]
+    if snapshot and scheme_id in snapshot.schemes:
+        s_intel = snapshot.schemes[scheme_id]
+        if s_intel.key_developments:
+            lines.append("*Key Developments:*")
+            for kd in s_intel.key_developments[:5]:
+                lines.append(f"• {kd}")
+            lines.append("")
+        if s_intel.important_sources:
+            lines.append(f"*Sources:* {', '.join(s_intel.important_sources[:4])}")
+            lines.append("")
+        if s_intel.last_update:
+            lines.append(f"_Updated: {s_intel.last_update[:16]} UTC_")
+    elif scheme_cfg:
+        lines.append(f"_{scheme_cfg.description}_")
+        lines.append("")
+        if scheme_cfg.sources:
+            lines.append(f"*Sources Monitored:* {len(scheme_cfg.sources)} official & industry feeds")
+    else:
+        lines.append("No recent intelligence reports available for this scheme.")
+    return "\n".join(lines).strip()
+
+
+def render_research_prompt_card(scheme_cfg: Optional[Any] = None, scheme_id: Optional[str] = None) -> str:
+    """Render instructional card for asynchronous research queries."""
+    raw_name = getattr(scheme_cfg, "name", scheme_id or "Scheme")
+    sname = raw_name.split("(")[0].strip()
+    sfocus = getattr(scheme_cfg, "focus", "")
+    lines = [
+        f"🧠 *{sname.upper()} RESEARCH*",
+        "",
+    ]
+    if sfocus:
+        lines.extend([f"*Context:* {sfocus}", ""])
+    lines.extend([
+        "To run deep asynchronous research on this scheme, send:",
+        "`/research <your question>`",
+        "",
+        "*Examples:*",
+    ])
+    if "samudra" in (scheme_id or getattr(scheme_cfg, "id", "")).lower():
+        lines.extend([
+            "• `/research What are the latest deepwater drilling contract updates?`",
+            "• `/research Analyze ONGC KG-Basin offshore ultra-deepwater catalysts`",
+        ])
+    else:
+        lines.extend([
+            "• `/research What changed in Gobardhan CBG policy this month?`",
+            "• `/research Compare SATAT procurement pricing vs natural gas`",
+        ])
     return "\n".join(lines)
 
 

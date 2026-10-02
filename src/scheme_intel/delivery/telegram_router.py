@@ -41,12 +41,33 @@ from ..intelligence_memory.cards import (
     render_snapshot_missing,
     render_snapshot_invalid,
     render_health_card,
+    render_scheme_header_menu,
+    get_scheme_inline_keyboard,
+    render_schemes_select_menu,
+    get_schemes_inline_keyboard,
+    get_back_and_switch_inline_keyboard,
+    render_intelligence_card,
+    render_research_prompt_card,
 )
 from ..research.queue import ResearchQueue
 from ..research.formatter import format_research_acknowledgement
 from ..logger import get_logger
 
 logger = get_logger(__name__)
+
+
+class RouterResponse(str):
+    """
+    Subclass of str that optionally carries Telegram reply_markup (e.g. inline keyboard).
+    Enables backward-compatible string assertions in existing callers/tests while
+    supplying rich inline keyboard definitions to Telegram delivery handlers.
+    """
+    reply_markup: Optional[Dict[str, Any]] = None
+
+    def __new__(cls, content: str, reply_markup: Optional[Dict[str, Any]] = None):
+        obj = super().__new__(cls, content)
+        obj.reply_markup = reply_markup
+        return obj
 
 
 class TelegramMessageRouter:
@@ -146,24 +167,25 @@ class TelegramMessageRouter:
         if intent.symbol:
             logger.info("[TELEGRAM] Snapshot lookup=%s", intent.symbol)
 
-        # 4. Handle Scheme Switch Intent
+        # 4. Handle Scheme Navigation and Context Intents
         if intent.intent_type == IntentType.SWITCH_SCHEME:
-            target = (intent.scheme_id or "").strip().lower()
+            target = (intent.scheme_id or intent.parameters.get("target_scheme", "")).strip().lower()
             if not target:
-                response = (
-                    "⚠️ Please specify a scheme to switch to.\n"
-                    "Example: `/switch samudra_manthan` or `/switch gobardhan`.\n\n"
-                    "Use `/schemes` to view registered schemes."
+                licensed_ids = self.entitlement_service.get_licensed_schemes(user_id=user_id, chat_id=chat_id)
+                licensed_schemes = [SchemeRegistry.get(sid) for sid in licensed_ids if SchemeRegistry.get(sid)]
+                response = RouterResponse(
+                    render_schemes_select_menu(licensed_schemes),
+                    reply_markup=get_schemes_inline_keyboard(licensed_schemes),
                 )
                 self.request_store.mark_completed(effective_req_id, response)
                 return response
 
             if target not in SchemeRegistry.list_scheme_ids():
-                response = render_unknown_scheme(target)
+                response = RouterResponse(render_unknown_scheme(target))
                 self.request_store.mark_completed(effective_req_id, response)
                 return response
 
-            # Hard licensing gate before switching
+            # Hard licensing gate before switching - NEVER alter session if unauthorized
             authorized, reason = self.entitlement_service.authorize_access(
                 scheme_id=target,
                 user_id=user_id,
@@ -171,7 +193,7 @@ class TelegramMessageRouter:
             )
             if not authorized:
                 logger.warning("[TELEGRAM] User %s switch to %s blocked: %s", effective_uid, target, reason)
-                response = f"⛔ *ACCESS DENIED*\n\nYou do not have an active license for scheme `{target}`.\n_{reason}_"
+                response = RouterResponse(f"⛔ *ACCESS DENIED*\n\nYou do not have an active license for scheme `{target}`.\n_{reason}_")
                 self.request_store.mark_completed(effective_req_id, response)
                 return response
 
@@ -179,11 +201,50 @@ class TelegramMessageRouter:
             cid = self.entitlement_service.resolve_customer(user_id=user_id, chat_id=chat_id)
             self.session_store.set_active_scheme(effective_uid, target, customer_id=cid)
             scfg = SchemeRegistry.get(target)
-            s_name = scfg.name if scfg else target
-            response = (
-                f"🔄 *Active Scheme Switched*\n\n"
-                f"Active scheme is now set to *{s_name}* (`{target}`).\n\n"
-                f"All subsequent watchlist, stock, setup, and research queries will now use this scheme scope."
+            text = render_scheme_header_menu(scfg, switched=True)
+            markup = get_scheme_inline_keyboard(target)
+            response = RouterResponse(text, reply_markup=markup)
+            self.request_store.mark_completed(effective_req_id, response)
+            return response
+
+        if intent.intent_type == IntentType.SCHEMES:
+            licensed_ids = self.entitlement_service.get_licensed_schemes(user_id=user_id, chat_id=chat_id)
+            if not licensed_ids:
+                response = RouterResponse("⛔ *ACCESS DENIED*\n\nYou do not have an active license for any scheme. Please contact your administrator.")
+                self.request_store.mark_completed(effective_req_id, response)
+                return response
+            licensed_schemes = [SchemeRegistry.get(sid) for sid in licensed_ids if SchemeRegistry.get(sid)]
+            response = RouterResponse(
+                render_schemes_select_menu(licensed_schemes),
+                reply_markup=get_schemes_inline_keyboard(licensed_schemes),
+            )
+            self.request_store.mark_completed(effective_req_id, response)
+            return response
+
+        if intent.intent_type == IntentType.SCHEME_MENU:
+            scfg = SchemeRegistry.get(active_scheme)
+            response = RouterResponse(
+                render_scheme_header_menu(scfg),
+                reply_markup=get_scheme_inline_keyboard(active_scheme),
+            )
+            self.request_store.mark_completed(effective_req_id, response)
+            return response
+
+        if intent.intent_type == IntentType.RESEARCH_PROMPT:
+            scfg = SchemeRegistry.get(active_scheme)
+            response = RouterResponse(
+                render_research_prompt_card(scheme_cfg=scfg, scheme_id=active_scheme),
+                reply_markup=get_back_and_switch_inline_keyboard(active_scheme),
+            )
+            self.request_store.mark_completed(effective_req_id, response)
+            return response
+
+        if intent.intent_type == IntentType.INTELLIGENCE_LOOKUP:
+            scfg = SchemeRegistry.get(active_scheme)
+            status, snapshot, _ = self.retriever.get_status(scheme_id=active_scheme)
+            response = RouterResponse(
+                render_intelligence_card(active_scheme, snapshot=snapshot, scheme_cfg=scfg),
+                reply_markup=get_back_and_switch_inline_keyboard(active_scheme),
             )
             self.request_store.mark_completed(effective_req_id, response)
             return response
@@ -212,7 +273,7 @@ class TelegramMessageRouter:
             )
             if not authorized:
                 logger.warning("[AUTH] Blocked access to %s for user %s: %s", check_scheme, effective_uid, reason)
-                response = f"⛔ *ACCESS DENIED*\n\nYou do not have an active license for scheme `{check_scheme}`.\n_{reason}_"
+                response = RouterResponse(f"⛔ *ACCESS DENIED*\n\nYou do not have an active license for scheme `{check_scheme}`.\n_{reason}_")
                 self.request_store.mark_completed(effective_req_id, response)
                 return response
 
@@ -309,7 +370,22 @@ class TelegramMessageRouter:
         """Enqueue asynchronous research task and return immediate acknowledgement."""
         question = intent.parameters.get("question", "").strip()
         if not question:
-            return "⚠️ Please provide a research question.\nExample: `/research What changed in Gobardhan policy this month?`"
+            scfg = SchemeRegistry.get(active_scheme)
+            return RouterResponse(
+                render_research_prompt_card(scheme_cfg=scfg, scheme_id=active_scheme),
+                reply_markup=get_back_and_switch_inline_keyboard(active_scheme),
+            )
+
+        # Research Boundary Interception: Check if user asks about a company from another scheme
+        stocks_in_q = IntentResolver.find_all_stocks_in_text(question)
+        active_cfg = SchemeRegistry.get(active_scheme)
+        for stock, s_id in stocks_in_q:
+            if active_cfg and not active_cfg.is_company_in_universe(stock.symbol):
+                s_name = active_cfg.name.split("(")[0].strip()
+                ticker = stock.symbol.split(".")[0]
+                return RouterResponse(
+                    f"That company ({ticker}) is not in the current {s_name} watchlist/context. Use /schemes to switch scheme."
+                )
 
         # Rate limit check for research requests
         uid = str(user_id or chat_id or "default")
@@ -317,12 +393,12 @@ class TelegramMessageRouter:
         last_req = self._user_last_research.get(uid, 0.0)
         if (now - last_req) < self.research_cooldown_seconds:
             wait_s = int(self.research_cooldown_seconds - (now - last_req))
-            return f"⏳ *Research Rate Limit Reached.*\nPlease wait {wait_s}s before submitting another research request."
+            return RouterResponse(f"⏳ *Research Rate Limit Reached.*\nPlease wait {wait_s}s before submitting another research request.")
 
         self._user_last_research[uid] = now
 
         # Enqueue job in persistent storage
-        scheme_id = intent.scheme_id or active_scheme or "gobardhan"
+        scheme_id = active_scheme or intent.scheme_id or "gobardhan"
         job = self.research_queue.enqueue_job(
             question=question,
             user_id=str(user_id) if user_id else None,
@@ -338,7 +414,7 @@ class TelegramMessageRouter:
                 execution_path=ExecutionPath.RESEARCH,
             )
 
-        return format_research_acknowledgement(job.job_id, question=question)
+        return RouterResponse(format_research_acknowledgement(job.job_id, question=question))
 
     def _handle_fast_query(
         self,
@@ -351,96 +427,100 @@ class TelegramMessageRouter:
         status, snapshot, status_msg = self.retriever.get_status(scheme_id=active_scheme)
 
         if intent.intent_type == IntentType.START:
-            return render_start_card()
+            text = render_start_card()
+            markup = {
+                "inline_keyboard": [
+                    [{"text": "📊 SCHEMES", "callback_data": "scheme_action:switch_scheme"}],
+                    [{"text": f"📋 {active_scheme.replace('_', ' ').title()} Menu", "callback_data": f"scheme_action:menu:{active_scheme}"}],
+                ]
+            }
+            return RouterResponse(text, reply_markup=markup)
 
         if intent.intent_type == IntentType.HELP:
-            return render_help_card()
+            return RouterResponse(render_help_card())
 
         if intent.intent_type == IntentType.STOCK_WHY_PROMPT:
-            return render_stock_prompt_card("/why")
+            return RouterResponse(render_stock_prompt_card("/why"))
 
         if intent.intent_type == IntentType.STOCK_WHAT_PROMPT:
-            return render_stock_prompt_card("/what")
+            return RouterResponse(render_stock_prompt_card("/what"))
 
         if intent.intent_type == IntentType.STOCK_WHEN_PROMPT:
-            return render_stock_prompt_card("/when")
+            return RouterResponse(render_stock_prompt_card("/when"))
 
         if intent.intent_type == IntentType.HEALTH_CHECK:
             pending_jobs = len(self.research_queue.list_jobs(status="QUEUED"))
             running_jobs = len(self.research_queue.list_jobs(status="RUNNING"))
-            return render_health_card(
+            return RouterResponse(render_health_card(
                 telegram_status="OK",
                 snapshot_status=status.value,
                 snapshot_age=snapshot.get_age_display() if snapshot else "N/A",
                 queue_status="OK",
                 worker_status="ACTIVE",
                 active_jobs=pending_jobs + running_jobs,
-            )
-
-        if status == SnapshotHealthStatus.MISSING or not snapshot:
-            return render_snapshot_missing()
-
-        if status == SnapshotHealthStatus.INVALID:
-            return render_snapshot_invalid(status_msg)
+            ))
 
         is_stale = (status == SnapshotHealthStatus.STALE)
 
         if intent.intent_type == IntentType.WATCHLIST:
-            target_scheme = intent.scheme_id or active_scheme
+            target_scheme = active_scheme
             companies = self.retriever.get_watchlist(scheme_id=target_scheme)
             scfg = SchemeRegistry.get(target_scheme)
             s_name = scfg.name if scfg else target_scheme
-            return render_watchlist_card(companies, is_stale=is_stale, scheme_name=s_name)
-
-        if intent.intent_type == IntentType.SCHEMES:
-            licensed_ids = self.entitlement_service.get_licensed_schemes(user_id=user_id, chat_id=chat_id)
-            if not licensed_ids:
-                return "⛔ *ACCESS DENIED*\n\nYou do not have an active license for any scheme. Please contact your administrator."
-            schemes = [
-                s for s in self.retriever.list_schemes()
-                if getattr(s, "scheme_id", getattr(s, "id", None)) in licensed_ids
-            ]
-            return render_schemes_list_card(schemes)
+            text = render_watchlist_card(companies, is_stale=is_stale, scheme_name=s_name)
+            markup = get_back_and_switch_inline_keyboard(active_scheme)
+            return RouterResponse(text, reply_markup=markup)
 
         if intent.intent_type == IntentType.SCHEME_LOOKUP:
-            scheme_id = intent.scheme_id or active_scheme
+            scheme_id = active_scheme
             scheme = self.retriever.get_scheme(scheme_id)
             if not scheme:
-                return render_unknown_scheme(scheme_id)
-            return render_scheme_card(scheme, is_stale=is_stale)
+                return RouterResponse(render_unknown_scheme(scheme_id))
+            text = render_scheme_card(scheme, is_stale=is_stale)
+            markup = get_back_and_switch_inline_keyboard(active_scheme)
+            return RouterResponse(text, reply_markup=markup)
+
+        if status == SnapshotHealthStatus.MISSING or not snapshot:
+            return RouterResponse(render_snapshot_missing())
+
+        if status == SnapshotHealthStatus.INVALID:
+            return RouterResponse(render_snapshot_invalid(status_msg))
 
         if intent.intent_type in (IntentType.STOCK_LOOKUP, IntentType.STOCK_WHY, IntentType.STOCK_WHAT, IntentType.STOCK_WHEN):
             target_symbol = intent.symbol or intent.parameters.get("unresolved_symbol", "")
             comp = self.retriever.get_company(target_symbol, scheme_id=active_scheme)
             if not comp:
-                return render_unknown_stock(target_symbol or "query", scheme_id=active_scheme)
+                return RouterResponse(render_unknown_stock(target_symbol or "query", scheme_id=active_scheme))
 
             if intent.intent_type == IntentType.STOCK_WHY:
-                return render_why_card(comp, is_stale=is_stale)
+                text = render_why_card(comp, is_stale=is_stale)
             elif intent.intent_type == IntentType.STOCK_WHAT:
-                return render_what_card(comp, is_stale=is_stale)
+                text = render_what_card(comp, is_stale=is_stale)
             elif intent.intent_type == IntentType.STOCK_WHEN:
-                return render_when_card(comp, is_stale=is_stale)
+                text = render_when_card(comp, is_stale=is_stale)
             else:
-                return render_stock_card(comp, is_stale=is_stale)
+                text = render_stock_card(comp, is_stale=is_stale)
+            return RouterResponse(text, reply_markup=get_back_and_switch_inline_keyboard(active_scheme))
 
         if intent.intent_type == IntentType.SETUPS_LOOKUP:
-            target_scheme = intent.scheme_id or active_scheme
+            target_scheme = active_scheme
             setups = self.retriever.get_qualified_setups(scheme_id=target_scheme)
-            return render_setups_card(setups, is_stale=is_stale, updated_str=snapshot.generated_at if snapshot else "")
+            text = render_setups_card(setups, is_stale=is_stale, updated_str=snapshot.generated_at if snapshot else "")
+            return RouterResponse(text, reply_markup=get_back_and_switch_inline_keyboard(active_scheme))
 
         if intent.intent_type == IntentType.WAITING_LOOKUP:
-            target_scheme = intent.scheme_id or active_scheme
+            target_scheme = active_scheme
             waiting = self.retriever.get_waiting_setups(scheme_id=target_scheme)
-            return render_waiting_card(waiting, is_stale=is_stale)
+            text = render_waiting_card(waiting, is_stale=is_stale)
+            return RouterResponse(text, reply_markup=get_back_and_switch_inline_keyboard(active_scheme))
 
         if intent.intent_type == IntentType.OUTCOMES_LOOKUP or intent.intent_type == IntentType.PERFORMANCE_LOOKUP:
             perf = self.retriever.get_performance(scheme_id=active_scheme)
-            return render_performance_card(perf, is_stale=is_stale)
+            return RouterResponse(render_performance_card(perf, is_stale=is_stale))
 
         if intent.intent_type == IntentType.BENCHMARK_LOOKUP:
             bench = self.retriever.get_benchmark(scheme_id=active_scheme)
-            return render_benchmark_card(bench, is_stale=is_stale)
+            return RouterResponse(render_benchmark_card(bench, is_stale=is_stale))
 
         # Default fallback for unmapped queries - NEVER echo user input
-        return render_help_card()
+        return RouterResponse(render_help_card())

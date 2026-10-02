@@ -34,9 +34,9 @@ from scheme_intel.stage2.telegram import (
 )
 
 
-def _generate_synthetic_bars(count: int = 120, base_price: float = 170.0, end_date: str = "2026-09-25") -> list[dict]:
+def _generate_synthetic_bars(count: int = 120, base_price: float = 170.0, end_date: Optional[str] = None) -> list[dict]:
     """Generate chronological, strictly valid OHLCV daily bars."""
-    end_d = date.fromisoformat(end_date)
+    end_d = date.today() if end_date is None else date.fromisoformat(end_date)
     bars = []
     d = end_d
     dates = []
@@ -69,7 +69,7 @@ class TestStage2MarketDataRegression:
 
     def test_1_db_history_reaches_stage2(self):
         """Test 1: DB history reaches Stage 2 and returns a valid TechnicalSnapshot."""
-        bars = _generate_synthetic_bars(count=120, base_price=170.0, end_date="2026-09-25")
+        bars = _generate_synthetic_bars(count=120, base_price=170.0)
         mock_db = MagicMock()
         mock_db.get_historical_prices.return_value = bars
 

@@ -209,7 +209,8 @@ class TelegramConversationHandler:
 
         # 4. Dispatch Reply Strictly to Originating chat_id
         if send_reply and chat_id and chunks:
-            reply_markup = get_terminal_inline_keyboard() if is_start_cmd else None
+            response_markup = getattr(raw_response, "reply_markup", None)
+            reply_markup = response_markup if response_markup is not None else (get_terminal_inline_keyboard() if is_start_cmd else None)
             for idx, ch in enumerate(chunks):
                 try:
                     success = send_telegram(
