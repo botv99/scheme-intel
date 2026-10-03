@@ -9,9 +9,10 @@ const TELEGRAM_API_BASE = "https://api.telegram.org";
 export const BOT_COMMANDS = [
   { command: "start", description: "Terminal main menu & shortcuts" },
   { command: "help", description: "Command guide & query examples" },
+  { command: "schemes", description: "Select and switch intelligence scheme" },
   { command: "stock", description: "Stock intelligence card (/stock <SYM>)" },
   { command: "setups", description: "Today's qualified setups" },
-  { command: "watchlist", description: "Monitored watchlist stocks" },
+  { command: "watchlist", description: "Monitored scheme watchlist" },
   { command: "research", description: "Deep policy research (/research <Q>)" },
 ];
 
@@ -157,6 +158,15 @@ export async function setMyCommands(botToken, commands = BOT_COMMANDS) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ commands }),
   });
+  return resp.json();
+}
+
+/**
+ * Fetch registered bot commands from Telegram.
+ */
+export async function getMyCommands(botToken) {
+  const url = `${TELEGRAM_API_BASE}/bot${botToken}/getMyCommands`;
+  const resp = await fetch(url);
   return resp.json();
 }
 

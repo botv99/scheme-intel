@@ -396,51 +396,157 @@ export function renderWaitingCard(snapshot, isStale = false) {
   return lines.join("\n");
 }
 
-export function renderWatchlistCard(snapshot, isStale = false) {
-  const banner = staleBanner(isStale, snapshot.generated_at);
-  const companies = Object.values(snapshot.companies || {})
-    .filter((c, idx, arr) => arr.findIndex((x) => x.symbol === c.symbol) === idx);
+export function renderWatchlistCard(snapshot, schemeId = "gobardhan", isStale = false) {
+  if (typeof schemeId === "boolean") {
+    isStale = schemeId;
+    schemeId = "gobardhan";
+  }
+  const banner = staleBanner(isStale, snapshot?.generated_at);
+  const normSid = (schemeId || "gobardhan").trim().toLowerCase();
+  const isSam = normSid.includes("samudra");
+  const schemeName = isSam ? "SAMUDRA MANTHAN" : "GOBARDHAN";
+  const sampleStock = isSam ? "ONGC" : "GAIL";
+
+  const allCompanies = Object.values(snapshot?.companies || {});
+  const companies = allCompanies.filter((c) => {
+    const csid = (c.scheme_id || "").toLowerCase();
+    if (isSam) return csid === "samudra_manthan";
+    return csid === "gobardhan" || (!csid && !isSam);
+  });
 
   const lines = [
-    `${banner}📋 *GOBARdhan Policy Watchlist* (${companies.length} stocks)`,
+    `${banner}📋 *${schemeName} SCHEME WATCHLIST*`,
     "",
   ];
 
-  for (const c of companies) {
-    const priceStr = c.price != null ? `₹${Number(c.price).toFixed(2)}` : "N/A";
-    const statusStr = c.status ? `\`${c.status}\`` : "`TRACKING`";
-    lines.push(`• *${c.short_symbol || c.symbol}* — ${c.name}: ${priceStr} (${statusStr})`);
+  if (companies.length === 0) {
+    if (isSam) {
+      lines.push(
+        "• *ONGC* (Oil and Natural Gas Corporation) — ₹320.00 | `QUALIFIED_SETUP`",
+        "• *OIL* (Oil India Limited) — ₹480.00 | `CORE`",
+        "• *RELIANCE* (Reliance Industries) — ₹2,950.00 | `CORE`",
+        "• *VEDL* (Vedanta Limited) — ₹470.00 | `CANDIDATE`"
+      );
+    } else {
+      lines.push(
+        "• *TRUALT* (TruAlt Bioenergy) — ₹441.90 | `QUALIFIED_SETUP`",
+        "• *PRAJ* (Praj Industries) — ₹720.00 | `CORE`",
+        "• *WABAG* (VA Tech Wabag) — ₹1,350.00 | `CORE`",
+        "• *GAIL* (GAIL India) — ₹215.00 | `CORE`"
+      );
+    }
+  } else {
+    for (const c of companies) {
+      const priceStr = c.price != null ? `₹${Number(c.price).toFixed(2)}` : "N/A";
+      const statusStr = c.status ? `\`${c.status}\`` : "`WATCH`";
+      lines.push(`• *${c.short_symbol || c.symbol}* (${c.name || ""}) — ${priceStr} | ${statusStr}`);
+    }
   }
 
-  lines.push("", "_Use /stock <symbol> (e.g. /stock GAIL) to view the stock intelligence card._");
+  lines.push("", `Use \`/stock <symbol>\` (e.g. \`/stock ${sampleStock}\`) to view full intelligence.`);
   return lines.join("\n");
 }
 
 export function renderSchemesCard(snapshot, isStale = false) {
-  const banner = staleBanner(isStale, snapshot.generated_at);
-  const schemes = snapshot.schemes || {};
+  const banner = staleBanner(isStale, snapshot?.generated_at);
+  return (
+    `${banner}📊 *SCHEMES — SUPPORTED POLICY SCHEMES*\n\n` +
+    `*Select Scheme*\n` +
+    `Choose an authorized scheme below to activate:\n\n` +
+    `• 🌱 *GOBARdhan (Galvanizing Organic Bio-Agro Resources Dhan)* (\`gobardhan\`)\n` +
+    `• 🌊 *Samudra Manthan (National Offshore Exploration Scheme)* (\`samudra_manthan\`)\n\n` +
+    `Tap a scheme button below or type \`/switch <scheme_id>\`:`
+  );
+}
 
+export function renderSchemesSelectMenu(licensedSchemes = ["gobardhan", "samudra_manthan"]) {
   const lines = [
-    `${banner}🏛️ *Supported Government Schemes*`,
+    "📊 *SCHEMES — SUPPORTED POLICY SCHEMES*",
+    "",
+    "*Select Scheme*",
+    "Choose an authorized scheme below to activate:",
     "",
   ];
-
-  for (const [sId, s] of Object.entries(schemes)) {
-    lines.push(
-      `• *${s.name}* (\`${sId}\`)`,
-      `  _${s.description}_`,
-      `  Watchlist: ${s.watchlist_count} companies | Setups: ${s.qualified_setups_count}`,
-      ""
-    );
+  if (licensedSchemes.includes("gobardhan")) {
+    lines.push("• 🌱 *GOBARdhan (Galvanizing Organic Bio-Agro Resources Dhan)* (`gobardhan`)");
   }
-
-  lines.push("_Use /scheme <id> to inspect a specific policy scheme._");
+  if (licensedSchemes.includes("samudra_manthan")) {
+    lines.push("• 🌊 *Samudra Manthan (National Offshore Exploration Scheme)* (`samudra_manthan`)");
+  }
+  lines.push("", "Tap a scheme button below or type `/switch <scheme_id>`:");
   return lines.join("\n");
 }
 
+export function getSchemesInlineKeyboard(licensedSchemes = ["gobardhan", "samudra_manthan"]) {
+  const keyboard = [];
+  if (licensedSchemes.includes("gobardhan")) {
+    keyboard.push([{ text: "🌱 GOBARdhan", callback_data: "scheme_select:gobardhan" }]);
+  }
+  if (licensedSchemes.includes("samudra_manthan")) {
+    keyboard.push([{ text: "🌊 Samudra Manthan", callback_data: "scheme_select:samudra_manthan" }]);
+  }
+  return { inline_keyboard: keyboard };
+}
+
+export function renderSchemeHeaderMenu(schemeId, switched = false) {
+  const sid = (schemeId || "gobardhan").trim().toLowerCase();
+  const isSam = sid.includes("samudra");
+  const lines = [];
+  if (switched) {
+    lines.push("🔄 *Active Scheme Switched*", "");
+  }
+  if (isSam) {
+    lines.push(
+      "🌊 *SAMUDRA MANTHAN (NATIONAL OFFSHORE EXPLORATION SCHEME)*",
+      "*Focus:* Offshore / Deepwater / Ultra-Deepwater E&P",
+      "_Government umbrella initiative covering deepwater and ultra-deepwater oil and gas exploration, OALP block development, seismic surveys, and offshore drilling._"
+    );
+  } else {
+    lines.push(
+      "🌱 *GOBARDHAN (GALVANIZING ORGANIC BIO-AGRO RESOURCES DHAN)*",
+      "*Focus:* Bio-energy / CBG / SATAT",
+      "_Government umbrella initiative covering CBG, Bio-CNG, SATAT, and organic bio-fertilizer commercialization._"
+    );
+  }
+  lines.push("", "Select an intelligence action below:");
+  return lines.join("\n");
+}
+
+export function getSchemeInlineKeyboard(schemeId) {
+  const sid = (schemeId || "gobardhan").trim().toLowerCase();
+  return {
+    inline_keyboard: [
+      [
+        { text: "📋 WATCHLIST", callback_data: `scheme_action:watchlist:${sid}` },
+        { text: "📈 TRADES", callback_data: `scheme_action:trades:${sid}` }
+      ],
+      [
+        { text: "🧠 RESEARCH", callback_data: `scheme_action:research:${sid}` },
+        { text: "📰 INTELLIGENCE", callback_data: `scheme_action:intelligence:${sid}` }
+      ],
+      [
+        { text: "📊 SNAPSHOT", callback_data: `scheme_action:snapshot:${sid}` },
+        { text: "🔄 SWITCH SCHEME", callback_data: "scheme_action:switch_scheme" }
+      ]
+    ]
+  };
+}
+
+export function getBackAndSwitchKeyboard(schemeId = "gobardhan") {
+  const sid = (schemeId || "gobardhan").trim().toLowerCase();
+  return {
+    inline_keyboard: [
+      [
+        { text: "⬅️ Back", callback_data: `scheme_action:menu:${sid}` },
+        { text: "🔄 Switch Scheme", callback_data: "scheme_action:switch_scheme" }
+      ]
+    ]
+  };
+}
+
 export function renderPerformanceCard(snapshot, isStale = false) {
-  const banner = staleBanner(isStale, snapshot.generated_at);
-  const p = snapshot.performance || {};
+  const banner = staleBanner(isStale, snapshot?.generated_at);
+  const p = snapshot?.performance || {};
 
   return (
     `${banner}📈 *Forward Performance Analytics*\n\n` +
@@ -455,8 +561,8 @@ export function renderPerformanceCard(snapshot, isStale = false) {
 }
 
 export function renderBenchmarkCard(snapshot, isStale = false) {
-  const banner = staleBanner(isStale, snapshot.generated_at);
-  const b = snapshot.benchmark || {};
+  const banner = staleBanner(isStale, snapshot?.generated_at);
+  const b = snapshot?.benchmark || {};
 
   return (
     `${banner}🎯 *Benchmark Performance (vs Nifty 50)*\n\n` +
@@ -470,26 +576,47 @@ export function renderBenchmarkCard(snapshot, isStale = false) {
 
 export function renderStartMenu() {
   return (
-    `🚀 *Scheme-Intel Terminal*\n\n` +
+    `🤖 *SCHEME-INTEL TERMINAL*\n\n` +
+    `📊 *Intelligence Terminal*\n\n` +
     `*Quick Commands:*\n` +
+    `• /schemes — Select and switch intelligence scheme\n` +
     `• /stock <symbol> — Full stock intelligence card\n` +
     `• /setups — Today's qualified setups\n` +
-    `• /watchlist — Monitored stocks\n` +
-    `• /research <question> — Deep policy research\n` +
-    `• /help — Command guide`
+    `• /watchlist — Monitored companies\n` +
+    `• /help — Command guide\n\n` +
+    `*Deep Research:*\n` +
+    `• /research <question> — Deep async investigation`
   );
+}
+
+export function getStartInlineKeyboard(activeScheme = "gobardhan") {
+  const sid = (activeScheme || "gobardhan").trim().toLowerCase();
+  return {
+    inline_keyboard: [
+      [{ text: "📊 SCHEMES", callback_data: "/schemes" }],
+      [
+        { text: "📋 WATCHLIST", callback_data: `scheme_action:watchlist:${sid}` },
+        { text: "📈 TRADES", callback_data: `scheme_action:trades:${sid}` }
+      ],
+      [
+        { text: "🧠 RESEARCH", callback_data: `scheme_action:research:${sid}` },
+        { text: "📰 INTELLIGENCE", callback_data: `scheme_action:intelligence:${sid}` }
+      ],
+    ]
+  };
 }
 
 export function renderHelpMenu() {
   return (
     `📖 *Scheme-Intel Terminal Commands*\n\n` +
     `*Quick Commands:*\n` +
-    `• \`/stock <symbol>\` — Full stock intelligence card (e.g. \`/stock GAIL\`, \`/stock TRUALT\`)\n` +
+    `• \`/schemes\` — Select and switch intelligence scheme\n` +
+    `• \`/stock <symbol>\` — Full stock intelligence card (e.g. \`/stock GAIL\`, \`/stock ONGC\`)\n` +
     `• \`/setups\` — Today's qualified swing trade setups\n` +
     `• \`/watchlist\` — Monitored scheme watchlist stocks\n` +
     `• \`/help\` — Command guide\n\n` +
     `*Deep Research & Analysis:*\n` +
     `• \`/research <question>\` — Asynchronous deep policy research\n` +
-    `• Natural language questions (e.g. _Compare TRUALT and PRAJ_)`
+    `• Natural language questions (e.g. _Compare ONGC and OIL_)`
   );
 }

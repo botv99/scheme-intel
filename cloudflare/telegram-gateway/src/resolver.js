@@ -28,6 +28,10 @@ export const IntentType = {
   PERFORMANCE_LOOKUP: "PERFORMANCE_LOOKUP",
   BENCHMARK_LOOKUP: "BENCHMARK_LOOKUP",
   RESEARCH_REQUEST: "RESEARCH_REQUEST",
+  RESEARCH_PROMPT: "RESEARCH_PROMPT",
+  INTELLIGENCE_LOOKUP: "INTELLIGENCE_LOOKUP",
+  SWITCH_SCHEME: "SWITCH_SCHEME",
+  SCHEME_MENU: "SCHEME_MENU",
   COMPLEX_QUERY: "COMPLEX_QUERY",
   STOCK_PROMPT: "STOCK_PROMPT",
   STOCK_UNKNOWN: "STOCK_UNKNOWN",
@@ -35,6 +39,7 @@ export const IntentType = {
 };
 
 export const GLOBAL_STOCK_ALIASES = {
+  // Gobardhan stocks
   "TRUALT": { symbol: "TRUALT.NS", short: "TRUALT", name: "TruAlt Bioenergy", scheme: "gobardhan" },
   "TRUALT.NS": { symbol: "TRUALT.NS", short: "TRUALT", name: "TruAlt Bioenergy", scheme: "gobardhan" },
   "TRUALT BIOENERGY": { symbol: "TRUALT.NS", short: "TRUALT", name: "TruAlt Bioenergy", scheme: "gobardhan" },
@@ -64,6 +69,23 @@ export const GLOBAL_STOCK_ALIASES = {
   "IONEXCHANG": { symbol: "IONEXCHANG.NS", short: "IONEXCHANG", name: "Ion Exchange", scheme: "gobardhan" },
   "IONEXCHANG.NS": { symbol: "IONEXCHANG.NS", short: "IONEXCHANG", name: "Ion Exchange", scheme: "gobardhan" },
   "ION EXCHANGE": { symbol: "IONEXCHANG.NS", short: "IONEXCHANG", name: "Ion Exchange", scheme: "gobardhan" },
+
+  // Samudra Manthan stocks
+  "ONGC": { symbol: "ONGC.NS", short: "ONGC", name: "Oil and Natural Gas Corporation", scheme: "samudra_manthan" },
+  "ONGC.NS": { symbol: "ONGC.NS", short: "ONGC", name: "Oil and Natural Gas Corporation", scheme: "samudra_manthan" },
+  "OIL": { symbol: "OIL.NS", short: "OIL", name: "Oil India Limited", scheme: "samudra_manthan" },
+  "OIL.NS": { symbol: "OIL.NS", short: "OIL", name: "Oil India Limited", scheme: "samudra_manthan" },
+  "OIL INDIA": { symbol: "OIL.NS", short: "OIL", name: "Oil India Limited", scheme: "samudra_manthan" },
+  "RELIANCE": { symbol: "RELIANCE.NS", short: "RELIANCE", name: "Reliance Industries", scheme: "samudra_manthan" },
+  "RIL": { symbol: "RELIANCE.NS", short: "RELIANCE", name: "Reliance Industries", scheme: "samudra_manthan" },
+  "VEDANTA": { symbol: "VEDL.NS", short: "VEDL", name: "Vedanta Limited", scheme: "samudra_manthan" },
+  "VEDL": { symbol: "VEDL.NS", short: "VEDL", name: "Vedanta Limited", scheme: "samudra_manthan" },
+  "DEEPIND": { symbol: "DEEPINDS.NS", short: "DEEPINDS", name: "Deep Industries", scheme: "samudra_manthan" },
+  "DEEP ENERGY": { symbol: "DEEPENR.NS", short: "DEEPENR", name: "Deep Energy Resources", scheme: "samudra_manthan" },
+  "DOLPHIN": { symbol: "DOLPHINOFF.BO", short: "DOLPHINOFF", name: "Dolphin Offshore Enterprises", scheme: "samudra_manthan" },
+  "ALPHAGEO": { symbol: "ALPHAGEO.NS", short: "ALPHAGEO", name: "Alphageo (India)", scheme: "samudra_manthan" },
+  "ASIAN OIL": { symbol: "ASIANENE.NS", short: "ASIANENE", name: "Asian Energy Services", scheme: "samudra_manthan" },
+  "HOEC": { symbol: "HINDOILEXP.NS", short: "HINDOILEXP", name: "Hindustan Oil Exploration Company", scheme: "samudra_manthan" },
 };
 
 const STOCK_SLASH_SHORTCUTS = {
@@ -80,6 +102,12 @@ const STOCK_SLASH_SHORTCUTS = {
   "/ioc": "IOC",
   "/iocl": "IOC",
   "/ionexchang": "IONEXCHANG",
+  "/ongc": "ONGC",
+  "/oil": "OIL",
+  "/reliance": "RELIANCE",
+  "/ril": "RELIANCE",
+  "/vedanta": "VEDANTA",
+  "/vedl": "VEDANTA",
 };
 
 export function resolveStock(text) {
@@ -200,9 +228,10 @@ export function isComplexQuery(text) {
   return false;
 }
 
-export function resolveIntent(message) {
+export function resolveIntent(message, activeScheme = "gobardhan") {
   const raw = (message || "").trim();
   const normalized = normalizeQuery(raw);
+  const effectiveScheme = (activeScheme || "gobardhan").trim().toLowerCase();
 
   if (!raw) {
     return {
@@ -210,8 +239,48 @@ export function resolveIntent(message) {
       executionPath: ExecutionPath.FAST,
       rawQuery: raw,
       normalizedQuery: normalized,
-      schemeId: "gobardhan",
+      schemeId: effectiveScheme,
     };
+  }
+
+  // 0. Telegram Button Callbacks & Scheme Routing
+  if (raw.startsWith("scheme_select:")) {
+    const targetScheme = raw.split(":", 2)[1].trim().toLowerCase();
+    return {
+      intentType: IntentType.SWITCH_SCHEME,
+      executionPath: ExecutionPath.FAST,
+      schemeId: targetScheme,
+      targetScheme,
+      rawQuery: raw,
+      normalizedQuery: normalized,
+    };
+  }
+
+  if (raw.startsWith("scheme_action:")) {
+    const parts = raw.split(":");
+    const action = parts[1] ? parts[1].trim().toLowerCase() : "";
+    const actionScheme = parts[2] ? parts[2].trim().toLowerCase() : effectiveScheme;
+    if (action === "watchlist") {
+      return { intentType: IntentType.WATCHLIST, executionPath: ExecutionPath.FAST, schemeId: actionScheme, rawQuery: raw, normalizedQuery: normalized };
+    }
+    if (action === "trades" || action === "setups") {
+      return { intentType: IntentType.SETUPS_LOOKUP, executionPath: ExecutionPath.FAST, schemeId: actionScheme, rawQuery: raw, normalizedQuery: normalized };
+    }
+    if (action === "research") {
+      return { intentType: IntentType.RESEARCH_PROMPT, executionPath: ExecutionPath.FAST, schemeId: actionScheme, rawQuery: raw, normalizedQuery: normalized };
+    }
+    if (action === "intelligence" || action === "news") {
+      return { intentType: IntentType.INTELLIGENCE_LOOKUP, executionPath: ExecutionPath.FAST, schemeId: actionScheme, rawQuery: raw, normalizedQuery: normalized };
+    }
+    if (action === "snapshot" || action === "scheme") {
+      return { intentType: IntentType.SCHEME_LOOKUP, executionPath: ExecutionPath.FAST, schemeId: actionScheme, rawQuery: raw, normalizedQuery: normalized };
+    }
+    if (action === "switch_scheme" || action === "switch" || action === "schemes") {
+      return { intentType: IntentType.SCHEMES, executionPath: ExecutionPath.FAST, schemeId: effectiveScheme, rawQuery: raw, normalizedQuery: normalized };
+    }
+    if (action === "menu" || action === "back") {
+      return { intentType: IntentType.SCHEME_MENU, executionPath: ExecutionPath.FAST, schemeId: actionScheme, rawQuery: raw, normalizedQuery: normalized };
+    }
   }
 
   const parts = raw.split(/\s+/);
@@ -241,7 +310,7 @@ export function resolveIntent(message) {
           executionPath: ExecutionPath.FAST,
           rawQuery: raw,
           normalizedQuery: normalized,
-          schemeId: "gobardhan",
+          schemeId: effectiveScheme,
         };
       case "/help":
         return {
@@ -249,7 +318,7 @@ export function resolveIntent(message) {
           executionPath: ExecutionPath.FAST,
           rawQuery: raw,
           normalizedQuery: normalized,
-          schemeId: "gobardhan",
+          schemeId: effectiveScheme,
         };
       case "/health":
         return {
@@ -257,7 +326,7 @@ export function resolveIntent(message) {
           executionPath: ExecutionPath.FAST,
           rawQuery: raw,
           normalizedQuery: normalized,
-          schemeId: "gobardhan",
+          schemeId: effectiveScheme,
         };
       case "/stock": {
         if (!remainder) {
@@ -266,7 +335,7 @@ export function resolveIntent(message) {
             executionPath: ExecutionPath.FAST,
             rawQuery: raw,
             normalizedQuery: normalized,
-            schemeId: "gobardhan",
+            schemeId: effectiveScheme,
           };
         }
         const stock = resolveStock(remainder);
@@ -288,6 +357,7 @@ export function resolveIntent(message) {
           executionPath: ExecutionPath.FAST,
           symbol: remainder.trim().toUpperCase(),
           shortSymbol: remainder.trim().toUpperCase(),
+          schemeId: effectiveScheme,
           rawQuery: raw,
           normalizedQuery: normalized,
           isUnknownCandidate: true,
@@ -299,7 +369,7 @@ export function resolveIntent(message) {
           executionPath: ExecutionPath.FAST,
           rawQuery: raw,
           normalizedQuery: normalized,
-          schemeId: "gobardhan",
+          schemeId: effectiveScheme,
         };
       case "/waiting":
         return {
@@ -307,7 +377,7 @@ export function resolveIntent(message) {
           executionPath: ExecutionPath.FAST,
           rawQuery: raw,
           normalizedQuery: normalized,
-          schemeId: "gobardhan",
+          schemeId: effectiveScheme,
         };
       case "/watchlist":
         return {
@@ -315,7 +385,7 @@ export function resolveIntent(message) {
           executionPath: ExecutionPath.FAST,
           rawQuery: raw,
           normalizedQuery: normalized,
-          schemeId: "gobardhan",
+          schemeId: effectiveScheme,
         };
       case "/schemes":
         return {
@@ -323,23 +393,55 @@ export function resolveIntent(message) {
           executionPath: ExecutionPath.FAST,
           rawQuery: raw,
           normalizedQuery: normalized,
-          schemeId: "gobardhan",
+          schemeId: effectiveScheme,
         };
-      case "/scheme":
+      case "/menu":
+        return {
+          intentType: IntentType.SCHEME_MENU,
+          executionPath: ExecutionPath.FAST,
+          rawQuery: raw,
+          normalizedQuery: normalized,
+          schemeId: effectiveScheme,
+        };
+      case "/switch": {
+        const target = remainder ? remainder.toLowerCase().replace(/[^a-z0-9_]/g, "") : "";
+        if (target === "gobardhan" || target === "samudra_manthan" || target === "samudra") {
+          const canonical = target === "samudra" ? "samudra_manthan" : target;
+          return {
+            intentType: IntentType.SWITCH_SCHEME,
+            executionPath: ExecutionPath.FAST,
+            schemeId: canonical,
+            targetScheme: canonical,
+            rawQuery: raw,
+            normalizedQuery: normalized,
+          };
+        }
+        return {
+          intentType: IntentType.SCHEMES,
+          executionPath: ExecutionPath.FAST,
+          rawQuery: raw,
+          normalizedQuery: normalized,
+          schemeId: effectiveScheme,
+        };
+      }
+      case "/scheme": {
+        const reqScheme = remainder ? remainder.toLowerCase().trim() : effectiveScheme;
+        const canonical = reqScheme === "samudra" ? "samudra_manthan" : reqScheme;
         return {
           intentType: IntentType.SCHEME_LOOKUP,
           executionPath: ExecutionPath.FAST,
           rawQuery: raw,
           normalizedQuery: normalized,
-          schemeId: remainder ? remainder.toLowerCase() : "gobardhan",
+          schemeId: canonical || effectiveScheme,
         };
+      }
       case "/performance":
         return {
           intentType: IntentType.PERFORMANCE_LOOKUP,
           executionPath: ExecutionPath.FAST,
           rawQuery: raw,
           normalizedQuery: normalized,
-          schemeId: "gobardhan",
+          schemeId: effectiveScheme,
         };
       case "/benchmark":
         return {
@@ -347,7 +449,7 @@ export function resolveIntent(message) {
           executionPath: ExecutionPath.FAST,
           rawQuery: raw,
           normalizedQuery: normalized,
-          schemeId: "gobardhan",
+          schemeId: effectiveScheme,
         };
       case "/research":
         return {
@@ -356,7 +458,7 @@ export function resolveIntent(message) {
           rawQuery: raw,
           normalizedQuery: normalized,
           question: remainder,
-          schemeId: "gobardhan",
+          schemeId: effectiveScheme,
         };
       case "/why": {
         const stock = resolveStock(remainder);
@@ -366,7 +468,7 @@ export function resolveIntent(message) {
             executionPath: ExecutionPath.FAST,
             rawQuery: raw,
             normalizedQuery: normalized,
-            schemeId: "gobardhan",
+            schemeId: effectiveScheme,
           };
         }
         return {
@@ -388,7 +490,7 @@ export function resolveIntent(message) {
             executionPath: ExecutionPath.FAST,
             rawQuery: raw,
             normalizedQuery: normalized,
-            schemeId: "gobardhan",
+            schemeId: effectiveScheme,
           };
         }
         return {
@@ -410,7 +512,7 @@ export function resolveIntent(message) {
             executionPath: ExecutionPath.FAST,
             rawQuery: raw,
             normalizedQuery: normalized,
-            schemeId: "gobardhan",
+            schemeId: effectiveScheme,
           };
         }
         return {
@@ -451,7 +553,7 @@ export function resolveIntent(message) {
       executionPath: ExecutionPath.WORKFLOW,
       symbol: primaryStock ? primaryStock.symbol : null,
       shortSymbol: primaryStock ? primaryStock.short : null,
-      schemeId: primaryStock ? primaryStock.scheme : "gobardhan",
+      schemeId: primaryStock ? primaryStock.scheme : effectiveScheme,
       rawQuery: raw,
       normalizedQuery: normalized,
     };
@@ -510,13 +612,31 @@ export function resolveIntent(message) {
   }
 
   // 5. Keyword fallbacks
-  if (normalized.includes("setup")) {
+  if (normalized.includes("scheme") || normalized.includes("switch")) {
+    return {
+      intentType: IntentType.SCHEMES,
+      executionPath: ExecutionPath.FAST,
+      rawQuery: raw,
+      normalizedQuery: normalized,
+      schemeId: effectiveScheme,
+    };
+  }
+  if (normalized === "menu" || normalized.includes("main menu") || normalized.includes("scheme menu")) {
+    return {
+      intentType: IntentType.SCHEME_MENU,
+      executionPath: ExecutionPath.FAST,
+      rawQuery: raw,
+      normalizedQuery: normalized,
+      schemeId: effectiveScheme,
+    };
+  }
+  if (normalized.includes("setup") || normalized.includes("trade")) {
     return {
       intentType: IntentType.SETUPS_LOOKUP,
       executionPath: ExecutionPath.FAST,
       rawQuery: raw,
       normalizedQuery: normalized,
-      schemeId: "gobardhan",
+      schemeId: effectiveScheme,
     };
   }
   if (normalized.includes("waiting")) {
@@ -525,7 +645,7 @@ export function resolveIntent(message) {
       executionPath: ExecutionPath.FAST,
       rawQuery: raw,
       normalizedQuery: normalized,
-      schemeId: "gobardhan",
+      schemeId: effectiveScheme,
     };
   }
   if (normalized.includes("watchlist")) {
@@ -534,7 +654,7 @@ export function resolveIntent(message) {
       executionPath: ExecutionPath.FAST,
       rawQuery: raw,
       normalizedQuery: normalized,
-      schemeId: "gobardhan",
+      schemeId: effectiveScheme,
     };
   }
   if (normalized.includes("performance")) {
@@ -543,7 +663,7 @@ export function resolveIntent(message) {
       executionPath: ExecutionPath.FAST,
       rawQuery: raw,
       normalizedQuery: normalized,
-      schemeId: "gobardhan",
+      schemeId: effectiveScheme,
     };
   }
   if (normalized.includes("benchmark")) {
@@ -552,7 +672,25 @@ export function resolveIntent(message) {
       executionPath: ExecutionPath.FAST,
       rawQuery: raw,
       normalizedQuery: normalized,
-      schemeId: "gobardhan",
+      schemeId: effectiveScheme,
+    };
+  }
+  if (normalized.includes("intelligence") || normalized.includes("news")) {
+    return {
+      intentType: IntentType.INTELLIGENCE_LOOKUP,
+      executionPath: ExecutionPath.FAST,
+      rawQuery: raw,
+      normalizedQuery: normalized,
+      schemeId: effectiveScheme,
+    };
+  }
+  if (normalized.includes("research")) {
+    return {
+      intentType: IntentType.RESEARCH_PROMPT,
+      executionPath: ExecutionPath.FAST,
+      rawQuery: raw,
+      normalizedQuery: normalized,
+      schemeId: effectiveScheme,
     };
   }
 
@@ -562,6 +700,6 @@ export function resolveIntent(message) {
     executionPath: ExecutionPath.WORKFLOW,
     rawQuery: raw,
     normalizedQuery: normalized,
-    schemeId: "gobardhan",
+    schemeId: effectiveScheme,
   };
 }

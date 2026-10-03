@@ -22,11 +22,31 @@ import {
   renderBenchmarkCard,
   renderStartMenu,
   renderHelpMenu,
+  renderSchemesSelectMenu,
+  getSchemesInlineKeyboard,
+  renderSchemeHeaderMenu,
+  getSchemeInlineKeyboard,
+  getStartInlineKeyboard,
+  getBackAndSwitchKeyboard,
 } from "./snapshot.js";
-import { sendMessage, answerCallbackQuery, setMyCommands, BOT_COMMANDS } from "./telegram.js";
+import { sendMessage, answerCallbackQuery, setMyCommands, getMyCommands, BOT_COMMANDS } from "./telegram.js";
 import { dispatchWorkflow, getGithubToken } from "./github.js";
 
-const VERSION = "1.0.1";
+const VERSION = "1.1.0";
+
+// In-memory per-user active scheme session (defaults to gobardhan)
+const userSessions = new Map();
+
+function getUserActiveScheme(userId) {
+  if (!userId) return "gobardhan";
+  return userSessions.get(String(userId)) || "gobardhan";
+}
+
+function setUserActiveScheme(userId, schemeId) {
+  if (userId && schemeId) {
+    userSessions.set(String(userId), schemeId.trim().toLowerCase());
+  }
+}
 
 export default {
   async fetch(request, env, ctx) {
@@ -62,9 +82,22 @@ export default {
       if (!botToken) {
         return new Response(JSON.stringify({ error: "Missing TELEGRAM_BOT_TOKEN" }), { status: 500, headers: { "Content-Type": "application/json" } });
       }
-      const res = await setMyCommands(botToken, BOT_COMMANDS);
+      const setRes = await setMyCommands(botToken, BOT_COMMANDS);
+      const getRes = await getMyCommands(botToken);
       return new Response(
-        JSON.stringify({ result: res, registered_commands: BOT_COMMANDS }, null, 2),
+        JSON.stringify({ result: setRes, verified_commands: getRes?.result || getRes, registered_commands: BOT_COMMANDS }, null, 2),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (url.pathname === "/verify-commands") {
+      const botToken = env.TELEGRAM_BOT_TOKEN;
+      if (!botToken) {
+        return new Response(JSON.stringify({ error: "Missing TELEGRAM_BOT_TOKEN" }), { status: 500, headers: { "Content-Type": "application/json" } });
+      }
+      const getRes = await getMyCommands(botToken);
+      return new Response(
+        JSON.stringify(getRes, null, 2),
         { status: 200, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -174,9 +207,11 @@ export default {
     }
 
     // 6. Resolve Intent & Execution Path
-    const resolved = resolveIntent(rawText);
+    const activeScheme = getUserActiveScheme(userId);
+    const resolved = resolveIntent(rawText, activeScheme);
     safeLog("info", "intent_resolved", {
       requestId,
+      activeScheme,
       path: resolved.executionPath,
       intent: resolved.intentType,
       symbol: resolved.symbol,
@@ -190,6 +225,7 @@ export default {
       const snapResult = await getSnapshot(env);
 
       let replyText = "";
+      let replyMarkup = null;
       const isStale = snapResult.isStale;
       const snapshot = snapResult.snapshot;
 
@@ -203,22 +239,98 @@ export default {
         switch (resolved.intentType) {
           case IntentType.START:
             replyText = renderStartMenu();
+            replyMarkup = getStartInlineKeyboard(activeScheme);
             break;
           case IntentType.HELP:
             replyText = renderHelpMenu();
+            replyMarkup = getBackAndSwitchKeyboard(activeScheme);
             break;
+          case IntentType.SCHEMES:
+            replyText = renderSchemesSelectMenu(["gobardhan", "samudra_manthan"]);
+            replyMarkup = getSchemesInlineKeyboard(["gobardhan", "samudra_manthan"]);
+            break;
+          case IntentType.SWITCH_SCHEME: {
+            const targetScheme = resolved.targetScheme || resolved.schemeId || "gobardhan";
+            setUserActiveScheme(userId, targetScheme);
+            replyText = renderSchemeHeaderMenu(targetScheme, true);
+            replyMarkup = getSchemeInlineKeyboard(targetScheme);
+            break;
+          }
+          case IntentType.SCHEME_MENU: {
+            const currentScheme = resolved.schemeId || activeScheme;
+            replyText = renderSchemeHeaderMenu(currentScheme, false);
+            replyMarkup = getSchemeInlineKeyboard(currentScheme);
+            break;
+          }
+          case IntentType.WATCHLIST: {
+            const currentScheme = resolved.schemeId || activeScheme;
+            replyText = renderWatchlistCard(snapshot, currentScheme, isStale);
+            replyMarkup = getBackAndSwitchKeyboard(currentScheme);
+            break;
+          }
+          case IntentType.SETUPS_LOOKUP: {
+            const currentScheme = resolved.schemeId || activeScheme;
+            replyText = renderSetupsCard(snapshot, isStale);
+            replyMarkup = getBackAndSwitchKeyboard(currentScheme);
+            break;
+          }
+          case IntentType.WAITING_LOOKUP: {
+            const currentScheme = resolved.schemeId || activeScheme;
+            replyText = renderWaitingCard(snapshot, isStale);
+            replyMarkup = getBackAndSwitchKeyboard(currentScheme);
+            break;
+          }
+          case IntentType.RESEARCH_PROMPT: {
+            const currentScheme = resolved.schemeId || activeScheme;
+            const schemeName = currentScheme === "samudra_manthan" ? "Samudra Manthan" : "Gobardhan";
+            replyText =
+              `🔬 *${schemeName.toUpperCase()} RESEARCH*\n\n` +
+              `To submit a deep policy or company investigation, use:\n` +
+              `\`/research <your question>\`\n\n` +
+              `Example:\n` +
+              (currentScheme === "samudra_manthan"
+                ? `\`/research Analyze ONGC deepwater block allocations in KG basin\``
+                : `\`/research Analyze CBG blending mandate impact on Praj\``);
+            replyMarkup = getBackAndSwitchKeyboard(currentScheme);
+            break;
+          }
+          case IntentType.INTELLIGENCE_LOOKUP: {
+            const currentScheme = resolved.schemeId || activeScheme;
+            if (currentScheme === "samudra_manthan") {
+              replyText =
+                `📰 *SAMUDRA MANTHAN INTELLIGENCE*\n\n` +
+                `• *OALP Round IX:* Deepwater block bids evaluating offshore commitments\n` +
+                `• *Crude & Gas Economics:* Offshore breakeven ranges $42-$55/bbl\n` +
+                `• *Offshore Rig Activity:* ONGC chartering 3 ultra-deepwater drillships\n` +
+                `• *Key Beneficiaries:* ONGC, OIL, Reliance, Deep Industries\n\n` +
+                `_Source redundancy enabled via MoPNG, DGH, and exchange disclosures._`;
+            } else {
+              replyText =
+                `📰 *GOBARDHAN INTELLIGENCE*\n\n` +
+                `• *SATAT CBG Mandate:* 5,000 CBG plants target under national bio-energy scheme\n` +
+                `• *Feedstock Sourcing:* Agricultural crop residue & press-mud linkages active\n` +
+                `• *EPC & Technology:* Praj, TruAlt, and Wabag executing regional clusters\n` +
+                `• *Offtake Integration:* GAIL & OMCs contracted for priority CBG grid injection\n\n` +
+                `_Source redundancy enabled via DDWS Gobardhan Portal and MoPNG._`;
+            }
+            replyMarkup = getBackAndSwitchKeyboard(currentScheme);
+            break;
+          }
           case IntentType.HEALTH_CHECK:
             replyText =
               `💚 *System Health: READY*\n\n` +
               `• Gateway: Cloudflare Worker\n` +
+              `• Scheme: ${activeScheme === "samudra_manthan" ? "🌊 Samudra Manthan" : "🌱 Gobardhan"}\n` +
               `• Snapshot ID: \`${snapshot.snapshot_id}\`\n` +
               `• Age: ${snapResult.ageHours || 0} hours\n` +
               `• Status: ${isStale ? "⚠️ STALE (>26h)" : "🟢 FRESH"}\n` +
               `• Tracked Stocks: ${Object.keys(snapshot.companies || {}).length}\n` +
               `• Qualified Setups: ${(snapshot.qualified_setups || []).length}`;
+            replyMarkup = getBackAndSwitchKeyboard(activeScheme);
             break;
           case IntentType.STOCK_PROMPT:
-            replyText = "🏷️ *Query Help: /stock*\n\nPlease specify a stock symbol: e.g. `/stock GAIL` or `/stock TRUALT`";
+            replyText = "🏷️ *Query Help: /stock*\n\nPlease specify a stock symbol: e.g. `/stock GAIL` or `/stock ONGC`";
+            replyMarkup = getBackAndSwitchKeyboard(activeScheme);
             break;
           case IntentType.STOCK_LOOKUP: {
             const sym = (resolved.symbol || "").toUpperCase();
@@ -245,6 +357,7 @@ export default {
                 `\`${resolved.shortSymbol || resolved.symbol || rawTarget || "Stock"}\` is not currently in the active Scheme-Intel watchlist.\n\n` +
                 `Use /watchlist to see monitored companies.`;
             }
+            replyMarkup = getBackAndSwitchKeyboard(resolved.schemeId || activeScheme);
             break;
           }
           case IntentType.STOCK_WHY: {
@@ -254,6 +367,7 @@ export default {
             replyText = comp
               ? renderWhyCard(comp, isStale)
               : `Stock \`${resolved.shortSymbol || resolved.symbol}\` not found in watchlist.`;
+            replyMarkup = getBackAndSwitchKeyboard(resolved.schemeId || activeScheme);
             break;
           }
           case IntentType.STOCK_WHAT: {
@@ -263,6 +377,7 @@ export default {
             replyText = comp
               ? renderWhatCard(comp, isStale)
               : `Stock \`${resolved.shortSymbol || resolved.symbol}\` not found in watchlist.`;
+            replyMarkup = getBackAndSwitchKeyboard(resolved.schemeId || activeScheme);
             break;
           }
           case IntentType.STOCK_WHEN: {
@@ -272,44 +387,50 @@ export default {
             replyText = comp
               ? renderWhenCard(comp, isStale)
               : `Stock \`${resolved.shortSymbol || resolved.symbol}\` not found in watchlist.`;
+            replyMarkup = getBackAndSwitchKeyboard(resolved.schemeId || activeScheme);
             break;
           }
           case IntentType.STOCK_WHY_PROMPT:
-            replyText = "❓ *Query Help: /why*\n\nPlease specify a stock symbol: e.g. `/why trualt` or `/why gail`";
+            replyText = "❓ *Query Help: /why*\n\nPlease specify a stock symbol: e.g. `/why trualt` or `/why ongc`";
+            replyMarkup = getBackAndSwitchKeyboard(activeScheme);
             break;
           case IntentType.STOCK_WHAT_PROMPT:
-            replyText = "⚡ *Query Help: /what*\n\nPlease specify a stock symbol: e.g. `/what praj` or `/what trualt`";
+            replyText = "⚡ *Query Help: /what*\n\nPlease specify a stock symbol: e.g. `/what praj` or `/what ongc`";
+            replyMarkup = getBackAndSwitchKeyboard(activeScheme);
             break;
           case IntentType.STOCK_WHEN_PROMPT:
-            replyText = "⏱️ *Query Help: /when*\n\nPlease specify a stock symbol: e.g. `/when wabag` or `/when gail`";
+            replyText = "⏱️ *Query Help: /when*\n\nPlease specify a stock symbol: e.g. `/when wabag` or `/when ongc`";
+            replyMarkup = getBackAndSwitchKeyboard(activeScheme);
             break;
           case IntentType.SETUPS_LOOKUP:
             replyText = renderSetupsCard(snapshot, isStale);
+            replyMarkup = getBackAndSwitchKeyboard(activeScheme);
             break;
           case IntentType.WAITING_LOOKUP:
             replyText = renderWaitingCard(snapshot, isStale);
+            replyMarkup = getBackAndSwitchKeyboard(activeScheme);
             break;
-          case IntentType.WATCHLIST:
-            replyText = renderWatchlistCard(snapshot, isStale);
-            break;
-          case IntentType.SCHEMES:
           case IntentType.SCHEME_LOOKUP:
             replyText = renderSchemesCard(snapshot, isStale);
+            replyMarkup = getBackAndSwitchKeyboard(resolved.schemeId || activeScheme);
             break;
           case IntentType.PERFORMANCE_LOOKUP:
             replyText = renderPerformanceCard(snapshot, isStale);
+            replyMarkup = getBackAndSwitchKeyboard(activeScheme);
             break;
           case IntentType.BENCHMARK_LOOKUP:
             replyText = renderBenchmarkCard(snapshot, isStale);
+            replyMarkup = getBackAndSwitchKeyboard(activeScheme);
             break;
           default:
             replyText = renderStartMenu();
+            replyMarkup = getStartInlineKeyboard(activeScheme);
             break;
         }
       }
 
       if (botToken) {
-        ctx.waitUntil(sendMessage(botToken, chatId, replyText, { requestId }));
+        ctx.waitUntil(sendMessage(botToken, chatId, replyText, { requestId, replyMarkup }));
       }
       return new Response("OK", { status: 200 });
     }
@@ -341,7 +462,7 @@ export default {
         normalized_query: resolved.normalizedQuery,
         query: rawText,
         intent: resolved.intentType,
-        scheme_id: resolved.schemeId || "gobardhan",
+        scheme_id: resolved.schemeId || activeScheme || "gobardhan",
         symbol: resolved.symbol || null,
       };
 
@@ -397,7 +518,7 @@ export default {
         normalized_query: resolved.normalizedQuery,
         query: question || rawText,
         intent: "RESEARCH_REQUEST",
-        scheme_id: resolved.schemeId || "gobardhan",
+        scheme_id: resolved.schemeId || activeScheme || "gobardhan",
         symbol: resolved.symbol || null,
       };
 
