@@ -145,10 +145,12 @@ class IntelligenceSnapshotBuilder:
                 status = setup.status if setup else "NO_TRADE"
                 if status == "QUALIFIED_SETUP":
                     qualified_count += 1
-                    qualified_setups.append(sym)
+                    if sym not in qualified_setups:
+                        qualified_setups.append(sym)
                 elif status == "WAIT":
                     wait_count += 1
-                    waiting_setups.append(sym)
+                    if sym not in waiting_setups:
+                        waiting_setups.append(sym)
                 elif status in ("DATA_UNAVAILABLE", "DATA_STALE", "DATA_INSUFFICIENT"):
                     data_unavail_count += 1
                 else:
@@ -296,7 +298,6 @@ class IntelligenceSnapshotBuilder:
                     updated_at=setup.created_at if setup else now_utc,
                 )
                 companies_dict[sym] = company_intel
-                companies_dict[short_sym] = company_intel
 
             # Source health and event breakdown for scheme
             scheme_source_health: Dict[str, str] = {}

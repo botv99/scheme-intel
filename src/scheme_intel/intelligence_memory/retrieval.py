@@ -4,6 +4,7 @@ Provides sub-second querying over prebuilt IntelligenceSnapshots without web cal
 """
 from __future__ import annotations
 
+import math
 import os
 from typing import List, Optional, Tuple
 from pathlib import Path
@@ -20,7 +21,25 @@ from .store import IntelligenceStore, DEFAULT_SNAPSHOT_PATH
 from .builder import IntelligenceSnapshotBuilder
 from ..logger import get_logger
 
-logger = get_logger(__name__)
+def is_valid_qualified_setup(comp: Optional[CompanyIntelligence]) -> bool:
+    """Validate that a qualified setup has real, non-null, valid numeric trading fields."""
+    if not comp:
+        return False
+    sym = (comp.symbol or comp.short_symbol or "").strip()
+    if not sym or sym.lower() in ("undefined", "null", "none"):
+        return False
+    arch = (comp.archetype or "").strip()
+    if not arch or arch.lower() in ("undefined", "null", "none"):
+        return False
+    for attr in ("trigger_price", "stop_loss", "target", "score"):
+        val = getattr(comp, attr, None)
+        if val is None:
+            return False
+        if not isinstance(val, (int, float)):
+            return False
+        if math.isnan(val) or math.isinf(val):
+            return False
+    return True
 
 
 class FastIntelligenceRetriever:
@@ -150,10 +169,19 @@ class FastIntelligenceRetriever:
         return None
 
     def get_watchlist(self, scheme_id: Optional[str] = None) -> List[CompanyIntelligence]:
-        """Fetch all companies for the active scheme watchlist with strict data-layer isolation."""
+        """Fetch all companies for the active scheme watchlist with strict data-layer isolation and deduplication."""
         if not scheme_id:
             snapshot = self.get_snapshot()
-            return list(snapshot.companies.values()) if snapshot else []
+            if not snapshot or not snapshot.companies:
+                return []
+            matched = []
+            seen_bases = set()
+            for c in snapshot.companies.values():
+                base = (c.symbol or c.short_symbol or "").split(".")[0].upper()
+                if base and base not in seen_bases:
+                    seen_bases.add(base)
+                    matched.append(c)
+            return matched
 
         norm_sid = scheme_id.strip().lower()
         from ..schemes.registry import SchemeRegistry
@@ -164,24 +192,37 @@ class FastIntelligenceRetriever:
         # 1. First attempt to retrieve from loaded snapshot
         snapshot = self.get_snapshot(scheme_id=norm_sid)
         if snapshot and snapshot.companies:
-            matched = [c for c in snapshot.companies.values() if (c.scheme_id or "").lower() == norm_sid]
+            matched = []
+            seen_bases = set()
+            for c in snapshot.companies.values():
+                if (c.scheme_id or "").lower() == norm_sid:
+                    base = (c.symbol or c.short_symbol or "").split(".")[0].upper()
+                    if base and base not in seen_bases:
+                        seen_bases.add(base)
+                        matched.append(c)
             if matched:
                 return matched
 
         # 2. Authoritative fallback directly from SchemeRegistry watchlist definition
         if scfg.watchlist:
-            return [
-                CompanyIntelligence(
-                    symbol=s.symbol,
-                    short_symbol=s.symbol.split(".")[0],
-                    name=s.name,
-                    scheme_id=scfg.id,
-                    scheme_name=scfg.name,
-                    status=s.status,
-                    relevance="High" if s.status == "CORE" else "Candidate",
-                )
-                for s in scfg.watchlist
-            ]
+            seen_bases = set()
+            res = []
+            for s in scfg.watchlist:
+                base = s.symbol.split(".")[0].upper()
+                if base not in seen_bases:
+                    seen_bases.add(base)
+                    res.append(
+                        CompanyIntelligence(
+                            symbol=s.symbol,
+                            short_symbol=s.symbol.split(".")[0],
+                            name=s.name,
+                            scheme_id=scfg.id,
+                            scheme_name=scfg.name,
+                            status=s.status,
+                            relevance="High" if s.status == "CORE" else "Candidate",
+                        )
+                    )
+            return res
 
         return []
 
@@ -222,11 +263,20 @@ class FastIntelligenceRetriever:
         norm_sid = scheme_id.strip().lower() if scheme_id else None
         for sym in snapshot.qualified_setups:
             comp = snapshot.companies.get(sym)
-            if comp and comp.symbol not in seen:
+            if not comp and "." not in sym:
+                comp = snapshot.companies.get(f"{sym}.NS") or snapshot.companies.get(f"{sym}.BO")
+            if not comp:
+                for c in snapshot.companies.values():
+                    if (c.symbol or "").upper() == sym.upper() or (c.short_symbol or "").upper() == sym.upper():
+                        comp = c
+                        break
+            if comp and is_valid_qualified_setup(comp):
                 if norm_sid and comp.scheme_id and comp.scheme_id.lower() != norm_sid:
                     continue
-                seen.add(comp.symbol)
-                results.append(comp)
+                base = (comp.symbol or comp.short_symbol or "").split(".")[0].upper()
+                if base not in seen:
+                    seen.add(base)
+                    results.append(comp)
         return results
 
     def get_waiting_setups(self, scheme_id: Optional[str] = None) -> List[CompanyIntelligence]:
@@ -239,11 +289,20 @@ class FastIntelligenceRetriever:
         norm_sid = scheme_id.strip().lower() if scheme_id else None
         for sym in snapshot.waiting_setups:
             comp = snapshot.companies.get(sym)
-            if comp and comp.symbol not in seen:
+            if not comp and "." not in sym:
+                comp = snapshot.companies.get(f"{sym}.NS") or snapshot.companies.get(f"{sym}.BO")
+            if not comp:
+                for c in snapshot.companies.values():
+                    if (c.symbol or "").upper() == sym.upper() or (c.short_symbol or "").upper() == sym.upper():
+                        comp = c
+                        break
+            if comp:
                 if norm_sid and comp.scheme_id and comp.scheme_id.lower() != norm_sid:
                     continue
-                seen.add(comp.symbol)
-                results.append(comp)
+                base = (comp.symbol or comp.short_symbol or "").split(".")[0].upper()
+                if base not in seen:
+                    seen.add(base)
+                    results.append(comp)
         return results
 
     def get_performance(self, scheme_id: Optional[str] = None) -> PerformanceIntelligence:

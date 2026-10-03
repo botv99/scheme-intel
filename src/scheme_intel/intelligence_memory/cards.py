@@ -4,6 +4,7 @@ Formats structured intelligence memory into clean, readable, factual Markdown te
 """
 from __future__ import annotations
 
+import math
 import re
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
@@ -348,24 +349,47 @@ def render_scheme_card(scheme: SchemeIntelligence, is_stale: bool = False) -> st
     return "\n".join(lines)
 
 
+def is_valid_qualified_setup(comp: Any) -> bool:
+    """Validate that a qualified setup has real, non-null, valid numeric trading fields."""
+    if not comp:
+        return False
+    sym = (getattr(comp, "symbol", "") or getattr(comp, "short_symbol", "") or "").strip()
+    if not sym or sym.lower() in ("undefined", "null", "none"):
+        return False
+    arch = (getattr(comp, "archetype", "") or "").strip()
+    if not arch or str(arch).lower() in ("undefined", "null", "none"):
+        return False
+    for attr in ("trigger_price", "stop_loss", "target", "score"):
+        val = getattr(comp, attr, None)
+        if val is None:
+            return False
+        if not isinstance(val, (int, float)):
+            return False
+        if math.isnan(val) or math.isinf(val):
+            return False
+    return True
+
+
 def render_setups_card(setups: List[CompanyIntelligence], is_stale: bool = False, updated_str: str = "") -> str:
     """Format qualified setups list."""
     banner = _stale_banner(is_stale, updated_str)
-    if not setups:
+    valid_setups = [s for s in (setups or []) if is_valid_qualified_setup(s)]
+    if not valid_setups:
         return f"{banner}🎯 *CURRENT SETUPS*\n\nNo qualified setups in the latest completed intelligence cycle.\n\nAll watchlist candidates either failed quantitative risk filters or are in waiting conditions."
 
     lines = [
         f"{banner}🎯 *CURRENT QUALIFIED SETUPS*",
-        f"Found {len(setups)} actionable setups from latest cycle:\n",
+        f"Found {len(valid_setups)} actionable setups from latest cycle:\n",
     ]
-    for i, s in enumerate(setups, 1):
-        trig = f"₹{s.trigger_price:.2f}" if s.trigger_price else "Market"
-        sl = f"₹{s.stop_loss:.2f}" if s.stop_loss else "N/A"
-        t1 = f"₹{s.target:.2f}" if s.target else "N/A"
+    for i, s in enumerate(valid_setups, 1):
+        trig = f"₹{s.trigger_price:.2f}"
+        sl = f"₹{s.stop_loss:.2f}"
+        t1 = f"₹{s.target:.2f}"
+        score_val = f"{s.score:.0f}" if isinstance(s.score, float) and s.score.is_integer() else f"{s.score}"
         lines.append(
-            f"*{i}. {s.short_symbol}* ({s.name})\n"
+            f"*{i}. {s.short_symbol or s.symbol.split('.')[0]}* ({s.name})\n"
             f"   • Archetype: {s.archetype or 'Swing'}\n"
-            f"   • Score: {s.score or 'N/A'}/100\n"
+            f"   • Score: {score_val}/100\n"
             f"   • Trigger: {trig} | SL: {sl} | T1: {t1}\n"
             f"   • Status: `{s.status}`\n"
         )
@@ -528,6 +552,7 @@ def render_watchlist_card(
     companies: Dict[str, CompanyIntelligence] | List[CompanyIntelligence],
     is_stale: bool = False,
     scheme_name: Optional[str] = None,
+    scheme_id: Optional[str] = None,
 ) -> str:
     """Format watchlist overview card."""
     header_name = (scheme_name or "GOBARdhan").split("(")[0].strip().upper()
@@ -537,17 +562,20 @@ def render_watchlist_card(
     ]
     seen = set()
     items = list(companies.values()) if isinstance(companies, dict) else list(companies)
+    if scheme_id:
+        norm_sid = scheme_id.strip().lower()
+        items = [c for c in items if (getattr(c, "scheme_id", None) or "").lower() in (norm_sid, "")]
     if not items:
         lines.append("No watchlist companies are currently configured for this scheme.")
         return "\n".join(lines)
 
     for comp in items:
-        sym = comp.symbol or comp.short_symbol
-        base = sym.split(".")[0]
-        if base in seen:
+        sym = comp.symbol or comp.short_symbol or ""
+        base = sym.split(".")[0].upper()
+        if not base or base in seen:
             continue
         seen.add(base)
-        price_str = f"₹{comp.price:,.2f}" if comp.price else "N/A"
+        price_str = f"₹{comp.price:,.2f}" if comp.price is not None else "N/A"
         status_str = f"`{comp.status}`" if comp.status else "`WATCH`"
         lines.append(f"• *{base}* ({comp.name}) — {price_str} | {status_str}")
 

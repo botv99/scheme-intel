@@ -598,7 +598,7 @@ class IntentResolver:
                 intent_type=IntentType.COMPLEX_QUERY,
                 execution_path=ExecutionPath.WORKFLOW,
                 symbol=primary_stock,
-                scheme_id="gobardhan",
+                scheme_id=effective_scheme,
                 raw_query=raw,
                 normalized_query=normalized,
                 parameters={"stocks_mentioned": [s[0].symbol for s in stocks]},

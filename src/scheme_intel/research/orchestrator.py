@@ -122,7 +122,25 @@ def search_internet_for_research(query: str, scheme: Optional[SchemeConfig] = No
         "kirloskar": "KIRLPNU.NS",
         "ioc": "IOC.NS",
         "ionexchang": "IONEXCHANG.NS",
+        "ongc": "ONGC.NS",
+        "oil": "OIL.NS",
+        "reliance": "RELIANCE.NS",
+        "ril": "RELIANCE.NS",
+        "vedl": "VEDL.NS",
+        "vedanta": "VEDL.NS",
+        "jindcot": "JINDCOT.NS",
+        "seamec": "SEAMECLTD.NS",
+        "dolphin": "DOLPHIN.NS",
     }
+    try:
+        from ..schemes.registry import SchemeRegistry
+        for s_cfg in SchemeRegistry.list_schemes():
+            for w in s_cfg.watchlist:
+                clean_sym = w.symbol.upper()
+                base_sym = clean_sym.split(".")[0]
+                ticker_map[base_sym.lower()] = clean_sym
+    except Exception:
+        pass
     for key, sym in ticker_map.items():
         if key in q_lower:
             try:
@@ -196,7 +214,11 @@ class ResearchOrchestrator:
 
         # 2. Snapshot as Background Context ONLY
         if snapshot_context:
+            target_scheme_id = scheme.id.lower() if scheme and getattr(scheme, "id", None) else None
             for sym, comp in snapshot_context.get("companies", {}).items():
+                comp_scheme = (comp.get("scheme_id") or "").lower()
+                if target_scheme_id and comp_scheme and comp_scheme != target_scheme_id:
+                    continue
                 name = comp.get("name", "").lower()
                 short_s = comp.get("short_symbol", "").lower()
                 if short_s in q_lower or name in q_lower or any(t in name for t in q_tokens):
