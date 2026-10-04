@@ -218,8 +218,17 @@ export async function activateAccessKey(
     .lt("used_count", keyRecord.max_uses)
     .eq("status", "ACTIVE");
 
-  const rows = Array.isArray(updatedRows) ? updatedRows : (updatedRows ? [updatedRows] : []);
-  if (updateErr || rows.length === 0) {
+  if (updateErr) {
+    safeLog("error", "key_activation_update_failed", { keyId: keyRecord.id, error: updateErr });
+    return {
+      success: false,
+      reason: "DB_ERROR",
+      message: "An error occurred while updating the access key.",
+    };
+  }
+
+  // Only reject if the database returned an explicit empty array (concurrency guard failed)
+  if (Array.isArray(updatedRows) && updatedRows.length === 0) {
     await recordAuditEvent(env, {
       userId: user.id,
       telegramUserId: String(telegramUserId),

@@ -8,6 +8,8 @@ GITHUB_OWNER = "botv99"
 GITHUB_REPO = "scheme-intel"
 GITHUB_BRANCH = "main"
 SNAPSHOT_PATH = "data/intelligence/latest.json"
+SUPABASE_URL = "https://uhtbrymlsgeqcrpzvldx.supabase.co"
+ADMIN_USER_IDS = "5917850553"
 
 # SECRETS (Do NOT put in this file! Set via `npx wrangler secret put <NAME>`):
 # - TELEGRAM_BOT_TOKEN       : Telegram bot token from @BotFather

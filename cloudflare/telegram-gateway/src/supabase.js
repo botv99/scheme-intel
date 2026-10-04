@@ -48,6 +48,7 @@ class PostgrestQueryBuilder {
     this.method = "PATCH";
     this.body = values;
     this.headers["Prefer"] = "return=representation";
+    this.params.set("select", "*");
     return this;
   }
 
@@ -391,8 +392,14 @@ export class SupabaseClient {
  * If SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY is absent or in test mode, safely falls back to MockSupabaseStore.
  */
 export function getSupabaseClient(env = {}) {
-  const url = env.SUPABASE_URL;
-  const key = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_KEY;
+  let url = (env.SUPABASE_URL || "").trim();
+  const key = (env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_KEY || "").trim();
+
+  // Defensive normalization: if user entered dashboard URL, extract project ID
+  const dashMatch = url.match(/supabase\.com\/dashboard\/project\/([a-z0-9_-]+)/i);
+  if (dashMatch) {
+    url = `https://${dashMatch[1]}.supabase.co`;
+  }
 
   if (env.__MOCK_SUPABASE__ || env.MOCK_SUPABASE === "true" || !url || !key) {
     return new SupabaseClient(url, key, { mockStore: env.__MOCK_STORE__ || getMockStore() });
