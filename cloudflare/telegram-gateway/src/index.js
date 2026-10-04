@@ -55,7 +55,8 @@ import {
   isPlatformAdmin,
 } from "./authorization.js";
 import { setUserSelectedScheme, recordAuditEvent } from "./users.js";
-import { activateAccessKey } from "./keys.js";
+import { activateAccessKey, hashAccessKey, generateAccessKey } from "./keys.js";
+import { getSupabaseClient } from "./supabase.js";
 import { getAllSchemes } from "./entitlements.js";
 import { getProducts, getProductByCode, createPaymentOrder, findOrder } from "./orders.js";
 import { handlePaymentWebhook } from "./payments/webhook.js";
@@ -138,6 +139,45 @@ export default {
       }
       const getRes = await getMyCommands(botToken);
       return new Response(JSON.stringify(getRes, null, 2), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (url.pathname === "/diagnose-auth" && method === "GET") {
+      const client = getSupabaseClient(env);
+      const testKey = url.searchParams.get("key");
+      const diag = {
+        supabase_url: env.SUPABASE_URL,
+        has_service_key: Boolean(env.SUPABASE_SERVICE_ROLE_KEY),
+      };
+
+      try {
+        const schemesRes = await client.from("schemes").select("*");
+        diag.schemes = schemesRes;
+
+        const usersRes = await client.from("users").select("*").limit(5);
+        diag.users = usersRes;
+
+        const keysRes = await client.from("access_keys").select("*").limit(5);
+        diag.access_keys = keysRes;
+
+        const auditsRes = await client.from("audit_events").select("*").order("created_at", { ascending: false }).limit(10);
+        diag.audit_events = auditsRes;
+
+        const keyEntsRes = await client.from("key_entitlements").select("*").limit(5);
+        diag.key_entitlements = keyEntsRes;
+
+        const userEntsRes = await client.from("user_scheme_entitlements").select("*").limit(5);
+        diag.user_scheme_entitlements = userEntsRes;
+
+        // Clean read-only diagnostics
+      } catch (err) {
+        diag.caught_error = err.message;
+        diag.caught_stack = err.stack;
+      }
+
+      return new Response(JSON.stringify(diag, null, 2), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
@@ -320,22 +360,28 @@ export default {
     // A5. /activate <key>
     if (resolved.intentType === IntentType.ACTIVATE_KEY) {
       const rawKey = resolved.key || rawText.replace(/^\/activate\s*/i, "").trim();
-      const actRes = await activateAccessKey(env, {
-        telegramUserId: userId,
-        rawKey,
-        telegramChatId: chatId,
-        username,
-        firstName,
-      });
+      let actRes = null;
+      try {
+        actRes = await activateAccessKey(env, {
+          telegramUserId: userId,
+          rawKey,
+          telegramChatId: chatId,
+          username,
+          firstName,
+        });
+      } catch (err) {
+        safeLog("error", "activate_key_exception", { error: err.message, stack: err.stack });
+        actRes = { success: false, message: `System error during activation: ${err.message}` };
+      }
 
       let replyText = "";
       let replyMarkup = null;
 
-      if (actRes.success) {
+      if (actRes && actRes.success) {
         replyText = renderActivationSuccessCard(actRes.grantedSchemes, actRes.expiresAt);
         replyMarkup = getActivationSuccessKeyboard(actRes.grantedSchemes);
       } else {
-        replyText = `❌ *KEY ACTIVATION FAILED*\n\n${actRes.message}\n\nPlease check your key and try again.`;
+        replyText = `❌ *KEY ACTIVATION FAILED*\n\n${actRes?.message || "Invalid or unhandled key activation."}\n\nPlease check your key and try again.`;
         replyMarkup = {
           inline_keyboard: [
             [{ text: "🔑 Try Another Key", callback_data: "action:enter_key" }],

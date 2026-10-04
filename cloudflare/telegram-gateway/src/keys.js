@@ -213,7 +213,7 @@ export async function activateAccessKey(
 
   const { data: updatedRows, error: updateErr } = await client
     .from("access_keys")
-    .update({ used_count: newUsedCount, status: newStatus, updated_at: now.toISOString() })
+    .update({ used_count: newUsedCount, status: newStatus })
     .eq("id", keyRecord.id)
     .lt("used_count", keyRecord.max_uses)
     .eq("status", "ACTIVE");
@@ -223,7 +223,8 @@ export async function activateAccessKey(
     return {
       success: false,
       reason: "DB_ERROR",
-      message: "An error occurred while updating the access key.",
+      message: `An error occurred while updating the access key: ${JSON.stringify(updateErr)}`,
+      error: updateErr,
     };
   }
 
@@ -309,7 +310,7 @@ export async function revokeAccessKey(env, keyPrefix) {
   const client = getSupabaseClient(env);
   const { data, error } = await client
     .from("access_keys")
-    .update({ status: "REVOKED", updated_at: new Date().toISOString() })
+    .update({ status: "REVOKED" })
     .eq("key_prefix", keyPrefix.trim().toUpperCase());
 
   return !error;
