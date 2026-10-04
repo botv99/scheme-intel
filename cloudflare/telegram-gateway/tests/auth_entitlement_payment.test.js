@@ -873,4 +873,152 @@ describe("Scheme Intel — Payment, Authorization & Entitlement System", () => {
     assert.equal(failures.length, 1, "Exactly one activation should fail");
     assert.equal(failures[0].reason, "MAX_USES_REACHED");
   });
+
+  test("23. Entitled user receives replies for /setups, /watchlist, /stock with object performance/benchmark", async () => {
+    // Register user with GOBARdhan access
+    const key = await generateAccessKey(env, { schemeIds: ["gobardhan"] });
+    await activateAccessKey(env, { telegramUserId: "user_fast_cmds", rawKey: key.plaintextKey });
+
+    const sentMessages = [];
+    const executionCtx = { waitUntil: (p) => Promise.resolve(p) };
+
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async (url, opts) => {
+      if (typeof url === "string" && url.includes("/sendMessage")) {
+        sentMessages.push(JSON.parse(opts.body));
+        return new Response(JSON.stringify({ ok: true, result: { message_id: 111 } }), { status: 200 });
+      }
+      if (typeof url === "string" && url.includes("raw.githubusercontent.com")) {
+        return new Response(
+          JSON.stringify({
+            snapshot_id: "SNAP-TEST-20261004",
+            generated_at: new Date().toISOString(),
+            companies: {
+              "GAIL.NS": {
+                symbol: "GAIL.NS",
+                short_symbol: "GAIL",
+                name: "GAIL (India)",
+                scheme_id: "gobardhan",
+                price: 215.0,
+                status: "QUALIFIED_SETUP",
+                archetype: "Breakout",
+                trigger_price: 215.0,
+                stop_loss: 205.0,
+                target: 235.0,
+                score: 80,
+              },
+            },
+            qualified_setups: ["GAIL.NS"],
+            waiting_setups: [],
+            // performance and benchmark as real objects, not arrays
+            performance: { completed_trades: 0, validation_status: "INSUFFICIENT_SAMPLE" },
+            benchmark: { status: "ACTIVE", benchmark_id: "NIFTY50" },
+          }),
+          { status: 200 }
+        );
+      }
+      return originalFetch(url, opts);
+    };
+
+    try {
+      // 1. /setups
+      sentMessages.length = 0;
+      const reqSetups = new Request("https://gateway.internal/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Telegram-Bot-Api-Secret-Token": env.TELEGRAM_WEBHOOK_SECRET },
+        body: JSON.stringify({
+          update_id: 5001,
+          message: { from: { id: "user_fast_cmds" }, chat: { id: "user_fast_cmds" }, text: "/setups" },
+        }),
+      });
+      await worker.fetch(reqSetups, env, executionCtx);
+      assert.equal(sentMessages.length, 1);
+      assert.match(sentMessages[0].text, /Today's Qualified Setups/i);
+      assert.match(sentMessages[0].text, /GAIL/);
+      assert.ok(!sentMessages[0].text.includes("undefined"));
+
+      // 2. /watchlist
+      sentMessages.length = 0;
+      const reqWatchlist = new Request("https://gateway.internal/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Telegram-Bot-Api-Secret-Token": env.TELEGRAM_WEBHOOK_SECRET },
+        body: JSON.stringify({
+          update_id: 5002,
+          message: { from: { id: "user_fast_cmds" }, chat: { id: "user_fast_cmds" }, text: "/watchlist" },
+        }),
+      });
+      await worker.fetch(reqWatchlist, env, executionCtx);
+      assert.equal(sentMessages.length, 1);
+      assert.match(sentMessages[0].text, /GOBARDHAN SCHEME WATCHLIST/i);
+      assert.match(sentMessages[0].text, /GAIL/);
+
+      // 3. /stock (prompt)
+      sentMessages.length = 0;
+      const reqStockPrompt = new Request("https://gateway.internal/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Telegram-Bot-Api-Secret-Token": env.TELEGRAM_WEBHOOK_SECRET },
+        body: JSON.stringify({
+          update_id: 5003,
+          message: { from: { id: "user_fast_cmds" }, chat: { id: "user_fast_cmds" }, text: "/stock" },
+        }),
+      });
+      await worker.fetch(reqStockPrompt, env, executionCtx);
+      assert.equal(sentMessages.length, 1);
+      assert.match(sentMessages[0].text, /Query Help: \/stock/i);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  test("24. Research dispatch strictly enforces <= 10 client_payload properties for GitHub limit", async () => {
+    const key = await generateAccessKey(env, { schemeIds: ["gobardhan"] });
+    await activateAccessKey(env, { telegramUserId: "user_research", rawKey: key.plaintextKey });
+
+    let dispatchedPayload = null;
+    const executionCtx = { waitUntil: (p) => Promise.resolve(p) };
+
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async (url, opts) => {
+      if (typeof url === "string" && url.includes("/sendMessage")) {
+        return new Response(JSON.stringify({ ok: true, result: { message_id: 112 } }), { status: 200 });
+      }
+      if (typeof url === "string" && url.includes("/dispatches")) {
+        dispatchedPayload = JSON.parse(opts.body);
+        const propsCount = Object.keys(dispatchedPayload.client_payload || {}).length;
+        if (propsCount > 10) {
+          return new Response(
+            JSON.stringify({
+              message: `Invalid request.\n\nNo more than 10 properties are allowed; ${propsCount} were supplied.`,
+            }),
+            { status: 422 }
+          );
+        }
+        return new Response(null, { status: 204 });
+      }
+      return originalFetch(url, opts);
+    };
+
+    try {
+      const req = new Request("https://gateway.internal/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Telegram-Bot-Api-Secret-Token": env.TELEGRAM_WEBHOOK_SECRET },
+        body: JSON.stringify({
+          update_id: 6001,
+          message: {
+            from: { id: "user_research" },
+            chat: { id: "user_research" },
+            text: "/research how is the Indian market nifty 50 on comparison with us markets",
+          },
+        }),
+      });
+
+      const res = await worker.fetch(req, { ...env, GITHUB_TOKEN: "mock_gh_token" }, executionCtx);
+      assert.equal(res.status, 200);
+      assert.ok(dispatchedPayload, "Workflow must be dispatched");
+      const propCount = Object.keys(dispatchedPayload.client_payload || {}).length;
+      assert.ok(propCount <= 10, `client_payload must have <= 10 properties, got ${propCount}`);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
 });

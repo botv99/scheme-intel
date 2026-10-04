@@ -342,8 +342,8 @@ export function renderWhenCard(comp, isStale = false) {
 }
 
 export function renderSetupsCard(snapshot, isStale = false) {
-  const banner = staleBanner(isStale, snapshot.generated_at);
-  const setups = snapshot.qualified_setups || [];
+  const banner = staleBanner(isStale, snapshot?.generated_at);
+  const setups = snapshot?.qualified_setups || [];
 
   if (setups.length === 0) {
     return (
@@ -358,11 +358,27 @@ export function renderSetupsCard(snapshot, isStale = false) {
     "",
   ];
 
-  for (const s of setups) {
+  for (const item of setups) {
+    const sym = typeof item === "string" ? item : (item.symbol || item.short_symbol);
+    const comp = (snapshot?.companies && snapshot.companies[sym])
+      ? snapshot.companies[sym]
+      : (typeof item === "object" ? item : { symbol: sym, short_symbol: sym });
+
+    const shortSym = comp.short_symbol || comp.symbol || sym;
+    const archetype = comp.archetype || item?.archetype || "Swing";
+    const trigger = comp.trigger_price ?? item?.trigger_price;
+    const triggerStr = trigger != null ? `₹${Number(trigger).toFixed(2)}` : "N/A";
+    const sl = comp.stop_loss ?? item?.stop_loss;
+    const slStr = sl != null ? `₹${Number(sl).toFixed(2)}` : "N/A";
+    const target = comp.target ?? item?.target;
+    const targetStr = target != null ? `₹${Number(target).toFixed(2)}` : "N/A";
+    const score = comp.score ?? item?.score ?? "N/A";
+    const rr = comp.risk_summary || item?.rr || "1:2+";
+
     lines.push(
-      `🎯 *${s.short_symbol || s.symbol}* (${s.archetype || "Swing"})`,
-      `• Trigger: ₹${Number(s.trigger_price).toFixed(2)} | SL: ₹${Number(s.stop_loss).toFixed(2)} | T1: ₹${Number(s.target).toFixed(2)}`,
-      `• Score: ${s.score || "N/A"}/100 | R:R: ${s.rr || "1:2+"}`,
+      `🎯 *${shortSym}* (${archetype})`,
+      `• Trigger: ${triggerStr} | SL: ${slStr} | T1: ${targetStr}`,
+      `• Score: ${score}/100 | ${rr}`,
       ""
     );
   }
@@ -371,8 +387,8 @@ export function renderSetupsCard(snapshot, isStale = false) {
 }
 
 export function renderWaitingCard(snapshot, isStale = false) {
-  const banner = staleBanner(isStale, snapshot.generated_at);
-  const waiting = snapshot.waiting_setups || [];
+  const banner = staleBanner(isStale, snapshot?.generated_at);
+  const waiting = snapshot?.waiting_setups || [];
 
   if (waiting.length === 0) {
     return (
@@ -386,10 +402,22 @@ export function renderWaitingCard(snapshot, isStale = false) {
     "",
   ];
 
-  for (const w of waiting) {
+  for (const item of waiting) {
+    const sym = typeof item === "string" ? item : (item.symbol || item.short_symbol);
+    const comp = (snapshot?.companies && snapshot.companies[sym])
+      ? snapshot.companies[sym]
+      : (typeof item === "object" ? item : { symbol: sym, short_symbol: sym });
+
+    const shortSym = comp.short_symbol || comp.symbol || sym;
+    const trigger = comp.trigger_price ?? item?.trigger_price;
+    const levelStr = trigger != null ? `₹${Number(trigger).toFixed(2)}` : "Watch";
+    const cond = (Array.isArray(comp.waiting_conditions) && comp.waiting_conditions.length > 0)
+      ? comp.waiting_conditions[0]
+      : (comp.condition || item?.condition || "");
+
     lines.push(
-      `• *${w.short_symbol || w.symbol}*: Level ₹${w.trigger_price != null ? Number(w.trigger_price).toFixed(2) : "Watch"}`,
-      w.condition ? `  _${w.condition}_` : ""
+      `• *${shortSym}*: Level ${levelStr}`,
+      cond ? `  _${cond}_` : ""
     );
   }
 

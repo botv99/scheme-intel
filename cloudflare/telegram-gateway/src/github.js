@@ -56,20 +56,31 @@ export async function dispatchWorkflow(githubToken, repoOwner, repoName, eventTy
     };
   }
 
+  // GitHub repository_dispatch enforces a hard limit of at most 10 properties in client_payload
+  const sanitizedPayload = { ...(clientPayload || {}) };
+  const keys = Object.keys(sanitizedPayload);
+  if (keys.length > 10) {
+    const lowPriorityKeys = ["message_id", "normalized_query", "raw_query", "username", "first_name"];
+    for (const k of lowPriorityKeys) {
+      if (Object.keys(sanitizedPayload).length <= 10) break;
+      delete sanitizedPayload[k];
+    }
+  }
+
   const url = `${GITHUB_API_BASE}/repos/${repoOwner}/${repoName}/dispatches`;
 
   try {
     const resp = await fetch(url, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${githubToken}`,
+        "Authorization": `Bearer ${token}`,
         "Accept": "application/vnd.github.v3+json",
         "User-Agent": "Scheme-Intel-Cloudflare-Gateway/1.0",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         event_type: eventType,
-        client_payload: clientPayload,
+        client_payload: sanitizedPayload,
       }),
     });
 

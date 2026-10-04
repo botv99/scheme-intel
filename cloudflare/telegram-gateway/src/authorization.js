@@ -135,7 +135,8 @@ export function filterSnapshotForUser(snapshot, allowedSchemeIds, isAdmin = fals
   }
 
   // Filter qualified setups (symbols must be in filteredCompanies)
-  const filteredQualified = (snapshot.qualified_setups || []).filter((sym) => {
+  const filteredQualified = (snapshot.qualified_setups || []).filter((item) => {
+    const sym = typeof item === "string" ? item : (item?.symbol || item?.short_symbol);
     const comp = snapshot.companies?.[sym] || Object.values(snapshot.companies || {}).find((c) => c.symbol === sym || c.short_symbol === sym);
     if (!comp) return false;
     const sId = (comp.scheme_id || getStockScheme(sym, snapshot) || "gobardhan").toLowerCase();
@@ -143,7 +144,8 @@ export function filterSnapshotForUser(snapshot, allowedSchemeIds, isAdmin = fals
   });
 
   // Filter waiting setups
-  const filteredWaiting = (snapshot.waiting_setups || []).filter((sym) => {
+  const filteredWaiting = (snapshot.waiting_setups || []).filter((item) => {
+    const sym = typeof item === "string" ? item : (item?.symbol || item?.short_symbol);
     const comp = snapshot.companies?.[sym] || Object.values(snapshot.companies || {}).find((c) => c.symbol === sym || c.short_symbol === sym);
     if (!comp) return false;
     const sId = (comp.scheme_id || getStockScheme(sym, snapshot) || "gobardhan").toLowerCase();
@@ -160,9 +162,28 @@ export function filterSnapshotForUser(snapshot, allowedSchemeIds, isAdmin = fals
     }
   }
 
-  // Filter performance and benchmarks
-  const filteredPerf = (snapshot.performance || []).filter((p) => !p.scheme_id || allowedSet.has(p.scheme_id.toLowerCase()));
-  const filteredBench = (snapshot.benchmark || []).filter((b) => !b.scheme_id || allowedSet.has(b.scheme_id.toLowerCase()));
+  // Filter performance and benchmarks safely (handles both Array and Object structures)
+  let filteredPerf = snapshot.performance;
+  if (Array.isArray(snapshot.performance)) {
+    filteredPerf = snapshot.performance.filter((p) => !p.scheme_id || allowedSet.has(p.scheme_id.toLowerCase()));
+  } else if (snapshot.performance && typeof snapshot.performance === "object") {
+    filteredPerf = { ...snapshot.performance };
+  }
+
+  let filteredBench = snapshot.benchmark;
+  if (Array.isArray(snapshot.benchmark)) {
+    filteredBench = snapshot.benchmark.filter((b) => !b.scheme_id || allowedSet.has(b.scheme_id.toLowerCase()));
+  } else if (snapshot.benchmark && typeof snapshot.benchmark === "object") {
+    filteredBench = { ...snapshot.benchmark };
+    if (Array.isArray(filteredBench.trade_comparisons)) {
+      filteredBench.trade_comparisons = filteredBench.trade_comparisons.filter((tc) => {
+        const sym = tc.symbol;
+        const comp = snapshot.companies?.[sym];
+        const sId = (comp?.scheme_id || getStockScheme(sym, snapshot) || "gobardhan").toLowerCase();
+        return allowedSet.has(sId);
+      });
+    }
+  }
 
   return {
     ...snapshot,

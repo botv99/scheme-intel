@@ -270,7 +270,8 @@ export default {
       query: rawText.slice(0, 60),
     });
 
-    // 6. Supabase Authorization & Entitlement Verification
+    try {
+      // 6. Supabase Authorization & Entitlement Verification
     // Database entitlements are the authoritative source of truth
     let auth = null;
     try {
@@ -814,9 +815,6 @@ export default {
         request_id: requestId,
         user_id: userId,
         chat_id: chatId,
-        message_id: messageId,
-        raw_query: rawText,
-        normalized_query: resolved.normalizedQuery,
         query: rawText,
         intent: resolved.intentType,
         scheme_id: currentScheme,
@@ -869,9 +867,6 @@ export default {
         request_id: requestId,
         user_id: userId,
         chat_id: chatId,
-        message_id: messageId,
-        raw_query: rawText,
-        normalized_query: resolved.normalizedQuery,
         query: question || rawText,
         intent: "RESEARCH_REQUEST",
         scheme_id: currentScheme,
@@ -904,5 +899,29 @@ export default {
     }
 
     return new Response("OK", { status: 200 });
+  } catch (unhandledErr) {
+      safeLog("error", "worker_unhandled_exception", {
+        error: unhandledErr.message,
+        stack: unhandledErr.stack,
+        chatId,
+        userId,
+        requestId,
+      });
+
+      if (botToken && chatId) {
+        ctx.waitUntil(
+          sendMessage(
+            botToken,
+            chatId,
+            `⚠️ *Temporary Processing Error*\n\n` +
+            `We encountered an issue processing your request. Please try again in a moment.\n\n` +
+            `_Request ID:_ \`${requestId}\``,
+            { requestId }
+          )
+        );
+      }
+
+      return new Response("OK", { status: 200 });
+    }
   },
 };
