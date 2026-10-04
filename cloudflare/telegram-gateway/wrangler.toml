@@ -10,10 +10,17 @@ GITHUB_BRANCH = "main"
 SNAPSHOT_PATH = "data/intelligence/latest.json"
 
 # SECRETS (Do NOT put in this file! Set via `npx wrangler secret put <NAME>`):
-# - TELEGRAM_BOT_TOKEN      : Telegram bot token from @BotFather
-# - TELEGRAM_WEBHOOK_SECRET : Secret token for Telegram X-Telegram-Bot-Api-Secret-Token validation
-# - GITHUB_TOKEN            : GitHub Personal Access Token (with repo or Actions:write scope)
+# - TELEGRAM_BOT_TOKEN       : Telegram bot token from @BotFather
+# - TELEGRAM_WEBHOOK_SECRET  : Secret token for Telegram X-Telegram-Bot-Api-Secret-Token validation
+# - GITHUB_TOKEN             : GitHub Personal Access Token (with repo or Actions:write scope)
+# - SUPABASE_URL             : Supabase project URL (e.g. https://xyz.supabase.co)
+# - SUPABASE_SERVICE_ROLE_KEY: Supabase service_role secret key for PostgREST access
+# - RAZORPAY_KEY_ID          : Razorpay API Key ID
+# - RAZORPAY_KEY_SECRET      : Razorpay API Key Secret
+# - RAZORPAY_WEBHOOK_SECRET  : Razorpay Webhook secret for HMAC signature verification
 #
-# Optional Access Control Variables:
-# - TELEGRAM_ALLOWED_USER_IDS : Comma-separated user IDs
-# - TELEGRAM_ALLOWED_CHAT_IDS : Comma-separated chat IDs
+# Administrative & Access Variables:
+# - ADMIN_USER_IDS           : Comma-separated Telegram User IDs with platform admin privileges
+# - TELEGRAM_ALLOWED_USER_IDS: Optional legacy emergency fallback whitelist
+# - TELEGRAM_ALLOWED_CHAT_IDS: Optional legacy emergency fallback whitelist
+

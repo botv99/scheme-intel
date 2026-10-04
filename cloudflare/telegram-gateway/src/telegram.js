@@ -14,6 +14,9 @@ export const BOT_COMMANDS = [
   { command: "setups", description: "Today's qualified setups" },
   { command: "watchlist", description: "Monitored scheme watchlist" },
   { command: "research", description: "Deep policy research (/research <Q>)" },
+  { command: "activate", description: "Unlock account with authorization key" },
+  { command: "purchase", description: "Browse subscription packages" },
+  { command: "status", description: "View your scheme access & expiration" },
 ];
 
 /**

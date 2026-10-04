@@ -615,8 +615,234 @@ export function renderHelpMenu() {
     `• \`/setups\` — Today's qualified swing trade setups\n` +
     `• \`/watchlist\` — Monitored scheme watchlist stocks\n` +
     `• \`/help\` — Command guide\n\n` +
+    `*Authorization & Payments:*\n` +
+    `• \`/activate <key>\` — Unlock account with authorization key\n` +
+    `• \`/purchase\` — Browse subscription packages\n` +
+    `• \`/status\` — View active scheme entitlements\n\n` +
     `*Deep Research & Analysis:*\n` +
     `• \`/research <question>\` — Asynchronous deep policy research\n` +
     `• Natural language questions (e.g. _Compare ONGC and OIL_)`
   );
 }
+
+// ============================================================================
+// COMMERCIAL ENTITLEMENT & PAYMENT CARD RENDERERS
+// ============================================================================
+
+export function renderLockedStartMenu() {
+  return (
+    `🔐 *SCHEME INTEL*\n\n` +
+    `Welcome to Scheme Intel.\n\n` +
+    `Your account is currently locked.\n\n` +
+    `Enter an authorization key to unlock your account.`
+  );
+}
+
+export function getLockedStartKeyboard() {
+  return {
+    inline_keyboard: [
+      [{ text: "🔑 Enter Access Key", callback_data: "action:enter_key" }],
+      [{ text: "🛒 Purchase Access", callback_data: "action:purchase_menu" }],
+      [{ text: "📋 Available Schemes", callback_data: "action:available_schemes" }],
+    ],
+  };
+}
+
+export function renderSchemeLockedCard(schemeId = "") {
+  return (
+    `🔒 *SCHEME LOCKED*\n\n` +
+    `You do not have access to this scheme.`
+  );
+}
+
+export function getSchemeLockedKeyboard(schemeId = "") {
+  return {
+    inline_keyboard: [
+      [
+        { text: "🛒 Unlock", callback_data: `action:buy_scheme:${schemeId}` },
+        { text: "← Back", callback_data: "/schemes" },
+      ],
+    ],
+  };
+}
+
+export function renderStockRestrictedCard(symbol, allowedSchemes = []) {
+  const schemeIcons = {
+    gobardhan: "🌱 GOBARdhan",
+    samudra_manthan: "🌊 Samudra Manthan",
+    green_hydrogen: "⚡ Green Hydrogen",
+    solar_mission: "☀️ Solar Mission",
+  };
+
+  const allowedList = allowedSchemes.length > 0
+    ? allowedSchemes.map((s) => schemeIcons[s.toLowerCase()] || `• ${s}`).join("\n")
+    : "_No active schemes_";
+
+  return (
+    `🔒 *ACCESS RESTRICTED*\n\n` +
+    `*${symbol.toUpperCase()}* belongs to a scheme you are not authorized to access.\n\n` +
+    `You can access:\n${allowedList}`
+  );
+}
+
+export function getStockRestrictedKeyboard() {
+  return {
+    inline_keyboard: [
+      [
+        { text: "🛒 Purchase Access", callback_data: "action:purchase_menu" },
+        { text: "📋 Available Schemes", callback_data: "action:available_schemes" },
+      ],
+    ],
+  };
+}
+
+export function renderAvailableSchemesMenu(allSchemes = [], allowedSchemes = []) {
+  const allowedSet = new Set((allowedSchemes || []).map((s) => s.trim().toLowerCase()));
+  const schemeIcons = {
+    gobardhan: "🌱",
+    samudra_manthan: "🌊",
+    green_hydrogen: "⚡",
+    solar_mission: "☀️",
+  };
+
+  const lines = (allSchemes || []).map((s) => {
+    const sid = s.scheme_id.trim().toLowerCase();
+    const icon = schemeIcons[sid] || "📌";
+    const status = allowedSet.has(sid) ? "✅ You have access" : "🔒 Locked";
+    return `${icon} *${s.name}*\n${status}\n`;
+  });
+
+  return `📋 *AVAILABLE SCHEMES*\n\n${lines.join("\n")}`;
+}
+
+export function getAvailableSchemesKeyboard(allSchemes = [], allowedSchemes = []) {
+  const allowedSet = new Set((allowedSchemes || []).map((s) => s.trim().toLowerCase()));
+  const rows = [];
+
+  for (const s of allSchemes || []) {
+    const sid = s.scheme_id.trim().toLowerCase();
+    if (allowedSet.has(sid)) {
+      rows.push([{ text: `Open ${s.name}`, callback_data: `scheme_select:${sid}` }]);
+    } else {
+      rows.push([{ text: `Unlock ${s.name}`, callback_data: `action:buy_scheme:${sid}` }]);
+    }
+  }
+
+  rows.push([{ text: "🔑 Enter Key", callback_data: "action:enter_key" }]);
+  return { inline_keyboard: rows };
+}
+
+export function renderPurchaseMenu(products = []) {
+  const schemeIcons = {
+    GOBARDHAN: "🌱",
+    SAMUDRA: "🌊",
+    ALL_ACCESS: "🌱🌊",
+  };
+
+  let header = "🛒 *PURCHASE ACCESS*\n\nChoose a package:\n\n";
+  const items = products.map((p) => {
+    const code = p.product_code.toUpperCase();
+    let icon = "🌱";
+    if (code.includes("SAMUDRA")) icon = "🌊";
+    if (code.includes("ALL")) icon = "🌱🌊";
+
+    const period = p.duration_days >= 365 ? "year" : "month";
+    const formattedPrice = Number(p.price_inr).toLocaleString("en-IN");
+    return `${icon} *${p.name}*\n₹${formattedPrice} / ${period}\n`;
+  });
+
+  return header + items.join("\n");
+}
+
+export function getPurchaseKeyboard(products = []) {
+  const rows = [];
+  for (const p of products || []) {
+    const label = `${p.name} (₹${Number(p.price_inr).toLocaleString("en-IN")})`;
+    rows.push([{ text: label, callback_data: `action:buy_product:${p.product_code}` }]);
+  }
+  rows.push([
+    { text: "🔑 Have a Key?", callback_data: "action:enter_key" },
+    { text: "📋 Schemes", callback_data: "action:available_schemes" },
+  ]);
+  return { inline_keyboard: rows };
+}
+
+export function renderOrderPaymentCard(order, product) {
+  const formattedPrice = Number(order.amount).toLocaleString("en-IN");
+  return (
+    `💳 *PAYMENT*\n\n` +
+    `*Package:*\n${product.name}\n\n` +
+    `*Amount:*\n₹${formattedPrice}\n\n` +
+    `*Order:*\n\`${order.order_code}\``
+  );
+}
+
+export function getOrderPaymentKeyboard(paymentUrl, orderCode) {
+  return {
+    inline_keyboard: [
+      [{ text: "💳 PAY NOW", url: paymentUrl || "https://rzp.io" }],
+      [{ text: "🔄 Check Status", callback_data: `action:check_order:${orderCode}` }],
+      [{ text: "← Back to Packages", callback_data: "action:purchase_menu" }],
+    ],
+  };
+}
+
+export function renderAccessExpiredCard(schemeName = "GOBARdhan", expiryDate = null) {
+  const dateStr = expiryDate
+    ? new Date(expiryDate).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })
+    : "Recently";
+
+  return (
+    `⏳ *ACCESS EXPIRED*\n\n` +
+    `Your access to *${schemeName}* expired on:\n\n` +
+    `${dateStr}\n\n` +
+    `Please renew your subscription or enter a new authorization key.`
+  );
+}
+
+export function getAccessExpiredKeyboard(schemeId = "gobardhan") {
+  return {
+    inline_keyboard: [
+      [
+        { text: "🔄 Renew Access", callback_data: `action:buy_scheme:${schemeId}` },
+        { text: "🔑 Enter Key", callback_data: "action:enter_key" },
+      ],
+    ],
+  };
+}
+
+export function renderActivationSuccessCard(grantedSchemes = [], expiresAt = null) {
+  const schemeIcons = {
+    gobardhan: "🌱 GOBARdhan",
+    samudra_manthan: "🌊 Samudra Manthan",
+    green_hydrogen: "⚡ Green Hydrogen",
+    solar_mission: "☀️ Solar Mission",
+  };
+
+  const schemeLines = grantedSchemes.length > 0
+    ? grantedSchemes.map((s) => schemeIcons[s.toLowerCase()] || `• ${s}`).join("\n")
+    : "🌱 GOBARdhan";
+
+  const dateStr = expiresAt
+    ? new Date(expiresAt).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })
+    : "Ongoing";
+
+  return (
+    `🎉 *CONGRATULATIONS!*\n\n` +
+    `You are now authorized for:\n\n` +
+    `${schemeLines}\n\n` +
+    `*Access valid until:*\n${dateStr}`
+  );
+}
+
+export function getActivationSuccessKeyboard(grantedSchemes = []) {
+  const rows = [];
+  for (const s of grantedSchemes) {
+    const sid = s.toLowerCase();
+    const title = sid === "samudra_manthan" ? "🌊 Samudra Manthan" : "🌱 GOBARdhan";
+    rows.push([{ text: title, callback_data: `scheme_select:${sid}` }]);
+  }
+  rows.push([{ text: "📋 My Access", callback_data: "my_access" }]);
+  return { inline_keyboard: rows };
+}
+

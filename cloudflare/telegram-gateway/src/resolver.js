@@ -35,6 +35,15 @@ export const IntentType = {
   COMPLEX_QUERY: "COMPLEX_QUERY",
   STOCK_PROMPT: "STOCK_PROMPT",
   STOCK_UNKNOWN: "STOCK_UNKNOWN",
+  ACTIVATE_KEY: "ACTIVATE_KEY",
+  ENTER_KEY_PROMPT: "ENTER_KEY_PROMPT",
+  PURCHASE_MENU: "PURCHASE_MENU",
+  BUY_PRODUCT: "BUY_PRODUCT",
+  BUY_SCHEME: "BUY_SCHEME",
+  CHECK_ORDER: "CHECK_ORDER",
+  AVAILABLE_SCHEMES: "AVAILABLE_SCHEMES",
+  MY_ACCESS: "MY_ACCESS",
+  ADMIN: "ADMIN",
   UNKNOWN: "UNKNOWN",
 };
 
@@ -283,6 +292,32 @@ export function resolveIntent(message, activeScheme = "gobardhan") {
     }
   }
 
+  // Commercial Action Callbacks
+  if (raw === "action:enter_key") {
+    return { intentType: IntentType.ENTER_KEY_PROMPT, executionPath: ExecutionPath.FAST, rawQuery: raw, normalizedQuery: normalized, schemeId: effectiveScheme };
+  }
+  if (raw === "action:available_schemes" || raw === "available_schemes") {
+    return { intentType: IntentType.AVAILABLE_SCHEMES, executionPath: ExecutionPath.FAST, rawQuery: raw, normalizedQuery: normalized, schemeId: effectiveScheme };
+  }
+  if (raw === "action:purchase_menu" || raw === "purchase_menu") {
+    return { intentType: IntentType.PURCHASE_MENU, executionPath: ExecutionPath.FAST, rawQuery: raw, normalizedQuery: normalized, schemeId: effectiveScheme };
+  }
+  if (raw.startsWith("action:buy_scheme:")) {
+    const sid = raw.split(":")[2] || effectiveScheme;
+    return { intentType: IntentType.BUY_SCHEME, executionPath: ExecutionPath.FAST, schemeId: sid, targetScheme: sid, rawQuery: raw, normalizedQuery: normalized };
+  }
+  if (raw.startsWith("action:buy_product:")) {
+    const pCode = raw.split(":")[2] || "";
+    return { intentType: IntentType.BUY_PRODUCT, executionPath: ExecutionPath.FAST, productCode: pCode, rawQuery: raw, normalizedQuery: normalized, schemeId: effectiveScheme };
+  }
+  if (raw.startsWith("action:check_order:")) {
+    const oCode = raw.split(":")[2] || "";
+    return { intentType: IntentType.CHECK_ORDER, executionPath: ExecutionPath.FAST, orderCode: oCode, rawQuery: raw, normalizedQuery: normalized, schemeId: effectiveScheme };
+  }
+  if (raw === "my_access") {
+    return { intentType: IntentType.MY_ACCESS, executionPath: ExecutionPath.FAST, rawQuery: raw, normalizedQuery: normalized, schemeId: effectiveScheme };
+  }
+
   const parts = raw.split(/\s+/);
   const firstToken = parts[0].toLowerCase().split("@")[0];
   const remainder = raw.slice(parts[0].length).trim();
@@ -307,6 +342,40 @@ export function resolveIntent(message, activeScheme = "gobardhan") {
       case "/start":
         return {
           intentType: IntentType.START,
+          executionPath: ExecutionPath.FAST,
+          rawQuery: raw,
+          normalizedQuery: normalized,
+          schemeId: effectiveScheme,
+        };
+      case "/activate":
+        return {
+          intentType: IntentType.ACTIVATE_KEY,
+          executionPath: ExecutionPath.FAST,
+          key: remainder,
+          rawQuery: raw,
+          normalizedQuery: normalized,
+          schemeId: effectiveScheme,
+        };
+      case "/purchase":
+        return {
+          intentType: IntentType.PURCHASE_MENU,
+          executionPath: ExecutionPath.FAST,
+          rawQuery: raw,
+          normalizedQuery: normalized,
+          schemeId: effectiveScheme,
+        };
+      case "/status":
+      case "/access":
+        return {
+          intentType: IntentType.MY_ACCESS,
+          executionPath: ExecutionPath.FAST,
+          rawQuery: raw,
+          normalizedQuery: normalized,
+          schemeId: effectiveScheme,
+        };
+      case "/admin":
+        return {
+          intentType: IntentType.ADMIN,
           executionPath: ExecutionPath.FAST,
           rawQuery: raw,
           normalizedQuery: normalized,

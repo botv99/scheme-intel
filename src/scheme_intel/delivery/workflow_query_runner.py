@@ -120,6 +120,39 @@ def process_workflow_query(
             store.mark_failed(request_id=request_id, error_msg=err_msg, workflow_run_id=workflow_run_id)
             return False
 
+        # 3b. Server-Side Entitlement & Scheme Isolation Filter
+        authorized_schemes = payload.get("authorized_schemes")
+        if authorized_schemes and isinstance(authorized_schemes, list):
+            norm_authorized = {s.strip().lower() for s in authorized_schemes}
+            if scheme_id and scheme_id.strip().lower() not in norm_authorized:
+                logger.warning("[WORKFLOW RUNNER] Unauthorized scheme access rejected: %s", scheme_id)
+                auth_denied_card = (
+                    f"🔒 *ACCESS RESTRICTED*\n\n"
+                    f"You are not authorized to run queries on scheme *{scheme_id}*.\n\n"
+                    f"You can access:\n" + "\n".join(f"• {s}" for s in authorized_schemes)
+                )
+                send_telegram(auth_denied_card, chat_ids=[target_chat_id], parse_mode="Markdown", request_id=request_id)
+                store.mark_completed(request_id=request_id, response_text=auth_denied_card, workflow_run_id=workflow_run_id)
+                return True
+
+            filtered_companies = {
+                sym: c for sym, c in snapshot.companies.items()
+                if (getattr(c, "scheme_id", None) or "").lower() in norm_authorized
+            }
+            filtered_qualified = [sym for sym in snapshot.qualified_setups if sym in filtered_companies]
+            filtered_waiting = [sym for sym in snapshot.waiting_setups if sym in filtered_companies]
+            filtered_schemes = {s_id: s_obj for s_id, s_obj in snapshot.schemes.items() if s_id.lower() in norm_authorized}
+
+            snapshot = snapshot.model_copy(
+                update={
+                    "companies": filtered_companies,
+                    "qualified_setups": filtered_qualified,
+                    "waiting_setups": filtered_waiting,
+                    "schemes": filtered_schemes,
+                    "total_companies_monitored": len(filtered_companies),
+                }
+            )
+
         # 4. Synthesize Answer
         engine = query_engine or ComplexQueryEngine()
         answer = engine.process_query(
