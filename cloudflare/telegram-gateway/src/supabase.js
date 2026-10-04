@@ -235,10 +235,13 @@ export class MockSupabaseStore {
         if (f.op === "eq" && rowVal !== f.val) return false;
         if (f.op === "neq" && rowVal === f.val) return false;
         if (f.op === "in" && !f.val.includes(rowVal)) return false;
-        if (f.op === "gt" && !(row[f.col] > f.val)) return false;
-        if (f.op === "gte" && !(row[f.col] >= f.val)) return false;
-        if (f.op === "lt" && !(row[f.col] < f.val)) return false;
-        if (f.op === "lte" && !(row[f.col] <= f.val)) return false;
+        const numRow = Number(row[f.col]);
+        const numVal = Number(f.val);
+        const isNumeric = !isNaN(numRow) && !isNaN(numVal) && row[f.col] !== "" && f.val !== "";
+        if (f.op === "gt" && !(isNumeric ? numRow > numVal : row[f.col] > f.val)) return false;
+        if (f.op === "gte" && !(isNumeric ? numRow >= numVal : row[f.col] >= f.val)) return false;
+        if (f.op === "lt" && !(isNumeric ? numRow < numVal : row[f.col] < f.val)) return false;
+        if (f.op === "lte" && !(isNumeric ? numRow <= numVal : row[f.col] <= f.val)) return false;
       }
       return true;
     };

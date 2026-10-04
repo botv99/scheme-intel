@@ -111,11 +111,11 @@ export async function grantEntitlement(
     finalExpiresAt = new Date(expiresAt).toISOString();
   } else if (durationDays !== null && durationDays !== undefined) {
     let baseTime = now.getTime();
-    if (existing && existing.status === EntitlementStatus.ACTIVE && existing.expires_at) {
+    if (existing && existing.expires_at) {
       const currentExp = new Date(existing.expires_at).getTime();
-      if (currentExp > baseTime) {
-        // Extend existing active subscription
-        baseTime = currentExp;
+      if (!isNaN(currentExp)) {
+        // Renewal support: Start extension from the greater of now or existing expiry
+        baseTime = Math.max(baseTime, currentExp);
       }
     }
     finalExpiresAt = new Date(baseTime + durationDays * 86400 * 1000).toISOString();

@@ -7,6 +7,7 @@
 import { getSupabaseClient } from "../supabase.js";
 import { RazorpayProvider } from "./razorpay.js";
 import { findOrder, completeOrderAndGrantEntitlements, OrderStatus } from "../orders.js";
+import { revokeEntitlement } from "../entitlements.js";
 import { sendMessage } from "../telegram.js";
 import { recordAuditEvent } from "../users.js";
 import { safeLog } from "../utils.js";
@@ -182,6 +183,31 @@ export async function handlePaymentWebhook(request, env, ctx) {
           userId: order.user_id,
           telegramUserId: "system",
           eventType: "PAYMENT_REFUNDED",
+          metadata: { orderCode: order.order_code, eventId: parsed.eventId },
+        });
+
+        // Revoke scheme entitlements granted by this order without deleting history
+        const schemesToRevoke = order.metadata?.schemes || [];
+        for (const schemeId of schemesToRevoke) {
+          await revokeEntitlement(env, {
+            userId: order.user_id,
+            schemeId,
+            reason: `refund_order_${order.order_code}`,
+            telegramUserId: "system",
+          });
+        }
+      }
+    } else if (parsed.eventType === "payment_link.expired" || parsed.eventType === "order.expired") {
+      const order = await findOrder(env, {
+        orderCode: parsed.orderCode,
+        providerOrderId: parsed.providerOrderId,
+      });
+      if (order && order.status === OrderStatus.CREATED) {
+        await client.from("orders").update({ status: OrderStatus.EXPIRED, updated_at: nowIso }).eq("id", order.id);
+        await recordAuditEvent(env, {
+          userId: order.user_id,
+          telegramUserId: "system",
+          eventType: "ORDER_EXPIRED",
           metadata: { orderCode: order.order_code, eventId: parsed.eventId },
         });
       }

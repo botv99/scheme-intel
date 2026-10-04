@@ -709,4 +709,168 @@ describe("Scheme Intel — Payment, Authorization & Entitlement System", () => {
     const authAfterRevoke = await getTelegramAuth(env, { userId: "target_user_55" });
     assert.equal(checkSchemeAccess(authAfterRevoke, "gobardhan"), false);
   });
+
+  // -------------------------------------------------------------------------
+  // 7. HARDENING PASS: RENEWAL, REFUND, EXPIRY & CONCURRENCY
+  // -------------------------------------------------------------------------
+  test("19. Subscription renewal preserves existing time (Math.max(now, expiry) + duration)", async () => {
+    const userAuth = await getTelegramAuth(env, { userId: "renewal_user_1" });
+    const now = new Date();
+    // Pre-grant entitlement expiring 20 days in the future
+    const initialExpiry = new Date(now.getTime() + 20 * 86400 * 1000);
+    await grantEntitlement(env, {
+      userId: userAuth.user.id,
+      schemeId: "gobardhan",
+      expiresAt: initialExpiry.toISOString(),
+      telegramUserId: "renewal_user_1",
+    });
+
+    // Renew for 30 days
+    const renewed = await grantEntitlement(env, {
+      userId: userAuth.user.id,
+      schemeId: "gobardhan",
+      durationDays: 30,
+      telegramUserId: "renewal_user_1",
+    });
+
+    const newExpiry = new Date(renewed.expires_at).getTime();
+    const expectedExpiry = initialExpiry.getTime() + 30 * 86400 * 1000;
+    assert.ok(Math.abs(newExpiry - expectedExpiry) < 2000, `Expected ~50 days, got ${newExpiry}`);
+  });
+
+  test("20. Refund webhook transitions order to REFUNDED, revokes entitlement, preserves history", async () => {
+    const userAuth = await getTelegramAuth(env, { userId: "refund_customer" });
+    const orderRes = await createPaymentOrder(env, {
+      user: userAuth.user,
+      productCode: "SAMUDRA_MONTHLY",
+    });
+
+    // Pay order
+    await completeOrderAndGrantEntitlements(env, {
+      order: orderRes.order,
+      providerPaymentId: "pay_refund_123",
+      eventId: "evt_pay_refund",
+    });
+
+    let auth = await getTelegramAuth(env, { userId: "refund_customer" });
+    assert.equal(checkSchemeAccess(auth, "samudra_manthan"), true);
+
+    // Send refund webhook
+    const payload = {
+      event: "refund.processed",
+      event_id: "evt_refund_999",
+      payload: {
+        payment_link: {
+          entity: {
+            id: orderRes.order.provider_order_id,
+            reference_id: orderRes.orderCode,
+          },
+        },
+      },
+    };
+
+    const rawBody = JSON.stringify(payload);
+    const encoder = new TextEncoder();
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(env.RAZORPAY_WEBHOOK_SECRET),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const sigBuffer = await crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(rawBody));
+    const validSignature = Array.from(new Uint8Array(sigBuffer))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    const req = new Request("https://gateway.internal/webhooks/razorpay", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-razorpay-signature": validSignature },
+      body: rawBody,
+    });
+    const res = await handlePaymentWebhook(req, env, { waitUntil: () => {} });
+    assert.equal(res.status, 200);
+
+    // Verify order is REFUNDED
+    const updatedOrder = await findOrder(env, { orderCode: orderRes.orderCode });
+    assert.equal(updatedOrder.status, OrderStatus.REFUNDED);
+
+    // Verify entitlement is revoked
+    auth = await getTelegramAuth(env, { userId: "refund_customer" });
+    assert.equal(checkSchemeAccess(auth, "samudra_manthan"), false);
+
+    // Verify history preserved: order and audit events exist
+    const client = env.__MOCK_STORE__;
+    assert.ok(client.tables.orders.some((o) => o.order_code === orderRes.orderCode));
+    assert.ok(client.tables.audit_events.some((a) => a.event_type === "PAYMENT_REFUNDED"));
+    assert.ok(client.tables.audit_events.some((a) => a.event_type === "ENTITLEMENT_REVOKED"));
+  });
+
+  test("21. Expired payment link transitions order to EXPIRED and logs audit", async () => {
+    const userAuth = await getTelegramAuth(env, { userId: "expired_link_customer" });
+    const orderRes = await createPaymentOrder(env, {
+      user: userAuth.user,
+      productCode: "GOBARDHAN_MONTHLY",
+    });
+
+    const payload = {
+      event: "payment_link.expired",
+      event_id: "evt_exp_123",
+      payload: {
+        payment_link: {
+          entity: {
+            id: orderRes.order.provider_order_id,
+            reference_id: orderRes.orderCode,
+          },
+        },
+      },
+    };
+
+    const rawBody = JSON.stringify(payload);
+    const encoder = new TextEncoder();
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(env.RAZORPAY_WEBHOOK_SECRET),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const sigBuffer = await crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(rawBody));
+    const validSignature = Array.from(new Uint8Array(sigBuffer))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    const req = new Request("https://gateway.internal/webhooks/razorpay", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-razorpay-signature": validSignature },
+      body: rawBody,
+    });
+    const res = await handlePaymentWebhook(req, env, { waitUntil: () => {} });
+    assert.equal(res.status, 200);
+
+    const updatedOrder = await findOrder(env, { orderCode: orderRes.orderCode });
+    assert.equal(updatedOrder.status, OrderStatus.EXPIRED);
+  });
+
+  test("22. Concurrent key activation cannot exceed max_uses", async () => {
+    // Generate key with max_uses = 1
+    const generated = await generateAccessKey(env, {
+      schemeIds: ["gobardhan"],
+      maxUses: 1,
+      durationDays: 30,
+    });
+
+    // Attempt concurrent activation with two different users
+    const [resA, resB] = await Promise.all([
+      activateAccessKey(env, { telegramUserId: "race_user_A", rawKey: generated.plaintextKey }),
+      activateAccessKey(env, { telegramUserId: "race_user_B", rawKey: generated.plaintextKey }),
+    ]);
+
+    const successes = [resA, resB].filter((r) => r.success);
+    const failures = [resA, resB].filter((r) => !r.success);
+
+    assert.equal(successes.length, 1, "Exactly one activation should succeed");
+    assert.equal(failures.length, 1, "Exactly one activation should fail");
+    assert.equal(failures[0].reason, "MAX_USES_REACHED");
+  });
 });

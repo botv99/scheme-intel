@@ -207,14 +207,31 @@ export async function activateAccessKey(
     };
   }
 
-  // 4. Atomically consume key usage
+  // 4. Atomically consume key usage with concurrency guard
   const newUsedCount = keyRecord.used_count + 1;
   const newStatus = newUsedCount >= keyRecord.max_uses ? "EXPIRED" : "ACTIVE";
 
-  await client
+  const { data: updatedRows, error: updateErr } = await client
     .from("access_keys")
     .update({ used_count: newUsedCount, status: newStatus, updated_at: now.toISOString() })
-    .eq("id", keyRecord.id);
+    .eq("id", keyRecord.id)
+    .lt("used_count", keyRecord.max_uses)
+    .eq("status", "ACTIVE");
+
+  const rows = Array.isArray(updatedRows) ? updatedRows : (updatedRows ? [updatedRows] : []);
+  if (updateErr || rows.length === 0) {
+    await recordAuditEvent(env, {
+      userId: user.id,
+      telegramUserId: String(telegramUserId),
+      eventType: "KEY_REJECTED",
+      metadata: { reason: "MAX_USES_REACHED", keyPrefix: keyRecord.key_prefix },
+    });
+    return {
+      success: false,
+      reason: "MAX_USES_REACHED",
+      message: "This access key has already reached its maximum number of uses.",
+    };
+  }
 
   // 5. Retrieve key scheme entitlements
   const { data: entitlements } = await client
