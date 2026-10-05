@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-02T01:46:08.152360+00:00",
+  "generated_at": "2026-10-05T01:07:14.328345+00:00",
   "prices": [
     {
       "company": "TruAlt Bioenergy",
@@ -14,20 +14,12 @@
       "change_pct": -5.2,
       "rsi14": 52.9,
       "market_cap": "\u20b9 3,810 Cr.",
-      "high_52w": 550.0,
+      "high_52w": 542.0,
       "low_52w": 310.0,
       "price_source": "screener.in",
       "dma200": 449.73,
       "error": null,
       "history": [
-        {
-          "date": "2026-04-01",
-          "open": 414.0,
-          "high": 417.6,
-          "low": 408.0,
-          "close": 410.75,
-          "volume": 120490
-        },
         {
           "date": "2026-04-02",
           "open": 409.0,
@@ -1082,14 +1074,6 @@
       "error": null,
       "history": [
         {
-          "date": "2026-04-01",
-          "open": 1202.07,
-          "high": 1238.98,
-          "low": 1177.13,
-          "close": 1233.19,
-          "volume": 310279
-        },
-        {
           "date": "2026-04-02",
           "open": 1208.25,
           "high": 1246.96,
@@ -2128,10 +2112,10 @@
       "symbol": "PRAJIND.NS",
       "screener_id": "PRAJIND",
       "date": "2026-10-01",
-      "open": NaN,
+      "open": 304.9,
       "close": 303.25,
-      "high": NaN,
-      "low": NaN,
+      "high": 305.15,
+      "low": 297.05,
       "volume": 428103,
       "change_pct": -0.85,
       "rsi14": 32.0,
@@ -2142,14 +2126,6 @@
       "dma200": 350.45,
       "error": null,
       "history": [
-        {
-          "date": "2026-04-01",
-          "open": 322.36,
-          "high": 327.15,
-          "low": 319.29,
-          "close": 322.5,
-          "volume": 1501859
-        },
         {
           "date": "2026-04-02",
           "open": 320.33,
@@ -3176,11 +3152,11 @@
         },
         {
           "date": "2026-10-01",
-          "open": NaN,
-          "high": NaN,
-          "low": NaN,
-          "close": NaN,
-          "volume": 401294
+          "open": 304.9,
+          "high": 305.15,
+          "low": 297.05,
+          "close": 303.25,
+          "volume": 401299
         }
       ]
     },
@@ -3189,10 +3165,10 @@
       "symbol": "ORGANICREC.BO",
       "screener_id": "543997",
       "date": "2026-10-01",
-      "open": NaN,
+      "open": 207.45,
       "close": 201.2,
-      "high": NaN,
-      "low": NaN,
+      "high": 213.0,
+      "low": 197.0,
       "volume": 92700,
       "change_pct": -3.01,
       "rsi14": 66.7,
@@ -3203,14 +3179,6 @@
       "dma200": 164.37,
       "error": null,
       "history": [
-        {
-          "date": "2026-04-01",
-          "open": 152.0,
-          "high": 156.0,
-          "low": 152.0,
-          "close": 153.33,
-          "volume": 2700
-        },
         {
           "date": "2026-04-02",
           "open": 154.67,
@@ -4229,10 +4197,10 @@
         },
         {
           "date": "2026-10-01",
-          "open": NaN,
-          "high": NaN,
-          "low": NaN,
-          "close": NaN,
+          "open": 207.45,
+          "high": 213.0,
+          "low": 197.0,
+          "close": 201.2,
           "volume": 92700
         }
       ]
@@ -4242,10 +4210,10 @@
       "symbol": "KIRLPNU.NS",
       "screener_id": "KIRLPNU",
       "date": "2026-10-01",
-      "open": NaN,
+      "open": 676.7,
       "close": 681.95,
-      "high": NaN,
-      "low": NaN,
+      "high": 691.4,
+      "low": 667.85,
       "volume": 104135,
       "change_pct": 0.78,
       "rsi14": 36.6,
@@ -4256,14 +4224,6 @@
       "dma200": 711.14,
       "error": null,
       "history": [
-        {
-          "date": "2026-04-01",
-          "open": 527.58,
-          "high": 547.44,
-          "low": 524.7,
-          "close": 540.42,
-          "volume": 57124
-        },
         {
           "date": "2026-04-02",
           "open": 536.04,
@@ -5282,10 +5242,10 @@
         },
         {
           "date": "2026-10-01",
-          "open": NaN,
-          "high": NaN,
-          "low": NaN,
-          "close": NaN,
+          "open": 676.7,
+          "high": 691.4,
+          "low": 667.85,
+          "close": 681.95,
           "volume": 97672
         }
       ]
@@ -5309,14 +5269,6 @@
       "dma200": 170.54,
       "error": null,
       "history": [
-        {
-          "date": "2026-04-01",
-          "open": 140.99,
-          "high": 142.32,
-          "low": 139.01,
-          "close": 140.26,
-          "volume": 15145719
-        },
         {
           "date": "2026-04-02",
           "open": 138.55,
@@ -6370,14 +6322,6 @@
       "dma200": 144.17,
       "error": null,
       "history": [
-        {
-          "date": "2026-04-01",
-          "open": 138.76,
-          "high": 138.76,
-          "low": 133.31,
-          "close": 134.52,
-          "volume": 26367709
-        },
         {
           "date": "2026-04-02",
           "open": 133.01,
