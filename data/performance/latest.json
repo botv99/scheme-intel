@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-10-05T01:08:41.857384+00:00",
+  "generated_at": "2026-10-06T02:25:42.711456+00:00",
   "data_period": {
-    "start_date": "2026-10-05",
-    "end_date": "2026-10-05"
+    "start_date": "2026-10-06",
+    "end_date": "2026-10-06"
   },
   "data_sufficiency": {
     "status": "INSUFFICIENT_SAMPLE",
@@ -13,8 +13,8 @@
   "strategy_status": "INSUFFICIENT DATA",
   "setup_metrics": {
     "total_setups": 7,
-    "qualified_setups": 1,
-    "rejected_setups": 3,
+    "qualified_setups": 0,
+    "rejected_setups": 4,
     "waiting_setups": 3,
     "watch_setups": 0,
     "triggered_setups": 0,
@@ -98,24 +98,6 @@
   },
   "archetype_breakdown": [
     {
-      "archetype": "Breakout Anticipation",
-      "setups": 1,
-      "qualified": 1,
-      "triggered": 0,
-      "completed": 0,
-      "wins": 0,
-      "losses": 0,
-      "expired": 0,
-      "win_rate": null,
-      "average_pnl_pct": null,
-      "expectancy": null,
-      "profit_factor": null,
-      "average_mfe_pct": null,
-      "average_mae_pct": null,
-      "average_holding_period": null,
-      "sample_status": "INSUFFICIENT_SAMPLE"
-    },
-    {
       "archetype": "Momentum Continuation",
       "setups": 1,
       "qualified": 0,
@@ -135,7 +117,7 @@
     },
     {
       "archetype": "Unspecified",
-      "setups": 5,
+      "setups": 6,
       "qualified": 0,
       "triggered": 0,
       "completed": 0,
@@ -156,7 +138,7 @@
     {
       "symbol": "GAIL.NS",
       "setups": 1,
-      "qualified": 1,
+      "qualified": 0,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -276,7 +258,23 @@
   "provider_breakdown": [
     {
       "provider": "Deterministic Fallback",
-      "setups": 7,
+      "setups": 6,
+      "triggered": 0,
+      "completed": 0,
+      "wins": 0,
+      "losses": 0,
+      "expired": 0,
+      "win_rate": null,
+      "average_pnl_pct": null,
+      "expectancy": null,
+      "average_mfe_pct": null,
+      "average_mae_pct": null,
+      "sample_status": "INSUFFICIENT_SAMPLE",
+      "observational_note": "Observational analysis only. Does not establish causation."
+    },
+    {
+      "provider": "Openrouter",
+      "setups": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -335,7 +333,7 @@
       "band_label": "61\u201380",
       "min_score": 61,
       "max_score": 80,
-      "setups": 2,
+      "setups": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -360,9 +358,9 @@
   ],
   "daily_series": [
     {
-      "date": "2026-10-05",
+      "date": "2026-10-06",
       "setups_generated": 7,
-      "qualified_setups": 1,
+      "qualified_setups": 0,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
