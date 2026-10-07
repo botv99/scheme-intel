@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-10-06T02:25:42.711456+00:00",
+  "generated_at": "2026-10-07T01:46:59.676449+00:00",
   "data_period": {
-    "start_date": "2026-10-06",
-    "end_date": "2026-10-06"
+    "start_date": "2026-10-07",
+    "end_date": "2026-10-07"
   },
   "data_sufficiency": {
     "status": "INSUFFICIENT_SAMPLE",
@@ -13,9 +13,9 @@
   "strategy_status": "INSUFFICIENT DATA",
   "setup_metrics": {
     "total_setups": 7,
-    "qualified_setups": 0,
-    "rejected_setups": 4,
-    "waiting_setups": 3,
+    "qualified_setups": 2,
+    "rejected_setups": 1,
+    "waiting_setups": 4,
     "watch_setups": 0,
     "triggered_setups": 0,
     "untriggered_setups": 7,
@@ -98,6 +98,24 @@
   },
   "archetype_breakdown": [
     {
+      "archetype": "Breakout Anticipation",
+      "setups": 3,
+      "qualified": 2,
+      "triggered": 0,
+      "completed": 0,
+      "wins": 0,
+      "losses": 0,
+      "expired": 0,
+      "win_rate": null,
+      "average_pnl_pct": null,
+      "expectancy": null,
+      "profit_factor": null,
+      "average_mfe_pct": null,
+      "average_mae_pct": null,
+      "average_holding_period": null,
+      "sample_status": "INSUFFICIENT_SAMPLE"
+    },
+    {
       "archetype": "Momentum Continuation",
       "setups": 1,
       "qualified": 0,
@@ -117,7 +135,7 @@
     },
     {
       "archetype": "Unspecified",
-      "setups": 6,
+      "setups": 3,
       "qualified": 0,
       "triggered": 0,
       "completed": 0,
@@ -172,7 +190,7 @@
     {
       "symbol": "KIRLPNU.NS",
       "setups": 1,
-      "qualified": 0,
+      "qualified": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -206,7 +224,7 @@
     {
       "symbol": "PRAJIND.NS",
       "setups": 1,
-      "qualified": 0,
+      "qualified": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -258,7 +276,7 @@
   "provider_breakdown": [
     {
       "provider": "Deterministic Fallback",
-      "setups": 6,
+      "setups": 5,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -274,7 +292,7 @@
     },
     {
       "provider": "Openrouter",
-      "setups": 1,
+      "setups": 2,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -333,7 +351,7 @@
       "band_label": "61\u201380",
       "min_score": 61,
       "max_score": 80,
-      "setups": 1,
+      "setups": 3,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -346,7 +364,7 @@
       "band_label": "81\u2013100",
       "min_score": 81,
       "max_score": 100,
-      "setups": 0,
+      "setups": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -358,9 +376,9 @@
   ],
   "daily_series": [
     {
-      "date": "2026-10-06",
+      "date": "2026-10-07",
       "setups_generated": 7,
-      "qualified_setups": 0,
+      "qualified_setups": 2,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
