@@ -1,7 +1,7 @@
 # Scheme-Intel Forward Performance & Validation Report
 
-**Generated At:** 2026-10-09T02:24:57.197120+00:00 UTC
-**Data Period:** 2026-10-09 → 2026-10-09
+**Generated At:** 2026-10-12T01:38:06.419506+00:00 UTC
+**Data Period:** 2026-10-12 → 2026-10-12
 **Data Sufficiency Status:** `INSUFFICIENT_SAMPLE` — *Insufficient sample (0 completed trades; minimum 30 required for statistical validity)*
 **Strategy Validation Status:** `INSUFFICIENT DATA`
 
@@ -10,8 +10,8 @@
 ## 1. Setup Lifecycle Sample
 - **Total Setups Recorded:** 7
 - **Qualified Setups:** 0
-- **Waiting Setups:** 3
-- **Rejected Setups (Hard Risk Veto / No Trade):** 4
+- **Waiting Setups:** 2
+- **Rejected Setups (Hard Risk Veto / No Trade):** 5
 - **Triggered Entries:** 0
 - **Untriggered Setups:** 7 *(never counted as losses)*
 - **Currently Active (Open) Trades:** 0
@@ -75,7 +75,8 @@
 ## 6. Breakdown by Archetype
 | Archetype | Setups | Trig | Comp | Win Rate | Avg P&L | Expectancy | PF | Avg MFE | Avg MAE | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| Unspecified | 7 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| Momentum Continuation | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| Unspecified | 6 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
 
 ---
 
@@ -96,7 +97,8 @@
 *(Observational measurement only. Does not imply causation.)*
 | Provider | Setups | Trig | Comp | Win Rate | Avg P&L | Expectancy | Avg MFE | Avg MAE | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| Deterministic Fallback | 7 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| Deterministic Fallback | 6 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| Groq → Openrouter failover | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
 
 ---
 
@@ -106,7 +108,7 @@
 | 0–20 | 0 | 0 | 0 | N/A | N/A | N/A |
 | 21–40 | 0 | 0 | 0 | N/A | N/A | N/A |
 | 41–60 | 0 | 0 | 0 | N/A | N/A | N/A |
-| 61–80 | 0 | 0 | 0 | N/A | N/A | N/A |
+| 61–80 | 1 | 0 | 0 | N/A | N/A | N/A |
 | 81–100 | 0 | 0 | 0 | N/A | N/A | N/A |
 
 ---

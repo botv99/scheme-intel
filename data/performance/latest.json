@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-10-09T02:24:57.197120+00:00",
+  "generated_at": "2026-10-12T01:38:06.419506+00:00",
   "data_period": {
-    "start_date": "2026-10-09",
-    "end_date": "2026-10-09"
+    "start_date": "2026-10-12",
+    "end_date": "2026-10-12"
   },
   "data_sufficiency": {
     "status": "INSUFFICIENT_SAMPLE",
@@ -14,8 +14,8 @@
   "setup_metrics": {
     "total_setups": 7,
     "qualified_setups": 0,
-    "rejected_setups": 4,
-    "waiting_setups": 3,
+    "rejected_setups": 5,
+    "waiting_setups": 2,
     "watch_setups": 0,
     "triggered_setups": 0,
     "untriggered_setups": 7,
@@ -98,8 +98,26 @@
   },
   "archetype_breakdown": [
     {
+      "archetype": "Momentum Continuation",
+      "setups": 1,
+      "qualified": 0,
+      "triggered": 0,
+      "completed": 0,
+      "wins": 0,
+      "losses": 0,
+      "expired": 0,
+      "win_rate": null,
+      "average_pnl_pct": null,
+      "expectancy": null,
+      "profit_factor": null,
+      "average_mfe_pct": null,
+      "average_mae_pct": null,
+      "average_holding_period": null,
+      "sample_status": "INSUFFICIENT_SAMPLE"
+    },
+    {
       "archetype": "Unspecified",
-      "setups": 7,
+      "setups": 6,
       "qualified": 0,
       "triggered": 0,
       "completed": 0,
@@ -240,7 +258,23 @@
   "provider_breakdown": [
     {
       "provider": "Deterministic Fallback",
-      "setups": 7,
+      "setups": 6,
+      "triggered": 0,
+      "completed": 0,
+      "wins": 0,
+      "losses": 0,
+      "expired": 0,
+      "win_rate": null,
+      "average_pnl_pct": null,
+      "expectancy": null,
+      "average_mfe_pct": null,
+      "average_mae_pct": null,
+      "sample_status": "INSUFFICIENT_SAMPLE",
+      "observational_note": "Observational analysis only. Does not establish causation."
+    },
+    {
+      "provider": "Groq \u2192 Openrouter failover",
+      "setups": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -299,7 +333,7 @@
       "band_label": "61\u201380",
       "min_score": 61,
       "max_score": 80,
-      "setups": 0,
+      "setups": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -324,7 +358,7 @@
   ],
   "daily_series": [
     {
-      "date": "2026-10-09",
+      "date": "2026-10-12",
       "setups_generated": 7,
       "qualified_setups": 0,
       "triggered": 0,
