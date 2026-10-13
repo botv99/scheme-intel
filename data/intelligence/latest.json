@@ -1,7 +1,7 @@
 {
-  "snapshot_id": "SNAP-20261012-013850",
+  "snapshot_id": "SNAP-20261013-030919",
   "schema_version": "1.0",
-  "generated_at": "2026-10-12T01:38:50.438020+00:00",
+  "generated_at": "2026-10-13T03:09:19.509173+00:00",
   "pipeline_run_id": null,
   "scheme_id": null,
   "scheme_ids": [
@@ -29,7 +29,7 @@
         "Ministry of New and Renewable Energy",
         "Ministry of Jal Shakti"
       ],
-      "last_update": "2026-10-12T01:38:50.438020+00:00",
+      "last_update": "2026-10-13T03:09:19.509173+00:00",
       "source_health": {
         "pib_mopng": "OK",
         "gobardhan_portal": "OK",
@@ -76,7 +76,7 @@
         "PIB National Energy & Infrastructure",
         "Prime Minister's Office Press Releases"
       ],
-      "last_update": "2026-10-12T01:38:50.438020+00:00",
+      "last_update": "2026-10-13T03:09:19.509173+00:00",
       "source_health": {
         "dgh_portal": "OK",
         "pib_mopng_samudra": "OK",
@@ -240,7 +240,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-12T01:38:50.438020+00:00"
+      "updated_at": "2026-10-13T03:09:19.509173+00:00"
     },
     "TRUALT.NS": {
       "symbol": "TRUALT.NS",
@@ -336,7 +336,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-12T01:38:50.438020+00:00"
+      "updated_at": "2026-10-13T03:09:19.509173+00:00"
     },
     "IONEXCHANG.NS": {
       "symbol": "IONEXCHANG.NS",
@@ -453,7 +453,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-12T01:38:50.438020+00:00"
+      "updated_at": "2026-10-13T03:09:19.509173+00:00"
     },
     "WABAG.NS": {
       "symbol": "WABAG.NS",
@@ -570,7 +570,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-12T01:38:50.438020+00:00"
+      "updated_at": "2026-10-13T03:09:19.509173+00:00"
     },
     "KIRLPNU.NS": {
       "symbol": "KIRLPNU.NS",
@@ -687,7 +687,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-12T01:38:50.438020+00:00"
+      "updated_at": "2026-10-13T03:09:19.509173+00:00"
     },
     "GAIL.NS": {
       "symbol": "GAIL.NS",
@@ -804,7 +804,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-12T01:38:50.438020+00:00"
+      "updated_at": "2026-10-13T03:09:19.509173+00:00"
     },
     "IOC.NS": {
       "symbol": "IOC.NS",
@@ -921,7 +921,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-12T01:38:50.438020+00:00"
+      "updated_at": "2026-10-13T03:09:19.509173+00:00"
     },
     "ONGC.NS": {
       "symbol": "ONGC.NS",
@@ -967,7 +967,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-12T01:38:50.438020+00:00"
+      "updated_at": "2026-10-13T03:09:19.509173+00:00"
     },
     "OIL.NS": {
       "symbol": "OIL.NS",
@@ -1013,7 +1013,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-12T01:38:50.438020+00:00"
+      "updated_at": "2026-10-13T03:09:19.509173+00:00"
     },
     "RELIANCE.NS": {
       "symbol": "RELIANCE.NS",
@@ -1059,7 +1059,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-12T01:38:50.438020+00:00"
+      "updated_at": "2026-10-13T03:09:19.509173+00:00"
     },
     "VEDL.NS": {
       "symbol": "VEDL.NS",
@@ -1105,7 +1105,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-12T01:38:50.438020+00:00"
+      "updated_at": "2026-10-13T03:09:19.509173+00:00"
     }
   },
   "qualified_setups": [],
@@ -1162,7 +1162,7 @@
       "Water Infrastructure",
       "Capital Goods"
     ],
-    "timestamp": "2026-10-12T01:38:52.571172+00:00",
+    "timestamp": "2026-10-13T03:09:21.307478+00:00",
     "evidence": [],
     "methodology": "Deterministic composite: Nifty trend/return weight (40%) + Watchlist breadth (35%) + News/Policy sentiment balance (25%)."
   },
@@ -1187,7 +1187,7 @@
     "evidence": [
       "Baseline macro indicators within historical variance"
     ],
-    "timestamp": "2026-10-12T01:38:52.571214+00:00",
+    "timestamp": "2026-10-13T03:09:21.307520+00:00",
     "methodology": "Deterministic evaluation of reported international indices, commodities, and risk proxies. Missing indicators are explicitly marked None without synthetic fabrication."
   },
   "scheme_impacts": {
@@ -1234,7 +1234,7 @@
         "Global Sentiment: NEUTRAL (Score: +0.0)",
         "Active Policy Sectors: Bio-Energy, Engineering, Bio-Energy"
       ],
-      "timestamp": "2026-10-12T01:38:52.571248+00:00",
+      "timestamp": "2026-10-13T03:09:21.307554+00:00",
       "disclaimer": "Analytical interpretation of macro conditions and scheme policy channels. Not an investment recommendation or trade instruction."
     },
     "samudra_manthan": {
@@ -1279,7 +1279,7 @@
         "Global Sentiment: NEUTRAL (Score: +0.0)",
         "Active Policy Sectors: Upstream Oil & Gas, Offshore Exploration, Deepwater Drilling"
       ],
-      "timestamp": "2026-10-12T01:38:52.571285+00:00",
+      "timestamp": "2026-10-13T03:09:21.307590+00:00",
       "disclaimer": "Analytical interpretation of macro conditions and scheme policy channels. Not an investment recommendation or trade instruction."
     }
   },
@@ -1310,7 +1310,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-12T01:38:52.571306+00:00"
+      "timestamp": "2026-10-13T03:09:21.307612+00:00"
     },
     "TRUALT.NS": {
       "stock": "TRUALT.NS",
@@ -1338,7 +1338,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-12T01:38:52.571330+00:00"
+      "timestamp": "2026-10-13T03:09:21.307636+00:00"
     },
     "IONEXCHANG.NS": {
       "stock": "IONEXCHANG.NS",
@@ -1366,7 +1366,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: NEUTRAL"
       ],
-      "timestamp": "2026-10-12T01:38:52.571343+00:00"
+      "timestamp": "2026-10-13T03:09:21.307650+00:00"
     },
     "WABAG.NS": {
       "stock": "WABAG.NS",
@@ -1394,7 +1394,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: NEUTRAL"
       ],
-      "timestamp": "2026-10-12T01:38:52.571354+00:00"
+      "timestamp": "2026-10-13T03:09:21.307660+00:00"
     },
     "KIRLPNU.NS": {
       "stock": "KIRLPNU.NS",
@@ -1422,7 +1422,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-12T01:38:52.571364+00:00"
+      "timestamp": "2026-10-13T03:09:21.307669+00:00"
     },
     "GAIL.NS": {
       "stock": "GAIL.NS",
@@ -1450,7 +1450,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-12T01:38:52.571374+00:00"
+      "timestamp": "2026-10-13T03:09:21.307679+00:00"
     },
     "IOC.NS": {
       "stock": "IOC.NS",
@@ -1478,7 +1478,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-12T01:38:52.571383+00:00"
+      "timestamp": "2026-10-13T03:09:21.307688+00:00"
     },
     "ONGC.NS": {
       "stock": "ONGC.NS",
@@ -1506,7 +1506,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-12T01:38:52.571391+00:00"
+      "timestamp": "2026-10-13T03:09:21.307697+00:00"
     },
     "OIL.NS": {
       "stock": "OIL.NS",
@@ -1534,7 +1534,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-12T01:38:52.571402+00:00"
+      "timestamp": "2026-10-13T03:09:21.307705+00:00"
     },
     "RELIANCE.NS": {
       "stock": "RELIANCE.NS",
@@ -1562,7 +1562,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-12T01:38:52.571412+00:00"
+      "timestamp": "2026-10-13T03:09:21.307713+00:00"
     },
     "VEDL.NS": {
       "stock": "VEDL.NS",
@@ -1590,7 +1590,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: NEUTRAL"
       ],
-      "timestamp": "2026-10-12T01:38:52.571421+00:00"
+      "timestamp": "2026-10-13T03:09:21.307722+00:00"
     }
   },
   "market_and_global_sentiment": {
