@@ -1,7 +1,7 @@
 {
-  "snapshot_id": "SNAP-20261013-030919",
+  "snapshot_id": "SNAP-20261014-012206",
   "schema_version": "1.0",
-  "generated_at": "2026-10-13T03:09:19.509173+00:00",
+  "generated_at": "2026-10-14T01:22:06.383387+00:00",
   "pipeline_run_id": null,
   "scheme_id": null,
   "scheme_ids": [
@@ -29,7 +29,7 @@
         "Ministry of New and Renewable Energy",
         "Ministry of Jal Shakti"
       ],
-      "last_update": "2026-10-13T03:09:19.509173+00:00",
+      "last_update": "2026-10-14T01:22:06.383387+00:00",
       "source_health": {
         "pib_mopng": "OK",
         "gobardhan_portal": "OK",
@@ -76,7 +76,7 @@
         "PIB National Energy & Infrastructure",
         "Prime Minister's Office Press Releases"
       ],
-      "last_update": "2026-10-13T03:09:19.509173+00:00",
+      "last_update": "2026-10-14T01:22:06.383387+00:00",
       "source_health": {
         "dgh_portal": "OK",
         "pib_mopng_samudra": "OK",
@@ -218,15 +218,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 285.8,
-      "change_pct": -1.36,
-      "volume": 422712,
+      "price": 288.05,
+      "change_pct": -0.23,
+      "volume": 425524,
       "volume_change_pct": null,
-      "avg_volume": 453083,
+      "avg_volume": 443275,
       "trend": "BEARISH",
-      "support": 284.65,
-      "resistance": 334.0,
-      "rsi": 28.3,
+      "support": 283.7,
+      "resistance": 324.8,
+      "rsi": 27.0,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -240,7 +240,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-13T03:09:19.509173+00:00"
+      "updated_at": "2026-10-14T01:22:06.383387+00:00"
     },
     "TRUALT.NS": {
       "symbol": "TRUALT.NS",
@@ -314,15 +314,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 427.2,
-      "change_pct": 0.74,
-      "volume": 296304,
+      "price": 443.25,
+      "change_pct": 3.76,
+      "volume": 181595,
       "volume_change_pct": null,
-      "avg_volume": 305702,
-      "trend": "BEARISH",
+      "avg_volume": 314527,
+      "trend": "NEUTRAL",
       "support": 400.0,
       "resistance": 472.5,
-      "rsi": 51.9,
+      "rsi": 59.3,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -336,7 +336,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-13T03:09:19.509173+00:00"
+      "updated_at": "2026-10-14T01:22:06.383387+00:00"
     },
     "IONEXCHANG.NS": {
       "symbol": "IONEXCHANG.NS",
@@ -431,15 +431,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 390.75,
-      "change_pct": -0.36,
-      "volume": 121644,
+      "price": 386.8,
+      "change_pct": -1.01,
+      "volume": 159727,
       "volume_change_pct": null,
-      "avg_volume": 326334,
+      "avg_volume": 293115,
       "trend": "NEUTRAL",
-      "support": 383.6,
+      "support": 383.45,
       "resistance": 461.0,
-      "rsi": 15.4,
+      "rsi": 16.8,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -453,7 +453,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-13T03:09:19.509173+00:00"
+      "updated_at": "2026-10-14T01:22:06.383387+00:00"
     },
     "WABAG.NS": {
       "symbol": "WABAG.NS",
@@ -548,15 +548,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 1936.8,
-      "change_pct": 0.14,
-      "volume": 270798,
+      "price": 1970.9,
+      "change_pct": 0.46,
+      "volume": 324976,
       "volume_change_pct": null,
-      "avg_volume": 714229,
+      "avg_volume": 575758,
       "trend": "NEUTRAL",
-      "support": 1921.3,
-      "resistance": 2319.0,
-      "rsi": 28.2,
+      "support": 1906.4,
+      "resistance": 2289.0,
+      "rsi": 38.0,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -570,7 +570,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-13T03:09:19.509173+00:00"
+      "updated_at": "2026-10-14T01:22:06.383387+00:00"
     },
     "KIRLPNU.NS": {
       "symbol": "KIRLPNU.NS",
@@ -665,15 +665,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 667.25,
-      "change_pct": -0.46,
-      "volume": 61968,
+      "price": 667.15,
+      "change_pct": -0.01,
+      "volume": 58865,
       "volume_change_pct": null,
-      "avg_volume": 121396,
+      "avg_volume": 117829,
       "trend": "BEARISH",
       "support": 657.0,
-      "resistance": 735.35,
-      "rsi": 40.3,
+      "resistance": 728.2,
+      "rsi": 33.8,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -687,7 +687,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-13T03:09:19.509173+00:00"
+      "updated_at": "2026-10-14T01:22:06.383387+00:00"
     },
     "GAIL.NS": {
       "symbol": "GAIL.NS",
@@ -782,15 +782,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 166.64,
-      "change_pct": -0.63,
-      "volume": 5427059,
+      "price": 166.91,
+      "change_pct": 0.16,
+      "volume": 8839150,
       "volume_change_pct": null,
-      "avg_volume": 6861781,
+      "avg_volume": 6915985,
       "trend": "BEARISH",
       "support": 166.3,
-      "resistance": 176.5,
-      "rsi": 34.1,
+      "resistance": 175.18,
+      "rsi": 36.9,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -804,7 +804,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-13T03:09:19.509173+00:00"
+      "updated_at": "2026-10-14T01:22:06.383387+00:00"
     },
     "IOC.NS": {
       "symbol": "IOC.NS",
@@ -899,15 +899,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 126.35,
-      "change_pct": 0.08,
-      "volume": 7316124,
+      "price": 126.14,
+      "change_pct": 0.63,
+      "volume": 6250457,
       "volume_change_pct": null,
-      "avg_volume": 8582375,
+      "avg_volume": 8882086,
       "trend": "BEARISH",
-      "support": 125.27,
+      "support": 125.0,
       "resistance": 139.3,
-      "rsi": 27.3,
+      "rsi": 25.2,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -921,7 +921,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-13T03:09:19.509173+00:00"
+      "updated_at": "2026-10-14T01:22:06.383387+00:00"
     },
     "ONGC.NS": {
       "symbol": "ONGC.NS",
@@ -945,15 +945,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 221.27,
-      "change_pct": 0.67,
-      "volume": 8103203,
+      "price": 222.65,
+      "change_pct": 1.2,
+      "volume": 5893758,
       "volume_change_pct": null,
-      "avg_volume": 12229697,
+      "avg_volume": 11818170,
       "trend": "BEARISH",
       "support": 218.53,
-      "resistance": 243.16,
-      "rsi": 31.9,
+      "resistance": 239.0,
+      "rsi": 29.3,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -967,7 +967,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-13T03:09:19.509173+00:00"
+      "updated_at": "2026-10-14T01:22:06.383387+00:00"
     },
     "OIL.NS": {
       "symbol": "OIL.NS",
@@ -991,15 +991,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 443.5,
-      "change_pct": -0.78,
-      "volume": 625338,
+      "price": 441.55,
+      "change_pct": -0.44,
+      "volume": 1029528,
       "volume_change_pct": null,
-      "avg_volume": 2139087,
+      "avg_volume": 2046758,
       "trend": "BEARISH",
       "support": 434.65,
-      "resistance": 514.45,
-      "rsi": 30.1,
+      "resistance": 511.95,
+      "rsi": 27.1,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -1013,7 +1013,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-13T03:09:19.509173+00:00"
+      "updated_at": "2026-10-14T01:22:06.383387+00:00"
     },
     "RELIANCE.NS": {
       "symbol": "RELIANCE.NS",
@@ -1037,15 +1037,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 1170.3,
-      "change_pct": -0.65,
-      "volume": 12086708,
+      "price": 1166.7,
+      "change_pct": 0.67,
+      "volume": 10988483,
       "volume_change_pct": null,
-      "avg_volume": 13101641,
+      "avg_volume": 13200448,
       "trend": "BEARISH",
-      "support": 1160.2,
-      "resistance": 1285.3,
-      "rsi": 38.2,
+      "support": 1152.2,
+      "resistance": 1259.4,
+      "rsi": 33.9,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -1059,7 +1059,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-13T03:09:19.509173+00:00"
+      "updated_at": "2026-10-14T01:22:06.383387+00:00"
     },
     "VEDL.NS": {
       "symbol": "VEDL.NS",
@@ -1083,15 +1083,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 264.0,
-      "change_pct": 4.31,
-      "volume": 11577993,
+      "price": 251.3,
+      "change_pct": -3.25,
+      "volume": 19282774,
       "volume_change_pct": null,
-      "avg_volume": 8330505,
-      "trend": "NEUTRAL",
-      "support": 247.25,
-      "resistance": 275.1,
-      "rsi": 47.6,
+      "avg_volume": 8752212,
+      "trend": "BEARISH",
+      "support": 242.43,
+      "resistance": 266.06,
+      "rsi": 45.6,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -1105,7 +1105,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-13T03:09:19.509173+00:00"
+      "updated_at": "2026-10-14T01:22:06.383387+00:00"
     }
   },
   "qualified_setups": [],
@@ -1135,16 +1135,16 @@
   },
   "indian_sentiment": {
     "classification": "NEUTRAL",
-    "score": -3.2,
+    "score": 6.4,
     "confidence": "LOW",
     "nifty_direction": "UNAVAILABLE",
     "sensex_direction": null,
     "breadth": {
-      "advances": 5,
-      "declines": 6,
-      "unchanged": 0,
-      "advance_decline_ratio": 0.83,
-      "positive_breadth_pct": 45.5
+      "advances": 6,
+      "declines": 4,
+      "unchanged": 1,
+      "advance_decline_ratio": 1.5,
+      "positive_breadth_pct": 54.5
     },
     "sector_rotation": [
       "Bio-Energy and Capital Goods domestic capex cycle active",
@@ -1162,7 +1162,7 @@
       "Water Infrastructure",
       "Capital Goods"
     ],
-    "timestamp": "2026-10-13T03:09:21.307478+00:00",
+    "timestamp": "2026-10-14T01:22:08.616737+00:00",
     "evidence": [],
     "methodology": "Deterministic composite: Nifty trend/return weight (40%) + Watchlist breadth (35%) + News/Policy sentiment balance (25%)."
   },
@@ -1187,7 +1187,7 @@
     "evidence": [
       "Baseline macro indicators within historical variance"
     ],
-    "timestamp": "2026-10-13T03:09:21.307520+00:00",
+    "timestamp": "2026-10-14T01:22:08.616779+00:00",
     "methodology": "Deterministic evaluation of reported international indices, commodities, and risk proxies. Missing indicators are explicitly marked None without synthetic fabrication."
   },
   "scheme_impacts": {
@@ -1230,11 +1230,11 @@
       "estimated_directional_impact": "NEUTRAL",
       "confidence": "MEDIUM",
       "supporting_evidence": [
-        "Indian Sentiment: NEUTRAL (Score: -3.2)",
+        "Indian Sentiment: NEUTRAL (Score: +6.4)",
         "Global Sentiment: NEUTRAL (Score: +0.0)",
         "Active Policy Sectors: Bio-Energy, Engineering, Bio-Energy"
       ],
-      "timestamp": "2026-10-13T03:09:21.307554+00:00",
+      "timestamp": "2026-10-14T01:22:08.616814+00:00",
       "disclaimer": "Analytical interpretation of macro conditions and scheme policy channels. Not an investment recommendation or trade instruction."
     },
     "samudra_manthan": {
@@ -1275,11 +1275,11 @@
       "estimated_directional_impact": "NEUTRAL",
       "confidence": "MEDIUM",
       "supporting_evidence": [
-        "Indian Sentiment: NEUTRAL (Score: -3.2)",
+        "Indian Sentiment: NEUTRAL (Score: +6.4)",
         "Global Sentiment: NEUTRAL (Score: +0.0)",
         "Active Policy Sectors: Upstream Oil & Gas, Offshore Exploration, Deepwater Drilling"
       ],
-      "timestamp": "2026-10-13T03:09:21.307590+00:00",
+      "timestamp": "2026-10-14T01:22:08.616852+00:00",
       "disclaimer": "Analytical interpretation of macro conditions and scheme policy channels. Not an investment recommendation or trade instruction."
     }
   },
@@ -1291,7 +1291,7 @@
       "scheme_relationship": "HIGH",
       "indian_market_impact": "NEUTRAL",
       "global_market_impact": "NEUTRAL",
-      "sector_impact": "NEUTRAL",
+      "sector_impact": "POSITIVE",
       "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
@@ -1310,7 +1310,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-13T03:09:21.307612+00:00"
+      "timestamp": "2026-10-14T01:22:08.616872+00:00"
     },
     "TRUALT.NS": {
       "stock": "TRUALT.NS",
@@ -1319,7 +1319,7 @@
       "scheme_relationship": "HIGH",
       "indian_market_impact": "NEUTRAL",
       "global_market_impact": "NEUTRAL",
-      "sector_impact": "NEUTRAL",
+      "sector_impact": "POSITIVE",
       "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
@@ -1328,7 +1328,7 @@
         "Potential project execution delays."
       ],
       "risks": [
-        "Overhead technical supply / resistance requires volume confirmation."
+        "Working capital cycle length."
       ],
       "uncertainty": "Offtake volume realization timelines.",
       "estimated_impact": "Neutral / Wait condition prevailing",
@@ -1336,9 +1336,9 @@
       "evidence": [
         "Indian Market: NEUTRAL",
         "Global Sentiment: NEUTRAL",
-        "Trend: BEARISH"
+        "Trend: NEUTRAL"
       ],
-      "timestamp": "2026-10-13T03:09:21.307636+00:00"
+      "timestamp": "2026-10-14T01:22:08.616895+00:00"
     },
     "IONEXCHANG.NS": {
       "stock": "IONEXCHANG.NS",
@@ -1347,7 +1347,7 @@
       "scheme_relationship": "HIGH",
       "indian_market_impact": "NEUTRAL",
       "global_market_impact": "NEUTRAL",
-      "sector_impact": "NEUTRAL",
+      "sector_impact": "POSITIVE",
       "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
@@ -1366,7 +1366,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: NEUTRAL"
       ],
-      "timestamp": "2026-10-13T03:09:21.307650+00:00"
+      "timestamp": "2026-10-14T01:22:08.616908+00:00"
     },
     "WABAG.NS": {
       "stock": "WABAG.NS",
@@ -1375,7 +1375,7 @@
       "scheme_relationship": "HIGH",
       "indian_market_impact": "NEUTRAL",
       "global_market_impact": "NEUTRAL",
-      "sector_impact": "NEUTRAL",
+      "sector_impact": "POSITIVE",
       "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
@@ -1394,7 +1394,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: NEUTRAL"
       ],
-      "timestamp": "2026-10-13T03:09:21.307660+00:00"
+      "timestamp": "2026-10-14T01:22:08.616918+00:00"
     },
     "KIRLPNU.NS": {
       "stock": "KIRLPNU.NS",
@@ -1403,7 +1403,7 @@
       "scheme_relationship": "HIGH",
       "indian_market_impact": "NEUTRAL",
       "global_market_impact": "NEUTRAL",
-      "sector_impact": "NEUTRAL",
+      "sector_impact": "POSITIVE",
       "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
@@ -1422,7 +1422,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-13T03:09:21.307669+00:00"
+      "timestamp": "2026-10-14T01:22:08.616927+00:00"
     },
     "GAIL.NS": {
       "stock": "GAIL.NS",
@@ -1431,7 +1431,7 @@
       "scheme_relationship": "HIGH",
       "indian_market_impact": "NEUTRAL",
       "global_market_impact": "NEUTRAL",
-      "sector_impact": "NEUTRAL",
+      "sector_impact": "POSITIVE",
       "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
@@ -1450,7 +1450,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-13T03:09:21.307679+00:00"
+      "timestamp": "2026-10-14T01:22:08.616937+00:00"
     },
     "IOC.NS": {
       "stock": "IOC.NS",
@@ -1459,7 +1459,7 @@
       "scheme_relationship": "HIGH",
       "indian_market_impact": "NEUTRAL",
       "global_market_impact": "NEUTRAL",
-      "sector_impact": "NEUTRAL",
+      "sector_impact": "POSITIVE",
       "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
@@ -1478,7 +1478,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-13T03:09:21.307688+00:00"
+      "timestamp": "2026-10-14T01:22:08.616946+00:00"
     },
     "ONGC.NS": {
       "stock": "ONGC.NS",
@@ -1487,7 +1487,7 @@
       "scheme_relationship": "HIGH",
       "indian_market_impact": "NEUTRAL",
       "global_market_impact": "NEUTRAL",
-      "sector_impact": "NEUTRAL",
+      "sector_impact": "POSITIVE",
       "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
@@ -1506,7 +1506,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-13T03:09:21.307697+00:00"
+      "timestamp": "2026-10-14T01:22:08.616955+00:00"
     },
     "OIL.NS": {
       "stock": "OIL.NS",
@@ -1515,7 +1515,7 @@
       "scheme_relationship": "HIGH",
       "indian_market_impact": "NEUTRAL",
       "global_market_impact": "NEUTRAL",
-      "sector_impact": "NEUTRAL",
+      "sector_impact": "POSITIVE",
       "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
@@ -1534,7 +1534,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-13T03:09:21.307705+00:00"
+      "timestamp": "2026-10-14T01:22:08.616964+00:00"
     },
     "RELIANCE.NS": {
       "stock": "RELIANCE.NS",
@@ -1543,7 +1543,7 @@
       "scheme_relationship": "HIGH",
       "indian_market_impact": "NEUTRAL",
       "global_market_impact": "NEUTRAL",
-      "sector_impact": "NEUTRAL",
+      "sector_impact": "POSITIVE",
       "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
@@ -1562,7 +1562,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-13T03:09:21.307713+00:00"
+      "timestamp": "2026-10-14T01:22:08.616972+00:00"
     },
     "VEDL.NS": {
       "stock": "VEDL.NS",
@@ -1571,7 +1571,7 @@
       "scheme_relationship": "HIGH",
       "indian_market_impact": "NEUTRAL",
       "global_market_impact": "NEUTRAL",
-      "sector_impact": "NEUTRAL",
+      "sector_impact": "POSITIVE",
       "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
       "positive_drivers": [
         "Structural multi-year government policy alignment."
@@ -1580,7 +1580,7 @@
         "Potential project execution delays."
       ],
       "risks": [
-        "Working capital cycle length."
+        "Overhead technical supply / resistance requires volume confirmation."
       ],
       "uncertainty": "Offtake volume realization timelines.",
       "estimated_impact": "Neutral / Wait condition prevailing",
@@ -1588,27 +1588,27 @@
       "evidence": [
         "Indian Market: NEUTRAL",
         "Global Sentiment: NEUTRAL",
-        "Trend: NEUTRAL"
+        "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-13T03:09:21.307722+00:00"
+      "timestamp": "2026-10-14T01:22:08.616980+00:00"
     }
   },
   "market_and_global_sentiment": {
     "section_title": "MARKET & GLOBAL SENTIMENT",
     "indian_market": {
       "classification": "NEUTRAL",
-      "score": -3.2,
+      "score": 6.4,
       "confidence": "LOW",
       "key_drivers": [
         "UNAVAILABLE"
       ],
       "evidence": [],
       "breadth": {
-        "advances": 5,
-        "declines": 6,
-        "unchanged": 0,
-        "advance_decline_ratio": 0.83,
-        "positive_breadth_pct": 45.5
+        "advances": 6,
+        "declines": 4,
+        "unchanged": 1,
+        "advance_decline_ratio": 1.5,
+        "positive_breadth_pct": 54.5
       },
       "sector_rotation": [
         "Bio-Energy and Capital Goods domestic capex cycle active",
@@ -1662,7 +1662,7 @@
     "watchlist_impact": {
       "PRAJIND.NS": {
         "relevant_stock": "PRAJIND.NS",
-        "sector_effect": "NEUTRAL",
+        "sector_effect": "POSITIVE",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
         "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
@@ -1671,7 +1671,7 @@
       },
       "TRUALT.NS": {
         "relevant_stock": "TRUALT.NS",
-        "sector_effect": "NEUTRAL",
+        "sector_effect": "POSITIVE",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
         "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
@@ -1680,7 +1680,7 @@
       },
       "IONEXCHANG.NS": {
         "relevant_stock": "IONEXCHANG.NS",
-        "sector_effect": "NEUTRAL",
+        "sector_effect": "POSITIVE",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
         "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
@@ -1689,7 +1689,7 @@
       },
       "WABAG.NS": {
         "relevant_stock": "WABAG.NS",
-        "sector_effect": "NEUTRAL",
+        "sector_effect": "POSITIVE",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
         "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
@@ -1698,7 +1698,7 @@
       },
       "KIRLPNU.NS": {
         "relevant_stock": "KIRLPNU.NS",
-        "sector_effect": "NEUTRAL",
+        "sector_effect": "POSITIVE",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
         "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
@@ -1707,7 +1707,7 @@
       },
       "GAIL.NS": {
         "relevant_stock": "GAIL.NS",
-        "sector_effect": "NEUTRAL",
+        "sector_effect": "POSITIVE",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
         "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
@@ -1716,7 +1716,7 @@
       },
       "IOC.NS": {
         "relevant_stock": "IOC.NS",
-        "sector_effect": "NEUTRAL",
+        "sector_effect": "POSITIVE",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
         "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
@@ -1725,7 +1725,7 @@
       },
       "ONGC.NS": {
         "relevant_stock": "ONGC.NS",
-        "sector_effect": "NEUTRAL",
+        "sector_effect": "POSITIVE",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
         "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
@@ -1734,7 +1734,7 @@
       },
       "OIL.NS": {
         "relevant_stock": "OIL.NS",
-        "sector_effect": "NEUTRAL",
+        "sector_effect": "POSITIVE",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
         "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
@@ -1743,7 +1743,7 @@
       },
       "RELIANCE.NS": {
         "relevant_stock": "RELIANCE.NS",
-        "sector_effect": "NEUTRAL",
+        "sector_effect": "POSITIVE",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
         "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
@@ -1752,7 +1752,7 @@
       },
       "VEDL.NS": {
         "relevant_stock": "VEDL.NS",
-        "sector_effect": "NEUTRAL",
+        "sector_effect": "POSITIVE",
         "scheme_effect": "HIGH",
         "global_effect": "NEUTRAL",
         "company_specific_interaction": "No immediate single-stock filing; price driven primarily by NEUTRAL sector trend.",
