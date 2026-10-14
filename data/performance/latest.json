@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-10-13T03:08:30.140998+00:00",
+  "generated_at": "2026-10-14T01:21:24.967151+00:00",
   "data_period": {
-    "start_date": "2026-10-13",
-    "end_date": "2026-10-13"
+    "start_date": "2026-10-14",
+    "end_date": "2026-10-14"
   },
   "data_sufficiency": {
     "status": "INSUFFICIENT_SAMPLE",
@@ -14,8 +14,8 @@
   "setup_metrics": {
     "total_setups": 7,
     "qualified_setups": 0,
-    "rejected_setups": 5,
-    "waiting_setups": 2,
+    "rejected_setups": 4,
+    "waiting_setups": 3,
     "watch_setups": 0,
     "triggered_setups": 0,
     "untriggered_setups": 7,
@@ -273,7 +273,7 @@
       "observational_note": "Observational analysis only. Does not establish causation."
     },
     {
-      "provider": "Openrouter",
+      "provider": "Groq \u2192 Openrouter failover",
       "setups": 1,
       "triggered": 0,
       "completed": 0,
@@ -358,7 +358,7 @@
   ],
   "daily_series": [
     {
-      "date": "2026-10-13",
+      "date": "2026-10-14",
       "setups_generated": 7,
       "qualified_setups": 0,
       "triggered": 0,
