@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-10-14T01:21:24.967151+00:00",
+  "generated_at": "2026-10-15T00:44:49.325047+00:00",
   "data_period": {
-    "start_date": "2026-10-14",
-    "end_date": "2026-10-14"
+    "start_date": "2026-10-15",
+    "end_date": "2026-10-15"
   },
   "data_sufficiency": {
     "status": "INSUFFICIENT_SAMPLE",
@@ -13,9 +13,9 @@
   "strategy_status": "INSUFFICIENT DATA",
   "setup_metrics": {
     "total_setups": 7,
-    "qualified_setups": 0,
+    "qualified_setups": 1,
     "rejected_setups": 4,
-    "waiting_setups": 3,
+    "waiting_setups": 2,
     "watch_setups": 0,
     "triggered_setups": 0,
     "untriggered_setups": 7,
@@ -100,7 +100,7 @@
     {
       "archetype": "Momentum Continuation",
       "setups": 1,
-      "qualified": 0,
+      "qualified": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -189,7 +189,7 @@
     {
       "symbol": "ORGANICREC.BO",
       "setups": 1,
-      "qualified": 0,
+      "qualified": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -358,9 +358,9 @@
   ],
   "daily_series": [
     {
-      "date": "2026-10-14",
+      "date": "2026-10-15",
       "setups_generated": 7,
-      "qualified_setups": 0,
+      "qualified_setups": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
