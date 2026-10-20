@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-10-19T00:23:25.259932+00:00",
+  "generated_at": "2026-10-20T01:11:12.527100+00:00",
   "data_period": {
-    "start_date": "2026-10-19",
-    "end_date": "2026-10-19"
+    "start_date": "2026-10-21",
+    "end_date": "2026-10-21"
   },
   "data_sufficiency": {
     "status": "INSUFFICIENT_SAMPLE",
@@ -273,7 +273,7 @@
       "observational_note": "Observational analysis only. Does not establish causation."
     },
     {
-      "provider": "Openrouter",
+      "provider": "Groq",
       "setups": 1,
       "triggered": 0,
       "completed": 0,
@@ -358,7 +358,7 @@
   ],
   "daily_series": [
     {
-      "date": "2026-10-19",
+      "date": "2026-10-21",
       "setups_generated": 7,
       "qualified_setups": 1,
       "triggered": 0,
