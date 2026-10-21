@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-20T01:11:12.527100+00:00",
+  "generated_at": "2026-10-21T00:51:22.269114+00:00",
   "data_period": {
     "start_date": "2026-10-21",
     "end_date": "2026-10-21"
@@ -273,7 +273,7 @@
       "observational_note": "Observational analysis only. Does not establish causation."
     },
     {
-      "provider": "Groq",
+      "provider": "Groq \u2192 Openrouter failover",
       "setups": 1,
       "triggered": 0,
       "completed": 0,

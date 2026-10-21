@@ -1,6 +1,6 @@
 # Scheme-Intel Forward Performance & Validation Report
 
-**Generated At:** 2026-10-20T01:11:12.527100+00:00 UTC
+**Generated At:** 2026-10-21T00:51:22.269114+00:00 UTC
 **Data Period:** 2026-10-21 → 2026-10-21
 **Data Sufficiency Status:** `INSUFFICIENT_SAMPLE` — *Insufficient sample (0 completed trades; minimum 30 required for statistical validity)*
 **Strategy Validation Status:** `INSUFFICIENT DATA`
@@ -98,7 +98,7 @@
 | Provider | Setups | Trig | Comp | Win Rate | Avg P&L | Expectancy | Avg MFE | Avg MAE | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | Deterministic Fallback | 6 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| Groq | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| Groq → Openrouter failover | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
 
 ---
 
