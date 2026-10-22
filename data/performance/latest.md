@@ -1,7 +1,7 @@
 # Scheme-Intel Forward Performance & Validation Report
 
-**Generated At:** 2026-10-21T00:51:22.269114+00:00 UTC
-**Data Period:** 2026-10-21 → 2026-10-21
+**Generated At:** 2026-10-22T00:52:51.143522+00:00 UTC
+**Data Period:** 2026-10-22 → 2026-10-22
 **Data Sufficiency Status:** `INSUFFICIENT_SAMPLE` — *Insufficient sample (0 completed trades; minimum 30 required for statistical validity)*
 **Strategy Validation Status:** `INSUFFICIENT DATA`
 
@@ -10,8 +10,8 @@
 ## 1. Setup Lifecycle Sample
 - **Total Setups Recorded:** 7
 - **Qualified Setups:** 1
-- **Waiting Setups:** 1
-- **Rejected Setups (Hard Risk Veto / No Trade):** 5
+- **Waiting Setups:** 0
+- **Rejected Setups (Hard Risk Veto / No Trade):** 6
 - **Triggered Entries:** 0
 - **Untriggered Setups:** 7 *(never counted as losses)*
 - **Currently Active (Open) Trades:** 0

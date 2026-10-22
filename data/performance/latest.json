@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-10-21T00:51:22.269114+00:00",
+  "generated_at": "2026-10-22T00:52:51.143522+00:00",
   "data_period": {
-    "start_date": "2026-10-21",
-    "end_date": "2026-10-21"
+    "start_date": "2026-10-22",
+    "end_date": "2026-10-22"
   },
   "data_sufficiency": {
     "status": "INSUFFICIENT_SAMPLE",
@@ -14,8 +14,8 @@
   "setup_metrics": {
     "total_setups": 7,
     "qualified_setups": 1,
-    "rejected_setups": 5,
-    "waiting_setups": 1,
+    "rejected_setups": 6,
+    "waiting_setups": 0,
     "watch_setups": 0,
     "triggered_setups": 0,
     "untriggered_setups": 7,
@@ -358,7 +358,7 @@
   ],
   "daily_series": [
     {
-      "date": "2026-10-21",
+      "date": "2026-10-22",
       "setups_generated": 7,
       "qualified_setups": 1,
       "triggered": 0,
