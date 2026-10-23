@@ -1,7 +1,7 @@
 {
-  "snapshot_id": "SNAP-20261022-005338",
+  "snapshot_id": "SNAP-20261023-005956",
   "schema_version": "1.0",
-  "generated_at": "2026-10-22T00:53:38.350640+00:00",
+  "generated_at": "2026-10-23T00:59:56.132473+00:00",
   "pipeline_run_id": null,
   "scheme_id": null,
   "scheme_ids": [
@@ -29,7 +29,7 @@
         "Ministry of New and Renewable Energy",
         "Ministry of Jal Shakti"
       ],
-      "last_update": "2026-10-22T00:53:38.350640+00:00",
+      "last_update": "2026-10-23T00:59:56.132473+00:00",
       "source_health": {
         "pib_mopng": "OK",
         "gobardhan_portal": "OK",
@@ -76,7 +76,7 @@
         "PIB National Energy & Infrastructure",
         "Prime Minister's Office Press Releases"
       ],
-      "last_update": "2026-10-22T00:53:38.350640+00:00",
+      "last_update": "2026-10-23T00:59:56.132473+00:00",
       "source_health": {
         "dgh_portal": "OK",
         "pib_mopng_samudra": "OK",
@@ -240,7 +240,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-22T00:53:38.350640+00:00"
+      "updated_at": "2026-10-23T00:59:56.132473+00:00"
     },
     "TRUALT.NS": {
       "symbol": "TRUALT.NS",
@@ -336,7 +336,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-22T00:53:38.350640+00:00"
+      "updated_at": "2026-10-23T00:59:56.132473+00:00"
     },
     "IONEXCHANG.NS": {
       "symbol": "IONEXCHANG.NS",
@@ -431,15 +431,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 367.9,
-      "change_pct": -2.54,
-      "volume": 161577,
+      "price": 351.6,
+      "change_pct": -4.43,
+      "volume": 172745,
       "volume_change_pct": null,
-      "avg_volume": 185529,
+      "avg_volume": 169025,
       "trend": "NEUTRAL",
-      "support": 363.35,
-      "resistance": 446.05,
-      "rsi": 12.7,
+      "support": 349.25,
+      "resistance": 442.95,
+      "rsi": 12.1,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -453,7 +453,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-22T00:53:38.350640+00:00"
+      "updated_at": "2026-10-23T00:59:56.132473+00:00"
     },
     "WABAG.NS": {
       "symbol": "WABAG.NS",
@@ -548,15 +548,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 1784.4,
-      "change_pct": -4.74,
-      "volume": 849005,
+      "price": 1772.2,
+      "change_pct": -0.68,
+      "volume": 354634,
       "volume_change_pct": null,
-      "avg_volume": 393399,
+      "avg_volume": 416158,
       "trend": "BEARISH",
-      "support": 1772.6,
+      "support": 1731.2,
       "resistance": 2141.9,
-      "rsi": 11.1,
+      "rsi": 11.7,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -570,7 +570,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-22T00:53:38.350640+00:00"
+      "updated_at": "2026-10-23T00:59:56.132473+00:00"
     },
     "KIRLPNU.NS": {
       "symbol": "KIRLPNU.NS",
@@ -687,7 +687,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-22T00:53:38.350640+00:00"
+      "updated_at": "2026-10-23T00:59:56.132473+00:00"
     },
     "GAIL.NS": {
       "symbol": "GAIL.NS",
@@ -804,7 +804,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-22T00:53:38.350640+00:00"
+      "updated_at": "2026-10-23T00:59:56.132473+00:00"
     },
     "IOC.NS": {
       "symbol": "IOC.NS",
@@ -899,15 +899,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 129.61,
-      "change_pct": -0.49,
-      "volume": 13753877,
+      "price": 130.98,
+      "change_pct": 1.06,
+      "volume": 6616574,
       "volume_change_pct": null,
-      "avg_volume": 8442154,
-      "trend": "BEARISH",
+      "avg_volume": 8699040,
+      "trend": "NEUTRAL",
       "support": 124.92,
-      "resistance": 139.3,
-      "rsi": 46.0,
+      "resistance": 138.75,
+      "rsi": 39.7,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -921,7 +921,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-22T00:53:38.350640+00:00"
+      "updated_at": "2026-10-23T00:59:56.132473+00:00"
     },
     "ONGC.NS": {
       "symbol": "ONGC.NS",
@@ -945,15 +945,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 225.62,
-      "change_pct": 0.28,
-      "volume": 8411046,
+      "price": 225.0,
+      "change_pct": -0.27,
+      "volume": 9714773,
       "volume_change_pct": null,
-      "avg_volume": 10105928,
+      "avg_volume": 10220778,
       "trend": "BEARISH",
       "support": 218.53,
       "resistance": 239.0,
-      "rsi": 42.8,
+      "rsi": 48.5,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -967,7 +967,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-22T00:53:38.350640+00:00"
+      "updated_at": "2026-10-23T00:59:56.132473+00:00"
     },
     "OIL.NS": {
       "symbol": "OIL.NS",
@@ -991,15 +991,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 449.0,
-      "change_pct": 0.9,
-      "volume": 925310,
+      "price": 456.9,
+      "change_pct": 0.64,
+      "volume": 905651,
       "volume_change_pct": null,
-      "avg_volume": 1597670,
-      "trend": "BEARISH",
+      "avg_volume": 1486418,
+      "trend": "NEUTRAL",
       "support": 434.65,
-      "resistance": 482.3,
-      "rsi": 33.9,
+      "resistance": 479.0,
+      "rsi": 58.7,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -1013,7 +1013,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-22T00:53:38.350640+00:00"
+      "updated_at": "2026-10-23T00:59:56.132473+00:00"
     },
     "RELIANCE.NS": {
       "symbol": "RELIANCE.NS",
@@ -1037,15 +1037,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 1209.0,
-      "change_pct": 0.58,
-      "volume": 17607823,
+      "price": 1184.5,
+      "change_pct": -2.03,
+      "volume": 14957042,
       "volume_change_pct": null,
-      "avg_volume": 14337899,
-      "trend": "NEUTRAL",
+      "avg_volume": 14717929,
+      "trend": "BEARISH",
       "support": 1152.2,
       "resistance": 1252.8,
-      "rsi": 56.4,
+      "rsi": 49.5,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -1059,7 +1059,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-22T00:53:38.350640+00:00"
+      "updated_at": "2026-10-23T00:59:56.132473+00:00"
     },
     "VEDL.NS": {
       "symbol": "VEDL.NS",
@@ -1083,15 +1083,15 @@
       "technical_score_version": "v1.0",
       "technical_score_data_as_of": null,
       "technical_score_coverage": 0.0,
-      "price": 236.85,
-      "change_pct": -2.61,
-      "volume": 12188695,
+      "price": 234.85,
+      "change_pct": -0.84,
+      "volume": 9746939,
       "volume_change_pct": null,
-      "avg_volume": 9697703,
+      "avg_volume": 9977136,
       "trend": "BEARISH",
-      "support": 233.1,
+      "support": 229.4,
       "resistance": 266.06,
-      "rsi": 36.7,
+      "rsi": 36.2,
       "status": "NO_TRADE",
       "archetype": null,
       "score": null,
@@ -1105,7 +1105,7 @@
       "next_session": null,
       "ai_provider": null,
       "evidence": [],
-      "updated_at": "2026-10-22T00:53:38.350640+00:00"
+      "updated_at": "2026-10-23T00:59:56.132473+00:00"
     }
   },
   "qualified_setups": [],
@@ -1135,16 +1135,16 @@
   },
   "indian_sentiment": {
     "classification": "BEARISH",
-    "score": -15.9,
+    "score": -22.3,
     "confidence": "LOW",
     "nifty_direction": "UNAVAILABLE",
     "sensex_direction": null,
     "breadth": {
-      "advances": 3,
-      "declines": 8,
+      "advances": 2,
+      "declines": 9,
       "unchanged": 0,
-      "advance_decline_ratio": 0.38,
-      "positive_breadth_pct": 27.3
+      "advance_decline_ratio": 0.22,
+      "positive_breadth_pct": 18.2
     },
     "sector_rotation": [
       "Bio-Energy and Capital Goods domestic capex cycle active",
@@ -1162,7 +1162,7 @@
       "Water Infrastructure",
       "Capital Goods"
     ],
-    "timestamp": "2026-10-22T00:53:39.898956+00:00",
+    "timestamp": "2026-10-23T00:59:58.051023+00:00",
     "evidence": [],
     "methodology": "Deterministic composite: Nifty trend/return weight (40%) + Watchlist breadth (35%) + News/Policy sentiment balance (25%)."
   },
@@ -1187,7 +1187,7 @@
     "evidence": [
       "Baseline macro indicators within historical variance"
     ],
-    "timestamp": "2026-10-22T00:53:39.899011+00:00",
+    "timestamp": "2026-10-23T00:59:58.051068+00:00",
     "methodology": "Deterministic evaluation of reported international indices, commodities, and risk proxies. Missing indicators are explicitly marked None without synthetic fabrication."
   },
   "scheme_impacts": {
@@ -1229,11 +1229,11 @@
       "estimated_directional_impact": "NEGATIVE",
       "confidence": "MEDIUM",
       "supporting_evidence": [
-        "Indian Sentiment: BEARISH (Score: -15.9)",
+        "Indian Sentiment: BEARISH (Score: -22.3)",
         "Global Sentiment: NEUTRAL (Score: +0.0)",
         "Active Policy Sectors: Bio-Energy, Engineering, Bio-Energy"
       ],
-      "timestamp": "2026-10-22T00:53:39.899060+00:00",
+      "timestamp": "2026-10-23T00:59:58.051099+00:00",
       "disclaimer": "Analytical interpretation of macro conditions and scheme policy channels. Not an investment recommendation or trade instruction."
     },
     "samudra_manthan": {
@@ -1273,11 +1273,11 @@
       "estimated_directional_impact": "NEGATIVE",
       "confidence": "MEDIUM",
       "supporting_evidence": [
-        "Indian Sentiment: BEARISH (Score: -15.9)",
+        "Indian Sentiment: BEARISH (Score: -22.3)",
         "Global Sentiment: NEUTRAL (Score: +0.0)",
         "Active Policy Sectors: Upstream Oil & Gas, Offshore Exploration, Deepwater Drilling"
       ],
-      "timestamp": "2026-10-22T00:53:39.899107+00:00",
+      "timestamp": "2026-10-23T00:59:58.051135+00:00",
       "disclaimer": "Analytical interpretation of macro conditions and scheme policy channels. Not an investment recommendation or trade instruction."
     }
   },
@@ -1308,7 +1308,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-22T00:53:39.899143+00:00"
+      "timestamp": "2026-10-23T00:59:58.051156+00:00"
     },
     "TRUALT.NS": {
       "stock": "TRUALT.NS",
@@ -1336,7 +1336,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-22T00:53:39.899201+00:00"
+      "timestamp": "2026-10-23T00:59:58.051178+00:00"
     },
     "IONEXCHANG.NS": {
       "stock": "IONEXCHANG.NS",
@@ -1364,7 +1364,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: NEUTRAL"
       ],
-      "timestamp": "2026-10-22T00:53:39.899218+00:00"
+      "timestamp": "2026-10-23T00:59:58.051190+00:00"
     },
     "WABAG.NS": {
       "stock": "WABAG.NS",
@@ -1392,7 +1392,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-22T00:53:39.899228+00:00"
+      "timestamp": "2026-10-23T00:59:58.051200+00:00"
     },
     "KIRLPNU.NS": {
       "stock": "KIRLPNU.NS",
@@ -1420,7 +1420,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-22T00:53:39.899238+00:00"
+      "timestamp": "2026-10-23T00:59:58.051209+00:00"
     },
     "GAIL.NS": {
       "stock": "GAIL.NS",
@@ -1448,7 +1448,7 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-22T00:53:39.899247+00:00"
+      "timestamp": "2026-10-23T00:59:58.051222+00:00"
     },
     "IOC.NS": {
       "stock": "IOC.NS",
@@ -1466,7 +1466,7 @@
         "Broad market selling pressure may suppress breakout follow-through."
       ],
       "risks": [
-        "Overhead technical supply / resistance requires volume confirmation."
+        "Working capital cycle length."
       ],
       "uncertainty": "Offtake volume realization timelines.",
       "estimated_impact": "Moderate headwind (Market volatility overhang)",
@@ -1474,9 +1474,9 @@
       "evidence": [
         "Indian Market: BEARISH",
         "Global Sentiment: NEUTRAL",
-        "Trend: BEARISH"
+        "Trend: NEUTRAL"
       ],
-      "timestamp": "2026-10-22T00:53:39.899270+00:00"
+      "timestamp": "2026-10-23T00:59:58.051231+00:00"
     },
     "ONGC.NS": {
       "stock": "ONGC.NS",
@@ -1504,40 +1504,12 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-22T00:53:39.899291+00:00"
+      "timestamp": "2026-10-23T00:59:58.051240+00:00"
     },
     "OIL.NS": {
       "stock": "OIL.NS",
       "short_symbol": "OIL",
       "name": "Oil India Limited",
-      "scheme_relationship": "HIGH",
-      "indian_market_impact": "NEGATIVE",
-      "global_market_impact": "NEUTRAL",
-      "sector_impact": "NEUTRAL",
-      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
-      "positive_drivers": [
-        "Structural multi-year government policy alignment."
-      ],
-      "negative_drivers": [
-        "Broad market selling pressure may suppress breakout follow-through."
-      ],
-      "risks": [
-        "Overhead technical supply / resistance requires volume confirmation."
-      ],
-      "uncertainty": "Offtake volume realization timelines.",
-      "estimated_impact": "Moderate headwind (Market volatility overhang)",
-      "confidence": "MEDIUM",
-      "evidence": [
-        "Indian Market: BEARISH",
-        "Global Sentiment: NEUTRAL",
-        "Trend: BEARISH"
-      ],
-      "timestamp": "2026-10-22T00:53:39.899300+00:00"
-    },
-    "RELIANCE.NS": {
-      "stock": "RELIANCE.NS",
-      "short_symbol": "RELIANCE",
-      "name": "Reliance Industries",
       "scheme_relationship": "HIGH",
       "indian_market_impact": "NEGATIVE",
       "global_market_impact": "NEUTRAL",
@@ -1560,7 +1532,35 @@
         "Global Sentiment: NEUTRAL",
         "Trend: NEUTRAL"
       ],
-      "timestamp": "2026-10-22T00:53:39.899309+00:00"
+      "timestamp": "2026-10-23T00:59:58.051248+00:00"
+    },
+    "RELIANCE.NS": {
+      "stock": "RELIANCE.NS",
+      "short_symbol": "RELIANCE",
+      "name": "Reliance Industries",
+      "scheme_relationship": "HIGH",
+      "indian_market_impact": "NEGATIVE",
+      "global_market_impact": "NEUTRAL",
+      "sector_impact": "NEUTRAL",
+      "company_catalyst_interaction": "No immediate single-stock filing; price driven primarily by BEARISH sector trend.",
+      "positive_drivers": [
+        "Structural multi-year government policy alignment."
+      ],
+      "negative_drivers": [
+        "Broad market selling pressure may suppress breakout follow-through."
+      ],
+      "risks": [
+        "Overhead technical supply / resistance requires volume confirmation."
+      ],
+      "uncertainty": "Offtake volume realization timelines.",
+      "estimated_impact": "Moderate headwind (Market volatility overhang)",
+      "confidence": "MEDIUM",
+      "evidence": [
+        "Indian Market: BEARISH",
+        "Global Sentiment: NEUTRAL",
+        "Trend: BEARISH"
+      ],
+      "timestamp": "2026-10-23T00:59:58.051257+00:00"
     },
     "VEDL.NS": {
       "stock": "VEDL.NS",
@@ -1588,25 +1588,25 @@
         "Global Sentiment: NEUTRAL",
         "Trend: BEARISH"
       ],
-      "timestamp": "2026-10-22T00:53:39.899322+00:00"
+      "timestamp": "2026-10-23T00:59:58.051265+00:00"
     }
   },
   "market_and_global_sentiment": {
     "section_title": "MARKET & GLOBAL SENTIMENT",
     "indian_market": {
       "classification": "BEARISH",
-      "score": -15.9,
+      "score": -22.3,
       "confidence": "LOW",
       "key_drivers": [
         "UNAVAILABLE"
       ],
       "evidence": [],
       "breadth": {
-        "advances": 3,
-        "declines": 8,
+        "advances": 2,
+        "declines": 9,
         "unchanged": 0,
-        "advance_decline_ratio": 0.38,
-        "positive_breadth_pct": 27.3
+        "advance_decline_ratio": 0.22,
+        "positive_breadth_pct": 18.2
       },
       "sector_rotation": [
         "Bio-Energy and Capital Goods domestic capex cycle active",
