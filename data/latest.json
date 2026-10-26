@@ -1,8 +1,12 @@
 {
-  "generated_at": "2026-10-23T00:48:55.791195+00:00",
+  "generated_at": "2026-10-26T00:35:26.769654+00:00",
   "catalysts": [],
   "setups": [],
   "source_errors": [
+    {
+      "source": "Central Public Procurement Portal (tenders)",
+      "error": "Failed to access Central Public Procurement Portal (tenders): HTTPSConnectionPool(host='eprocure.gov.in', port=443): Max retries exceeded with url: /eprocure/app (Caused by Connect"
+    },
     {
       "source": "ingestion::NSE block deals",
       "error": "Expecting value: line 2 column 1 (char 1)"
