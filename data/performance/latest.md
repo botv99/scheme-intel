@@ -1,7 +1,7 @@
 # Scheme-Intel Forward Performance & Validation Report
 
-**Generated At:** 2026-10-26T00:36:03.696135+00:00 UTC
-**Data Period:** 2026-10-26 → 2026-10-26
+**Generated At:** 2026-10-27T01:35:36.631733+00:00 UTC
+**Data Period:** 2026-10-27 → 2026-10-27
 **Data Sufficiency Status:** `INSUFFICIENT_SAMPLE` — *Insufficient sample (0 completed trades; minimum 30 required for statistical validity)*
 **Strategy Validation Status:** `INSUFFICIENT DATA`
 
@@ -10,8 +10,8 @@
 ## 1. Setup Lifecycle Sample
 - **Total Setups Recorded:** 7
 - **Qualified Setups:** 1
-- **Waiting Setups:** 2
-- **Rejected Setups (Hard Risk Veto / No Trade):** 4
+- **Waiting Setups:** 1
+- **Rejected Setups (Hard Risk Veto / No Trade):** 5
 - **Triggered Entries:** 0
 - **Untriggered Setups:** 7 *(never counted as losses)*
 - **Currently Active (Open) Trades:** 0
@@ -97,8 +97,7 @@
 *(Observational measurement only. Does not imply causation.)*
 | Provider | Setups | Trig | Comp | Win Rate | Avg P&L | Expectancy | Avg MFE | Avg MAE | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| Deterministic Fallback | 6 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| Openrouter | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| Deterministic Fallback | 7 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
 
 ---
 
