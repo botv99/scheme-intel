@@ -1,7 +1,7 @@
 # Scheme-Intel Forward Performance & Validation Report
 
-**Generated At:** 2026-10-29T01:56:29.197386+00:00 UTC
-**Data Period:** 2026-10-29 → 2026-10-29
+**Generated At:** 2026-10-30T02:07:16.070653+00:00 UTC
+**Data Period:** 2026-10-30 → 2026-10-30
 **Data Sufficiency Status:** `INSUFFICIENT_SAMPLE` — *Insufficient sample (0 completed trades; minimum 30 required for statistical validity)*
 **Strategy Validation Status:** `INSUFFICIENT DATA`
 
