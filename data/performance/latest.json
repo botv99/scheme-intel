@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-11-02T01:44:15.672588+00:00",
+  "generated_at": "2026-11-03T03:36:59.613374+00:00",
   "data_period": {
-    "start_date": "2026-11-02",
-    "end_date": "2026-11-02"
+    "start_date": "2026-11-03",
+    "end_date": "2026-11-03"
   },
   "data_sufficiency": {
     "status": "INSUFFICIENT_SAMPLE",
@@ -13,9 +13,9 @@
   "strategy_status": "INSUFFICIENT DATA",
   "setup_metrics": {
     "total_setups": 7,
-    "qualified_setups": 3,
-    "rejected_setups": 4,
-    "waiting_setups": 0,
+    "qualified_setups": 1,
+    "rejected_setups": 3,
+    "waiting_setups": 3,
     "watch_setups": 0,
     "triggered_setups": 0,
     "untriggered_setups": 7,
@@ -100,7 +100,7 @@
     {
       "archetype": "Breakout Anticipation",
       "setups": 2,
-      "qualified": 2,
+      "qualified": 0,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -156,7 +156,7 @@
     {
       "symbol": "GAIL.NS",
       "setups": 1,
-      "qualified": 1,
+      "qualified": 0,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -173,7 +173,7 @@
     {
       "symbol": "IOC.NS",
       "setups": 1,
-      "qualified": 1,
+      "qualified": 0,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -376,9 +376,9 @@
   ],
   "daily_series": [
     {
-      "date": "2026-11-02",
+      "date": "2026-11-03",
       "setups_generated": 7,
-      "qualified_setups": 3,
+      "qualified_setups": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
