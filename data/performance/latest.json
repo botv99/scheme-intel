@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-11-04T02:34:07.225360+00:00",
+  "generated_at": "2026-11-05T02:41:56.960027+00:00",
   "data_period": {
-    "start_date": "2026-11-04",
-    "end_date": "2026-11-04"
+    "start_date": "2026-11-05",
+    "end_date": "2026-11-05"
   },
   "data_sufficiency": {
     "status": "INSUFFICIENT_SAMPLE",
@@ -117,25 +117,7 @@
     },
     {
       "archetype": "Breakout Anticipation",
-      "setups": 1,
-      "qualified": 0,
-      "triggered": 0,
-      "completed": 0,
-      "wins": 0,
-      "losses": 0,
-      "expired": 0,
-      "win_rate": null,
-      "average_pnl_pct": null,
-      "expectancy": null,
-      "profit_factor": null,
-      "average_mfe_pct": null,
-      "average_mae_pct": null,
-      "average_holding_period": null,
-      "sample_status": "INSUFFICIENT_SAMPLE"
-    },
-    {
-      "archetype": "Pullback",
-      "setups": 1,
+      "setups": 2,
       "qualified": 1,
       "triggered": 0,
       "completed": 0,
@@ -294,7 +276,23 @@
   "provider_breakdown": [
     {
       "provider": "Deterministic Fallback",
-      "setups": 7,
+      "setups": 6,
+      "triggered": 0,
+      "completed": 0,
+      "wins": 0,
+      "losses": 0,
+      "expired": 0,
+      "win_rate": null,
+      "average_pnl_pct": null,
+      "expectancy": null,
+      "average_mfe_pct": null,
+      "average_mae_pct": null,
+      "sample_status": "INSUFFICIENT_SAMPLE",
+      "observational_note": "Observational analysis only. Does not establish causation."
+    },
+    {
+      "provider": "Groq \u2192 Openrouter failover",
+      "setups": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -378,7 +376,7 @@
   ],
   "daily_series": [
     {
-      "date": "2026-11-04",
+      "date": "2026-11-05",
       "setups_generated": 7,
       "qualified_setups": 1,
       "triggered": 0,
