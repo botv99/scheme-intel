@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-11-10T04:17:18.504787+00:00",
+  "generated_at": "2026-11-11T02:09:07.325225+00:00",
   "data_period": {
-    "start_date": "2026-11-10",
-    "end_date": "2026-11-10"
+    "start_date": "2026-11-11",
+    "end_date": "2026-11-11"
   },
   "data_sufficiency": {
     "status": "INSUFFICIENT_SAMPLE",
@@ -392,7 +392,7 @@
   ],
   "daily_series": [
     {
-      "date": "2026-11-10",
+      "date": "2026-11-11",
       "setups_generated": 7,
       "qualified_setups": 1,
       "triggered": 0,
