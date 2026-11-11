@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-10T04:14:47.752535+00:00",
+  "generated_at": "2026-11-11T02:04:29.329092+00:00",
   "prices": [
     {
       "company": "TruAlt Bioenergy",
@@ -3084,7 +3084,7 @@
           "high": 255.07,
           "low": 247.5,
           "close": 250.8,
-          "volume": 746434
+          "volume": 746604
         }
       ]
     },
@@ -8272,7 +8272,18 @@
     }
   ],
   "announcements": [],
-  "news": [],
+  "news": [
+    {
+      "title": "OMC stocks: Brent slips below $90 to hit over 2-month low amid Iran peace hopes; Will HPCL, BPCL and IOC benefit?",
+      "url": "https://www.livemint.com/market/stock-market-news/omc-stocks-brent-slips-below-90-to-hit-over-2-month-low-amid-iran-peace-hopes-will-hpcl-bpcl-and-ioc-benefit-11794312198955.html",
+      "source": "Mint",
+      "published_at": "2026-11-10T12:40:46+00:00",
+      "matched_stocks": [
+        "IOC"
+      ],
+      "summary": "Oil marketing companies may draw investor attention as Brent crude falls to a three-month low amid hopes of easing Middle East tensions. HPCL, BPCL and IOC have gained 10%\u201313.5% so far in November. Lower crude prices can reduce costs, improve margins and cash flows, though shipping risks remain."
+    }
+  ],
   "source_errors": [
     {
       "source": "NSE block deals",
@@ -8295,5 +8306,5 @@
       "error": "Failed to access Financial Express (markets): 403 Client Error: Forbidden for url: https://www.financialexpress.com/market/"
     }
   ],
-  "summary": "7 price snapshots, 76 bulk/block deals, 0 tender/contract announcements, 0 news items"
+  "summary": "7 price snapshots, 76 bulk/block deals, 0 tender/contract announcements, 1 news items"
 }
