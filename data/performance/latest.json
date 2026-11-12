@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-11-11T02:09:07.325225+00:00",
+  "generated_at": "2026-11-12T03:17:16.102112+00:00",
   "data_period": {
-    "start_date": "2026-11-11",
-    "end_date": "2026-11-11"
+    "start_date": "2026-11-12",
+    "end_date": "2026-11-12"
   },
   "data_sufficiency": {
     "status": "INSUFFICIENT_SAMPLE",
@@ -292,7 +292,7 @@
     },
     {
       "provider": "Groq \u2192 Openrouter failover",
-      "setups": 1,
+      "setups": 2,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -308,7 +308,7 @@
     },
     {
       "provider": "Openrouter",
-      "setups": 3,
+      "setups": 2,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -392,7 +392,7 @@
   ],
   "daily_series": [
     {
-      "date": "2026-11-11",
+      "date": "2026-11-12",
       "setups_generated": 7,
       "qualified_setups": 1,
       "triggered": 0,
