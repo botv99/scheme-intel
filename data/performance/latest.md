@@ -1,7 +1,7 @@
 # Scheme-Intel Forward Performance & Validation Report
 
-**Generated At:** 2026-11-12T03:17:16.102112+00:00 UTC
-**Data Period:** 2026-11-12 → 2026-11-12
+**Generated At:** 2026-11-13T02:49:06.432403+00:00 UTC
+**Data Period:** 2026-11-13 → 2026-11-13
 **Data Sufficiency Status:** `INSUFFICIENT_SAMPLE` — *Insufficient sample (0 completed trades; minimum 30 required for statistical validity)*
 **Strategy Validation Status:** `INSUFFICIENT DATA`
 
@@ -9,8 +9,8 @@
 
 ## 1. Setup Lifecycle Sample
 - **Total Setups Recorded:** 7
-- **Qualified Setups:** 1
-- **Waiting Setups:** 4
+- **Qualified Setups:** 0
+- **Waiting Setups:** 5
 - **Rejected Setups (Hard Risk Veto / No Trade):** 2
 - **Triggered Entries:** 0
 - **Untriggered Setups:** 7 *(never counted as losses)*
@@ -76,7 +76,7 @@
 | Archetype | Setups | Trig | Comp | Win Rate | Avg P&L | Expectancy | PF | Avg MFE | Avg MAE | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | Breakout Anticipation | 3 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
-| Pullback | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
+| Momentum Continuation | 1 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
 | Unspecified | 3 | 0 | 0 | N/A | N/A | N/A | N/A | N/A | N/A | `INSUFFICIENT_SAMPLE` |
 
 ---
@@ -110,8 +110,8 @@
 | 0–20 | 0 | 0 | 0 | N/A | N/A | N/A |
 | 21–40 | 0 | 0 | 0 | N/A | N/A | N/A |
 | 41–60 | 0 | 0 | 0 | N/A | N/A | N/A |
-| 61–80 | 1 | 0 | 0 | N/A | N/A | N/A |
-| 81–100 | 3 | 0 | 0 | N/A | N/A | N/A |
+| 61–80 | 3 | 0 | 0 | N/A | N/A | N/A |
+| 81–100 | 1 | 0 | 0 | N/A | N/A | N/A |
 
 ---
 
