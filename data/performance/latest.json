@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-11-13T02:49:06.432403+00:00",
+  "generated_at": "2026-11-16T02:20:48.616769+00:00",
   "data_period": {
-    "start_date": "2026-11-13",
-    "end_date": "2026-11-13"
+    "start_date": "2026-11-16",
+    "end_date": "2026-11-16"
   },
   "data_sufficiency": {
     "status": "INSUFFICIENT_SAMPLE",
@@ -13,9 +13,9 @@
   "strategy_status": "INSUFFICIENT DATA",
   "setup_metrics": {
     "total_setups": 7,
-    "qualified_setups": 0,
+    "qualified_setups": 1,
     "rejected_setups": 2,
-    "waiting_setups": 5,
+    "waiting_setups": 4,
     "watch_setups": 0,
     "triggered_setups": 0,
     "untriggered_setups": 7,
@@ -99,24 +99,6 @@
   "archetype_breakdown": [
     {
       "archetype": "Breakout Anticipation",
-      "setups": 3,
-      "qualified": 0,
-      "triggered": 0,
-      "completed": 0,
-      "wins": 0,
-      "losses": 0,
-      "expired": 0,
-      "win_rate": null,
-      "average_pnl_pct": null,
-      "expectancy": null,
-      "profit_factor": null,
-      "average_mfe_pct": null,
-      "average_mae_pct": null,
-      "average_holding_period": null,
-      "sample_status": "INSUFFICIENT_SAMPLE"
-    },
-    {
-      "archetype": "Momentum Continuation",
       "setups": 1,
       "qualified": 0,
       "triggered": 0,
@@ -134,8 +116,26 @@
       "sample_status": "INSUFFICIENT_SAMPLE"
     },
     {
+      "archetype": "Pullback",
+      "setups": 1,
+      "qualified": 1,
+      "triggered": 0,
+      "completed": 0,
+      "wins": 0,
+      "losses": 0,
+      "expired": 0,
+      "win_rate": null,
+      "average_pnl_pct": null,
+      "expectancy": null,
+      "profit_factor": null,
+      "average_mfe_pct": null,
+      "average_mae_pct": null,
+      "average_holding_period": null,
+      "sample_status": "INSUFFICIENT_SAMPLE"
+    },
+    {
       "archetype": "Unspecified",
-      "setups": 3,
+      "setups": 5,
       "qualified": 0,
       "triggered": 0,
       "completed": 0,
@@ -207,7 +207,7 @@
     {
       "symbol": "ORGANICREC.BO",
       "setups": 1,
-      "qualified": 0,
+      "qualified": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -276,39 +276,7 @@
   "provider_breakdown": [
     {
       "provider": "Deterministic Fallback",
-      "setups": 3,
-      "triggered": 0,
-      "completed": 0,
-      "wins": 0,
-      "losses": 0,
-      "expired": 0,
-      "win_rate": null,
-      "average_pnl_pct": null,
-      "expectancy": null,
-      "average_mfe_pct": null,
-      "average_mae_pct": null,
-      "sample_status": "INSUFFICIENT_SAMPLE",
-      "observational_note": "Observational analysis only. Does not establish causation."
-    },
-    {
-      "provider": "Groq \u2192 Openrouter failover",
-      "setups": 2,
-      "triggered": 0,
-      "completed": 0,
-      "wins": 0,
-      "losses": 0,
-      "expired": 0,
-      "win_rate": null,
-      "average_pnl_pct": null,
-      "expectancy": null,
-      "average_mfe_pct": null,
-      "average_mae_pct": null,
-      "sample_status": "INSUFFICIENT_SAMPLE",
-      "observational_note": "Observational analysis only. Does not establish causation."
-    },
-    {
-      "provider": "Openrouter",
-      "setups": 2,
+      "setups": 7,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -367,7 +335,7 @@
       "band_label": "61\u201380",
       "min_score": 61,
       "max_score": 80,
-      "setups": 3,
+      "setups": 2,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -380,7 +348,7 @@
       "band_label": "81\u2013100",
       "min_score": 81,
       "max_score": 100,
-      "setups": 1,
+      "setups": 0,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -392,9 +360,9 @@
   ],
   "daily_series": [
     {
-      "date": "2026-11-13",
+      "date": "2026-11-16",
       "setups_generated": 7,
-      "qualified_setups": 0,
+      "qualified_setups": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
