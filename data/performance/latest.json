@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-11-16T02:20:48.616769+00:00",
+  "generated_at": "2026-11-17T04:43:28.155940+00:00",
   "data_period": {
-    "start_date": "2026-11-16",
-    "end_date": "2026-11-16"
+    "start_date": "2026-11-17",
+    "end_date": "2026-11-17"
   },
   "data_sufficiency": {
     "status": "INSUFFICIENT_SAMPLE",
@@ -99,8 +99,8 @@
   "archetype_breakdown": [
     {
       "archetype": "Breakout Anticipation",
-      "setups": 1,
-      "qualified": 0,
+      "setups": 2,
+      "qualified": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -118,7 +118,7 @@
     {
       "archetype": "Pullback",
       "setups": 1,
-      "qualified": 1,
+      "qualified": 0,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -135,7 +135,7 @@
     },
     {
       "archetype": "Unspecified",
-      "setups": 5,
+      "setups": 4,
       "qualified": 0,
       "triggered": 0,
       "completed": 0,
@@ -173,7 +173,7 @@
     {
       "symbol": "IOC.NS",
       "setups": 1,
-      "qualified": 0,
+      "qualified": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -207,7 +207,7 @@
     {
       "symbol": "ORGANICREC.BO",
       "setups": 1,
-      "qualified": 1,
+      "qualified": 0,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -348,7 +348,7 @@
       "band_label": "81\u2013100",
       "min_score": 81,
       "max_score": 100,
-      "setups": 0,
+      "setups": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -360,7 +360,7 @@
   ],
   "daily_series": [
     {
-      "date": "2026-11-16",
+      "date": "2026-11-17",
       "setups_generated": 7,
       "qualified_setups": 1,
       "triggered": 0,
