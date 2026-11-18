@@ -1,7 +1,7 @@
 # Scheme-Intel Forward Performance & Validation Report
 
-**Generated At:** 2026-11-17T04:43:28.155940+00:00 UTC
-**Data Period:** 2026-11-17 → 2026-11-17
+**Generated At:** 2026-11-18T03:49:32.585847+00:00 UTC
+**Data Period:** 2026-11-18 → 2026-11-18
 **Data Sufficiency Status:** `INSUFFICIENT_SAMPLE` — *Insufficient sample (0 completed trades; minimum 30 required for statistical validity)*
 **Strategy Validation Status:** `INSUFFICIENT DATA`
 
@@ -108,8 +108,8 @@
 | 0–20 | 0 | 0 | 0 | N/A | N/A | N/A |
 | 21–40 | 0 | 0 | 0 | N/A | N/A | N/A |
 | 41–60 | 0 | 0 | 0 | N/A | N/A | N/A |
-| 61–80 | 2 | 0 | 0 | N/A | N/A | N/A |
-| 81–100 | 1 | 0 | 0 | N/A | N/A | N/A |
+| 61–80 | 3 | 0 | 0 | N/A | N/A | N/A |
+| 81–100 | 0 | 0 | 0 | N/A | N/A | N/A |
 
 ---
 
