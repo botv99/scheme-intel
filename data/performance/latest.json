@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-11-23T02:59:52.319386+00:00",
+  "generated_at": "2026-11-24T06:17:16.769399+00:00",
   "data_period": {
-    "start_date": "2026-11-23",
-    "end_date": "2026-11-23"
+    "start_date": "2026-11-25",
+    "end_date": "2026-11-25"
   },
   "data_sufficiency": {
     "status": "INSUFFICIENT_SAMPLE",
@@ -13,9 +13,9 @@
   "strategy_status": "INSUFFICIENT DATA",
   "setup_metrics": {
     "total_setups": 7,
-    "qualified_setups": 1,
+    "qualified_setups": 3,
     "rejected_setups": 3,
-    "waiting_setups": 3,
+    "waiting_setups": 1,
     "watch_setups": 0,
     "triggered_setups": 0,
     "untriggered_setups": 7,
@@ -99,8 +99,26 @@
   "archetype_breakdown": [
     {
       "archetype": "Breakout Anticipation",
-      "setups": 2,
-      "qualified": 0,
+      "setups": 1,
+      "qualified": 1,
+      "triggered": 0,
+      "completed": 0,
+      "wins": 0,
+      "losses": 0,
+      "expired": 0,
+      "win_rate": null,
+      "average_pnl_pct": null,
+      "expectancy": null,
+      "profit_factor": null,
+      "average_mfe_pct": null,
+      "average_mae_pct": null,
+      "average_holding_period": null,
+      "sample_status": "INSUFFICIENT_SAMPLE"
+    },
+    {
+      "archetype": "Momentum Continuation",
+      "setups": 1,
+      "qualified": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -156,7 +174,7 @@
     {
       "symbol": "GAIL.NS",
       "setups": 1,
-      "qualified": 0,
+      "qualified": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -173,7 +191,7 @@
     {
       "symbol": "IOC.NS",
       "setups": 1,
-      "qualified": 0,
+      "qualified": 1,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
@@ -360,9 +378,9 @@
   ],
   "daily_series": [
     {
-      "date": "2026-11-23",
+      "date": "2026-11-25",
       "setups_generated": 7,
-      "qualified_setups": 1,
+      "qualified_setups": 3,
       "triggered": 0,
       "completed": 0,
       "wins": 0,
