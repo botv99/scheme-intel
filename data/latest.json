@@ -1,8 +1,12 @@
 {
-  "generated_at": "2026-11-25T04:59:58.192639+00:00",
+  "generated_at": "2026-11-26T04:17:17.249255+00:00",
   "catalysts": [],
   "setups": [],
   "source_errors": [
+    {
+      "source": "Central Public Procurement Portal (tenders)",
+      "error": "Failed to access Central Public Procurement Portal (tenders): ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))"
+    },
     {
       "source": "ingestion::NSE block deals",
       "error": "Expecting value: line 2 column 1 (char 1)"
@@ -18,10 +22,6 @@
     {
       "source": "ingestion::BSE announcements (tenders/contracts)",
       "error": "403 Client Error: Forbidden for url: https://api.bseindia.com/BseIndiaAPI/api/Announcements/w?pageno=1"
-    },
-    {
-      "source": "ingestion::Financial Express (markets)",
-      "error": "Failed to access Financial Express (markets): 403 Client Error: Forbidden for url: https://www.financialexpress.com/market/"
     }
   ],
   "summary": "0 material catalysts and 0 setups generated."
