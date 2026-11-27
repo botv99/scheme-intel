@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-11-26T04:18:07.785428+00:00",
+  "generated_at": "2026-11-27T04:26:19.993483+00:00",
   "data_period": {
-    "start_date": "2026-11-26",
-    "end_date": "2026-11-26"
+    "start_date": "2026-11-27",
+    "end_date": "2026-11-27"
   },
   "data_sufficiency": {
     "status": "INSUFFICIENT_SAMPLE",
@@ -98,26 +98,8 @@
   },
   "archetype_breakdown": [
     {
-      "archetype": "Breakout Anticipation",
-      "setups": 1,
-      "qualified": 0,
-      "triggered": 0,
-      "completed": 0,
-      "wins": 0,
-      "losses": 0,
-      "expired": 0,
-      "win_rate": null,
-      "average_pnl_pct": null,
-      "expectancy": null,
-      "profit_factor": null,
-      "average_mfe_pct": null,
-      "average_mae_pct": null,
-      "average_holding_period": null,
-      "sample_status": "INSUFFICIENT_SAMPLE"
-    },
-    {
       "archetype": "Pullback",
-      "setups": 2,
+      "setups": 3,
       "qualified": 1,
       "triggered": 0,
       "completed": 0,
@@ -360,7 +342,7 @@
   ],
   "daily_series": [
     {
-      "date": "2026-11-26",
+      "date": "2026-11-27",
       "setups_generated": 7,
       "qualified_setups": 1,
       "triggered": 0,
